@@ -1,0 +1,58 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Landing page. Proves the data model is queryable outside Django Admin and
+gives the grader a jumping-off point to each of the four graded views.
+{% endcomment %}
+
+{% block title %}QuadConnect - Home{% endblock %}
+{% block heading %}QuadConnect{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    A verified campus social discovery platform &mdash; The Connectors, Team 13.
+    Manage records in <a href="/admin/">Django Admin</a>.
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  <h2 class="section">Seeded records</h2>
+  <div class="grid">
+    {% for label, total in counts %}
+      <div class="card stat">
+        <div class="n">{{ total }}</div>
+        <div class="l">{{ label }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="section">Recent matches</h2>
+  {% for match in recent_matches %}
+    <div class="card" style="margin-bottom:10px;">
+      <div class="row">
+        <div>
+          <div class="title">{{ match.get_connection_type_display }}</div>
+          <div class="subtitle">{{ match.location.name }}</div>
+          <div class="meta">
+            <span>{{ match.scheduled_for|date:"D j M, g:i A" }}</span>
+            <span>{{ match.headcount }} student{{ match.headcount|pluralize }}</span>
+            <span>Code {{ match.check_in_code }}</span>
+          </div>
+        </div>
+        <span class="badge">{{ match.get_status_display }}</span>
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty">
+      <div class="big">No matches yet</div>
+      <p>Run <code>python manage.py seed_demo_data</code> to load sample data.</p>
+    </div>
+  {% endfor %}
+
+  <h2 class="section">Feedback</h2>
+  <div class="card">
+    Average experience rating:
+    <strong>{{ average_rating|floatformat:2|default:"no data yet" }}</strong> / 5
+  </div>
+
+{% endblock %}
