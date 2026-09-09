@@ -67,7 +67,7 @@ Passing it is what makes the manual path equivalent to `render()`.
 
 ## Privacy rule — read this before you write the query
 
-`ExperienceFeedback.private_note` is **private**. `CLAUDE.md` §2 states it is
+`ExperienceFeedback.private_note` is **private**. `docs/project_reference.md` §2 states it is
 never shown to other participants, and the wireframe on Screen 9 promises the
 student exactly that.
 
@@ -111,7 +111,7 @@ Behaviour — build a context containing:
 - `wants_connection` — how many said `wants_to_stay_connected=True`
 - `mutual_pairs` — **only if you have time**: for Friend Connect matches where
   *both* participants opted in. This is the mutual-connection rule from
-  `CLAUDE.md` §2. If it turns out fiddly, skip it and note it in `notes.txt`
+  `docs/project_reference.md` §2. If it turns out fiddly, skip it and note it in `notes.txt`
   as an open item — a correct simple page beats a half-working clever one.
 
 Keep the aggregation in a module-level helper so the view body stays short.
@@ -260,10 +260,10 @@ In `docs/notes/notes.txt`:
 
 ---
 
-## Step 7 — update `CLAUDE.md` (REQUIRED, do this last)
+## Step 7 — update `docs/project_reference.md` (REQUIRED, do this last)
 
-`CLAUDE.md` at the repo root is the team's shared memory. It is how the next
-person — and the next AI assistant — knows what already exists. It is **not**
+`docs/project_reference.md` is the team's shared memory. It is how the next
+person knows what already exists. It is **not**
 part of the Canvas submission; we keep it purely for our own knowledge.
 
 Two edits, both in your own row/block only:
@@ -321,5 +321,5 @@ Record HttpResponse FBV in notes and add screenshot
 - [ ] `01_fbv_httpresponse.png` saved
 - [ ] `notes.txt` VIEW REGISTER marked DONE + reflection written
 - [ ] `base.html` untouched · other owners' sections untouched
-- [ ] `CLAUDE.md` status board row + work log block updated
+- [ ] `docs/project_reference.md` status board row + work log block updated
 - [ ] Branch pushed, PR opened against `main`

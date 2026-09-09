@@ -109,7 +109,7 @@ Behaviour:
   matches no rows.
 - Also expose only approved venues by default (`is_approved=True`), and say so
   in the subtitle. Unapproved venues exist so they can be retired without
-  losing history — see `CLAUDE.md` §5.
+  losing history — see `docs/project_reference.md` §5.
 - Shape each row into the item contract:
   - `title` → the venue name
   - `subtitle` → the street address
@@ -241,10 +241,10 @@ In `docs/notes/notes.txt`:
 
 ---
 
-## Step 7 — update `CLAUDE.md` (REQUIRED, do this last)
+## Step 7 — update `docs/project_reference.md` (REQUIRED, do this last)
 
-`CLAUDE.md` at the repo root is the team's shared memory. It is how the next
-person — and the next AI assistant — knows what already exists. It is **not**
+`docs/project_reference.md` is the team's shared memory. It is how the next
+person knows what already exists. It is **not**
 part of the Canvas submission; we keep it purely for our own knowledge.
 
 Two edits, both in your own row/block only:
@@ -304,5 +304,5 @@ Record base CBV in notes and add screenshot
 - [ ] `03_cbv_base.png` saved
 - [ ] `notes.txt` VIEW REGISTER marked DONE + reflection written
 - [ ] `base.html` untouched · other owners' sections untouched
-- [ ] `CLAUDE.md` status board row + work log block updated
+- [ ] `docs/project_reference.md` status board row + work log block updated
 - [ ] Branch pushed, PR opened against `main`

@@ -226,10 +226,10 @@ In `docs/notes/notes.txt`:
 
 ---
 
-## Step 7 — update `CLAUDE.md` (REQUIRED, do this last)
+## Step 7 — update `docs/project_reference.md` (REQUIRED, do this last)
 
-`CLAUDE.md` at the repo root is the team's shared memory. It is how the next
-person — and the next AI assistant — knows what already exists. It is **not**
+`docs/project_reference.md` is the team's shared memory. It is how the next
+person knows what already exists. It is **not**
 part of the Canvas submission; we keep it purely for our own knowledge.
 
 Two edits, both in your own row/block only:
@@ -287,7 +287,7 @@ Record render() FBV in notes and add screenshot
 - [ ] `02_fbv_render.png` saved
 - [ ] `notes.txt` VIEW REGISTER marked DONE + reflection written
 - [ ] `base.html` untouched · other owners' sections untouched
-- [ ] `CLAUDE.md` status board row + work log block updated
+- [ ] `docs/project_reference.md` status board row + work log block updated
 - [ ] Branch pushed, PR opened against `main`
 
 ---

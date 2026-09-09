@@ -97,6 +97,6 @@ Then open a pull request against `main`. Manojkumar merges them one at a time.
 
 ### Reference
 
-`CLAUDE.md` at the repo root is the full project reference: product decisions,
+`docs/project_reference.md` is the full project reference: product decisions,
 every model field, every `on_delete` and why. Read section 5 before querying
 anything.
