@@ -13,6 +13,32 @@ Read [`README.md`](README.md) in this folder first. Yours is the view the
 grader checks for **Base CBV (2 pts)** — and, together with Manojkumar, for
 **template reuse (2 pts)**.
 
+## Start here
+
+```bash
+git clone https://github.com/manojkmohan5/13_QuadConnect.git
+cd 13_QuadConnect
+git switch feature/location-views          # your branch, already on the remote
+
+python -m venv .venv
+source .venv/Scripts/activate      # Windows Git Bash
+# .venv\Scriptsctivate           # PowerShell
+# source .venv/bin/activate        # macOS / Linux
+
+pip install -r requirements.txt
+cp .env.example .env
+python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"
+# paste that value into DJANGO_SECRET_KEY in .env
+
+python manage.py migrate
+python manage.py seed_demo_data
+python manage.py runserver          # http://127.0.0.1:8000/locations/ shows a stub
+```
+
+You should see a placeholder page at `/locations/` saying "Not implemented yet".
+Replacing it is your whole task. Work through the steps below in order, then
+tick every box in the Done checklist at the bottom.
+
 ---
 
 ## What you are building
