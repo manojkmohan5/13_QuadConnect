@@ -1,0 +1,228 @@
+================================================================================
+QuadConnect - Working Notes
+The Connectors | Team 13 | 13_QuadConnect
+================================================================================
+
+This file is updated WEEKLY. Newest entry goes at the top of the WEEKLY LOG.
+Everyone appends; nobody deletes another person's entry.
+
+Sections:
+  1. WEEKLY LOG
+  2. VIEW REGISTER  (P1-A2 Section 2 requirement)
+  3. REFLECTION     (P1-A2 bonus)
+  4. NOTES FOR TEAMMATES
+  5. REMINDERS & DEADLINES
+  6. CHALLENGES & OPEN QUESTIONS
+  7. CLARIFICATIONS RECEIVED
+
+
+================================================================================
+1. WEEKLY LOG
+================================================================================
+
+--------------------------------------------------------------------------------
+WEEK 3  (w/c 2026-09-07)  -  P1-A2 scaffold
+--------------------------------------------------------------------------------
+Done:
+  - Created GitHub repository 13_QuadConnect.
+  - Flattened the project so the repo root is the Django project root, matching
+    the structure in the assignment brief.
+  - Split settings into quadconnect/settings/{base,development,production}.py.
+      * base.py holds everything shared and reads secrets from .env
+      * development.py  DEBUG=True,  ALLOWED_HOSTS = localhost/127.0.0.1
+      * production.py   DEBUG=False, ALLOWED_HOSTS required from env,
+                        plus security headers and optional HSTS/SSL
+  - Moved SECRET_KEY out of source into .env and ROTATED it, because the old
+    django-insecure-... key had already been written to a file. .env.example
+    is committed with placeholders; .env is gitignored.
+  - Added .gitignore (.env first line), requirements.txt.
+  - Built connect/templates/connect/base.html with {% block title %} and
+    {% block content %}, shared nav and footer.
+  - Built the shared entity_list.html so two different views can render the
+    same template from pre-shaped context.
+  - Committed stub views + all four NAMED routes so base.html can reverse
+    every nav link and main is never broken while feature branches are open.
+  - Exported the P1-A1 wireframes to docs/wireframes/v1/ as PNGs.
+  - Wrote docs/branching_strategy/ (diagram.png + branching.md).
+
+Verified:
+  - python manage.py check                                 -> 0 issues (dev)
+  - DJANGO_SETTINGS_MODULE=...production manage.py check --deploy
+        with DJANGO_SECURE_SSL=1                           -> 0 issues
+  - production settings raise RuntimeError when DJANGO_ALLOWED_HOSTS is unset
+    (fail fast rather than silently serving any Host header)
+  - All routes return 200: / /students/ /students/1/ /matches/ /locations/
+    /feedback/summary/ ; /admin/ returns 302 to login as expected.
+
+Next:
+  - Four feature branches, one per member. See docs/build_tasks/.
+
+
+================================================================================
+2. VIEW REGISTER   (P1-A2 Section 2 - name, type and purpose of each view)
+================================================================================
+
+The view marked GRADED for each of the four required kinds is the one wired to
+the working URL listed beside it.
+
+--------------------------------------------------------------------------------
+KIND A1 - Function-Based View returning HttpResponse manually        [GRADED]
+--------------------------------------------------------------------------------
+  Name     : feedback_summary
+  Owner    : Dhruv Thaker (dthaker3)
+  URL      : /feedback/summary/          name="connect:feedback-summary"
+  Model    : ExperienceFeedback
+  Template : connect/feedback_summary.html, loaded with loader.get_template()
+             and wrapped in HttpResponse (NOT render()).
+  Purpose  : Aggregate private post-experience feedback into a single
+             read-only summary - average rating, how many students opted in to
+             stay connected, and which enjoyment factors came up most. Built
+             with the manual HttpResponse path to show the request/response
+             cycle without the render() shortcut hiding it.
+  Status   : TODO - stub committed on main
+
+--------------------------------------------------------------------------------
+KIND A2 - Function-Based View using the render() shortcut            [GRADED]
+--------------------------------------------------------------------------------
+  Name     : match_list
+  Owner    : Manojkumar Mohankumar (mm240)
+  URL      : /matches/                   name="connect:match-list"
+  Model    : Match
+  Template : connect/entity_list.html   (SHARED - also used by kind B1)
+  Purpose  : List every weekly scheduled experience with its location,
+             activity, participant count and status, filterable by week via
+             ?week=YYYY-MM-DD. The filter is what makes the empty state
+             reachable without deleting data.
+  Status   : TODO - stub committed on main
+
+--------------------------------------------------------------------------------
+KIND B1 - Base Class-Based View (inherits django.views.View)         [GRADED]
+--------------------------------------------------------------------------------
+  Name     : CampusLocationListView
+  Owner    : Prathamesh Mulay (pmulay2)
+  URL      : /locations/                 name="connect:location-list"
+  Model    : CampusLocation
+  Template : connect/entity_list.html   (SHARED - also used by kind A2)
+  Purpose  : List approved public meeting places with capacity, indoor/outdoor
+             and how many matches each has hosted. Written as a base View with
+             an explicit get() and a hand-written queryset, so the work a
+             generic view does for you is visible.
+  Status   : TODO - stub committed on main
+
+--------------------------------------------------------------------------------
+KIND B2 - Generic Class-Based View (ListView / DetailView)           [GRADED]
+--------------------------------------------------------------------------------
+  Name     : StudentProfileListView   (plus StudentProfileDetailView)
+  Owner    : Kritika Agrawal (kritika7)
+  URL      : /students/                  name="connect:student-list"
+             /students/<pk>/             name="connect:student-detail"
+  Model    : StudentProfile
+  Template : connect/studentprofile_list.html   (Django default naming)
+             connect/studentprofile_detail.html
+  Purpose  : Browse the verified student roster with their college, connection
+             preference and social energy, filterable by ?college=. Uses
+             ListView so pagination, context_object_name and template naming
+             come for free; DetailView shows one student's interests and
+             availability.
+  Status   : TODO - stub committed on main
+
+--------------------------------------------------------------------------------
+SUPPORTING (not graded)
+--------------------------------------------------------------------------------
+  Name     : home
+  URL      : /                           name="connect:home"
+  Purpose  : Dashboard proving the data model is queryable outside Django
+             Admin, and the entry point a grader lands on.
+
+
+================================================================================
+3. REFLECTION   (P1-A2 bonus - fill in after your view works)
+================================================================================
+
+HttpResponse vs render()
+------------------------
+  [Dhruv]      TODO - when did the manual path help, and what did it cost?
+  [Manojkumar] TODO - what did render() save you compared with the manual path?
+
+Base CBV vs Generic CBV
+-----------------------
+  [Prathamesh] TODO - what did you have to write by hand in get()?
+  [Kritika]    TODO - what did ListView give you for free, and where did it
+                      get in the way when you added the ?college= filter?
+
+Team-level observation
+----------------------
+  TODO after integration - which of the four would you reach for by default
+  in the rest of this project, and why?
+
+
+================================================================================
+4. NOTES FOR TEAMMATES
+================================================================================
+
+- Your build instructions are in docs/build_tasks/<yourname>_*.md. Read the
+  whole file before writing code; it lists the exact files you may touch.
+- DO NOT edit base.html. All four routes are already named and reversed there.
+  If you think you need to change it, message the group instead.
+- DO NOT edit another owner's section of views.py. The file is divided by
+  commented section headers.
+- entity_list.html is SHARED by Manojkumar and Prathamesh. Agree before
+  changing its context contract; the contract is documented at the top of the
+  file.
+- First thing after cloning:
+      cp .env.example .env
+      python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"
+      # paste that into DJANGO_SECRET_KEY in your .env
+      pip install -r requirements.txt
+      python manage.py migrate
+      python manage.py seed_demo_data
+- db.sqlite3 is gitignored on purpose. Never force-add it: a tracked binary
+  would conflict on every branch. seed_demo_data is idempotent, so re-run it
+  instead of sharing a database file.
+
+
+================================================================================
+5. REMINDERS & DEADLINES
+================================================================================
+
+- P1-A2 due Monday 23:59. Submit ONE item: the public GitHub repository link.
+- Add the instructor as a collaborator (27guptamohit) - Manojkumar does this
+  LAST, after all four branches are merged.
+- Screenshots go in docs/screenshots/ before submitting:
+      01_fbv_httpresponse.png    feedback_summary
+      02_fbv_render.png          match_list
+      03_cbv_base.png            CampusLocationListView
+      04_cbv_generic.png         StudentProfileListView
+      05_list_normal.png         a populated list
+      06_list_empty.png          the same list with a filter that matches nothing
+- Late policy is strict: -10%/24h, zero after 48h.
+
+
+================================================================================
+6. CHALLENGES & OPEN QUESTIONS
+================================================================================
+
+- BASE_DIR had to change from parent.parent to parent.parent.parent when
+  settings became a package. It fails silently if you miss it: Django looks
+  for db.sqlite3 one directory too deep and creates an empty one. Worth
+  knowing if anyone restructures again.
+- With DEBUG=False, runserver will not serve /static/. Our CSS is inline in
+  base.html so production mode renders correctly today. The moment we add real
+  static assets we need WhiteNoise or a collectstatic step - not before.
+- UniqueConstraint cannot span relations, so "one match per student per week"
+  is NOT enforceable in the model layer. It has to live in the matching
+  service when we build it. Carried over from P1-A1.
+- Still unspecified: the matching algorithm itself. compatibility_score and
+  match_reason exist as fields but nothing computes them outside seed data.
+  This is the biggest open design question for the next assignment.
+
+
+================================================================================
+7. CLARIFICATIONS RECEIVED
+================================================================================
+
+- P1-A1 named two different superusers (mohitg2 in section 4, tester in the
+  checklist). We created BOTH, password uiuc12345, so either instruction works.
+- P1-A2 says "do not change sheet names" but also "change the name of the
+  sheet to the NetID" - the specific instruction with a worked example wins.
+  (Applies to the P1-A1 TCC workbook, recorded here so we do not relitigate.)
