@@ -241,6 +241,43 @@ In `docs/notes/notes.txt`:
 
 ---
 
+## Step 7 — update `CLAUDE.md` (REQUIRED, do this last)
+
+`CLAUDE.md` at the repo root is the team's shared memory. It is how the next
+person — and the next AI assistant — knows what already exists. It is **not**
+part of the Canvas submission; we keep it purely for our own knowledge.
+
+Two edits, both in your own row/block only:
+
+**1. Status board (§0)** — change your row from `NOT STARTED` to done:
+
+```
+| Prathamesh Mulay | `feature/location-views` | Base CBV | <route> | DONE - <one line on what shipped> |
+```
+
+**2. Work log (§9)** — replace your placeholder block using this exact shape,
+so every entry reads the same way:
+
+```markdown
+### DONE `feature/location-views` - Prathamesh Mulay - YYYY-MM-DD
+**Shipped:** one sentence on what the view does.
+**Files added:** paths.
+**Files changed:** paths, and what changed in each.
+**Decisions that differ from the build task:** anything you did differently,
+and why. Write "none" if there were none.
+**Gotchas for the next person:** anything that surprised you, cost you time,
+or that someone extending this view must know. Write "none" if there were none.
+**Verified:** manage.py check clean / route returns 200 / empty state renders /
+screenshot saved.
+```
+
+If you hit a trap worth warning others about, also add it to **§11 Traps**.
+
+**Only touch your own row and your own block.** Four people edit this file; git
+merges different lines cleanly but conflicts on the same line.
+
+---
+
 ## Commit sequence
 
 ```
@@ -267,4 +304,5 @@ Record base CBV in notes and add screenshot
 - [ ] `03_cbv_base.png` saved
 - [ ] `notes.txt` VIEW REGISTER marked DONE + reflection written
 - [ ] `base.html` untouched · other owners' sections untouched
+- [ ] `CLAUDE.md` status board row + work log block updated
 - [ ] Branch pushed, PR opened against `main`
