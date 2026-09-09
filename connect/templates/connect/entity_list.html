@@ -1,0 +1,63 @@
+{% extends "connect/base.html" %}
+{% comment %}
+SHARED list template - deliberately reused by more than one view.
+
+It knows nothing about any model. Each view shapes its queryset into a list of
+plain dictionaries, so the template stays independent of how the data was
+produced. This is the "template reuse" deliverable of P1-A2 Section 3.
+
+Context contract
+----------------
+page_title     str   <title> text
+heading        str   page heading
+subtitle       str   optional line under the heading
+items          list  of dicts, each with:
+                       title     str            required
+                       subtitle  str            optional
+                       meta      list[str]      optional, rendered inline
+                       badge     str            optional, pill on the right
+                       url       str            optional, links the title
+empty_title    str   headline shown when items is empty
+empty_message  str   explanatory line shown when items is empty
+filter_html    bool  set truthy by a view that renders its own filter block
+{% endcomment %}
+
+{% block title %}{{ page_title|default:"QuadConnect" }}{% endblock %}
+{% block heading %}{{ heading|default:page_title }}{% endblock %}
+
+{% block subtitle %}
+  {% if subtitle %}<p class="sub">{{ subtitle }}</p>{% endif %}
+{% endblock %}
+
+{% block content %}
+
+  {% block filters %}{% endblock %}
+
+  {% for item in items %}
+    <div class="card" style="margin-bottom:10px;">
+      <div class="row">
+        <div>
+          <div class="title">
+            {% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>
+            {% else %}{{ item.title }}{% endif %}
+          </div>
+          {% if item.subtitle %}
+            <div class="subtitle">{{ item.subtitle }}</div>
+          {% endif %}
+          {% if item.meta %}
+            <div class="meta">
+              {% for bit in item.meta %}<span>{{ bit }}</span>{% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        {% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty">
+      <div class="big">{{ empty_title|default:"Nothing to show yet" }}</div>
+      <p>{{ empty_message|default:"There are no records matching this view." }}</p>
+    </div>
+  {% endfor %}
+
+{% endblock %}
