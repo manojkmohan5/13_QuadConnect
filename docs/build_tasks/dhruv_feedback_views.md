@@ -21,7 +21,7 @@ git switch feature/feedback-views          # your branch, already on the remote
 
 python -m venv .venv
 source .venv/Scripts/activate      # Windows Git Bash
-# .venv\Scriptsctivate           # PowerShell
+# .venv\Scripts\activate           # PowerShell
 # source .venv/bin/activate        # macOS / Linux
 
 pip install -r requirements.txt
