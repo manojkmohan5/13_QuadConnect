@@ -26,11 +26,11 @@ WhiteNoise at the same time.
   <style>
     :root {
       --ink: #1f2933;
-      --muted: #6b7280;
+      --muted: #666e7b;
       --line: #e3e3e0;
       --bg: #f6f6f4;
       --card: #ffffff;
-      --accent: #c8461e;
+      --accent: #c0421c;
       --accent-soft: #fdf0eb;
       --ok: #0b6e4f;
     }
@@ -43,6 +43,18 @@ WhiteNoise at the same time.
       color: var(--ink);
     }
     a { color: var(--accent); }
+
+    /* WCAG 2.1 AA 2.4.7 - focus must be visible at all times. The browser
+       default ring is easy to lose against the card background, so make it
+       explicit and high contrast. */
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
 
     /* --- header / nav --- */
     header.site {
