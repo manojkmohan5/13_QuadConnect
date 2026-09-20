@@ -18,6 +18,7 @@ feature branch; nobody needs to touch base.html or another owner's section.
 from django.db.models import Avg, Count
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.views import View
 
 from .models import (
     CampusLocation,
@@ -96,14 +97,82 @@ def match_list(request):
 # ===========================================================================
 
 
-def campus_location_list_stub(request):
-    """STUB - replace with CampusLocationListView on
-    branch feature/location-views."""
-    return HttpResponse(
-        "<h1>Campus locations</h1>"
-        "<p>Not implemented yet. Owner: Prathamesh Mulay.</p>",
-        content_type="text/html",
-    )
+class CampusLocationListView(View):
+    """List approved QuadConnect campus meeting locations."""
+
+    def _build_items(self, queryset):
+        items = []
+
+        for location in queryset:
+            setting = "Indoor" if location.is_indoor else "Outdoor"
+
+            meta = [
+                setting,
+                f"Seats up to {location.capacity}",
+                f"Hosted {location.match_count} matches",
+            ]
+
+            if location.arrival_note:
+                meta.append(location.arrival_note)
+
+            items.append(
+                {
+                    "title": location.name,
+                    "subtitle": location.street_address,
+                    "meta": meta,
+                    "badge": setting,
+                    "url": None,
+                }
+            )
+
+        return items
+
+    def get(self, request):
+        setting = request.GET.get("setting", "").strip().lower()
+
+        queryset = (
+            CampusLocation.objects.annotate(
+                match_count=Count("matches")
+            )
+            .filter(is_approved=True)
+            .order_by("name")
+        )
+
+        if setting == "indoor":
+            queryset = queryset.filter(is_indoor=True)
+        elif setting == "outdoor":
+            queryset = queryset.filter(is_indoor=False)
+
+        items = self._build_items(queryset)
+
+        if items:
+            empty_title = ""
+            empty_message = ""
+        elif setting == "indoor":
+            empty_title = "No indoor venues approved"
+            empty_message = (
+                "Try clearing the indoor filter to see other approved venues."
+            )
+        elif setting == "outdoor":
+            empty_title = "No outdoor venues approved"
+            empty_message = (
+                "Try clearing the outdoor filter to see other approved venues."
+            )
+        else:
+            empty_title = "No approved campus locations"
+            empty_message = (
+                "Matches cannot be scheduled until a venue is approved."
+            )
+
+        context = {
+            "page_title": "Campus Locations",
+            "entity_name": "Campus Locations",
+            "items": items,
+            "empty_title": empty_title,
+            "empty_message": empty_message,
+        }
+
+        return render(request, "connect/entity_list.html", context)
 
 
 # ===========================================================================
