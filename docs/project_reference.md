@@ -645,8 +645,19 @@ template chain `location_list.html → entity_list.html → base.html` ·
 1 SQL query · reflected `?seats=` value HTML-escaped · `entity_list.html` and
 `base.html` unmodified by this branch.
 
-### ⬜ `feature/feedback-views` — Dhruv
-*Not started.*
+### DONE `feature/feedback-views` - Dhruv Thaker - 2026-09-20
+
+**Shipped:** Implemented the aggregate feedback summary at `/feedback/summary/`, including total submissions, average rating, rating distribution, enjoyment metrics, and stay-connected preferences.
+
+**Files added:** `connect/templates/connect/feedback_summary.html`.
+
+**Files changed:** `connect/views.py` — replaced the feedback stub with an `HttpResponse` FBV using `loader.get_template()` and added aggregate feedback calculations.
+
+**Decisions that differ from the build task:** None.
+
+**Gotchas for the next person:** The feedback summary must remain aggregate-only; individual ratings and `private_note` values must not be displayed.
+
+**Verified:** View uses `loader.get_template()` and `HttpResponse`; template extends `base.html`; no individual feedback or private notes are displayed.
 
 ---
 
