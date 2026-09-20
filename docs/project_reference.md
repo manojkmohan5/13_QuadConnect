@@ -41,7 +41,7 @@ link resolves today, and each developer replaces exactly one stub.
 |---|---|---|---|---|
 | Kritika Agrawal | `feature/profile-views` | Generic CBV | `/students/` | ⬜ NOT STARTED |
 | Manojkumar Mohankumar | `feature/match-views` | FBV `render()` | `/matches/` | ✅ DONE — `match_list` with `?week=` filter, renders the shared list template |
-| Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ⬜ DONE - Locations |
+| Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ✅ DONE — `CampusLocationListView` base CBV with setting + seats filters, reuses the shared list template |
 | Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ⬜ NOT STARTED |
 
 **Whoever completes a branch:** updating this file is
@@ -609,14 +609,41 @@ duplicated or path-traversal query values.
 contrast in five places. Fixed on `main` (see the entry below) and merged in,
 which is why this branch contains a merge commit.
 
-### ⬜ `feature/location-views` — Prathamesh
-- Implemented CampusLocationListView using Django's base View class.
-- Added manual CampusLocation queryset with approved-location filtering
-  and match-count annotation.
-- Added indoor/outdoor filtering through location_list.html extending
-  the shared entity_list.html template.
-- Wired the /locations/ route using CampusLocationListView.as_view().
-- Added required Base CBV screenshot and reflection notes.
+### ✅ `feature/location-views` — Prathamesh Mulay — 2026-09-20
+**Shipped:** `/locations/` lists approved public venues with capacity,
+indoor/outdoor and matches hosted, filterable by `?setting=` and `?seats=`.
+
+**Files added:** `connect/templates/connect/location_list.html`;
+`docs/screenshots/03_cbv_base.png`; `docs/screenshots/07_cbv_base_empty.png`.
+
+**Files changed:** `connect/views.py` — Section B1 only: `CampusLocationListView`
+with `_build_items()` helper. `connect/urls.py` — stub swapped for
+`.as_view()`. `docs/notes/notes.txt`, `docs/screenshots/README.md`.
+
+**Decisions that differ from the build task:** added a `?seats=N` minimum-capacity
+filter that the task did not ask for. It was necessary: with the seeded data
+3 approved venues are indoor and 1 is outdoor, so **no `?setting=` value could
+ever empty the list**, and `{% empty %}` was impossible to demonstrate. `?seats=`
+is a genuine product query — Squad Connect groups are 4–8 students, so venue
+capacity decides where a squad can meet — and `?seats=25` returns nothing.
+
+**Gotchas for the next person:**
+- `base.html` defines `.filter` (singular). Using `class="filters"` silently
+  renders unstyled controls — no error, it just looks broken.
+- When you add a filter, check that at least one value returns **zero rows**.
+  A filter that can never empty the list cannot demonstrate `{% empty %}`.
+- Parse query params defensively: `?seats=banana` must show the empty state,
+  not a 500.
+- Docs were originally committed straight to `main` rather than to the branch,
+  which left `notes.txt` un-updated and a screenshot named
+  `Screenshot _03_cbv_base.png`. Put doc updates on your branch with the code.
+
+**Verified:** `manage.py check` 0 issues · `/locations/` 200 with 4 venues ·
+`?setting=indoor` 3, `?setting=outdoor` 1 · `?seats=8` 3, `?seats=13` 1 ·
+`?seats=25` and `?seats=banana` both 200 with the empty state, neither a 500 ·
+template chain `location_list.html → entity_list.html → base.html` ·
+1 SQL query · reflected `?seats=` value HTML-escaped · `entity_list.html` and
+`base.html` unmodified by this branch.
 
 ### ⬜ `feature/feedback-views` — Dhruv
 *Not started.*

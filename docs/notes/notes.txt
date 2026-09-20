@@ -58,6 +58,39 @@ Next:
   - Four feature branches, one per member. See docs/build_tasks/.
 
 --------------------------------------------------------------------------------
+WEEK 4  (w/c 2026-09-14)  -  feature/location-views  [Prathamesh]
+--------------------------------------------------------------------------------
+Done:
+  - CampusLocationListView as a base django.views.View with an explicit get()
+    and a hand-written queryset (no generic view).
+  - location_list.html extends the shared entity_list.html and overrides only
+    {% block filters %}; the shared template is unmodified.
+  - Filters: ?setting=indoor|outdoor and ?seats=N (minimum capacity).
+  - Screenshots 03_cbv_base.png and 07_cbv_base_empty.png.
+
+Fixed during review before merge:
+  - Branch was 11 commits behind main and missing the WCAG palette fix;
+    merged main in (one import conflict in views.py, resolved by keeping both).
+  - Filter block used class="filters"; base.html defines .filter (singular),
+    so the controls rendered unstyled. One character.
+  - The empty state was UNREACHABLE: 3 approved venues are indoor and 1 is
+    outdoor, so neither setting filter ever emptied the list and {% empty %}
+    could never be demonstrated. Added the ?seats=N filter, which is a real
+    product query and makes ?seats=25 return nothing.
+  - Context was missing `heading` and `subtitle`, and passed an `entity_name`
+    key the template contract does not use.
+
+Verified:
+  - manage.py check                        -> 0 issues
+  - /locations/                            200, 4 venues
+  - ?setting=indoor / outdoor              200, 3 / 1
+  - ?seats=8 / ?seats=13                   200, 3 / 1
+  - ?seats=25                              200, EMPTY STATE
+  - ?seats=banana                          200, EMPTY STATE (not a 500)
+  - template chain location_list -> entity_list -> base
+  - 1 SQL query; reflected ?seats= value HTML-escaped.
+
+--------------------------------------------------------------------------------
 WEEK 3  (w/c 2026-09-07)  -  feature/match-views  [Manojkumar]
 --------------------------------------------------------------------------------
 Done:
@@ -128,12 +161,17 @@ KIND B1 - Base Class-Based View (inherits django.views.View)         [GRADED]
   Owner    : Prathamesh Mulay (pmulay2)
   URL      : /locations/                 name="connect:location-list"
   Model    : CampusLocation
-  Template : connect/entity_list.html   (SHARED - also used by kind A2)
+  Template : connect/location_list.html, which extends the SHARED
+             connect/entity_list.html (also rendered by kind A2). The child
+             adds only the filter controls; the shared template is unmodified.
   Purpose  : List approved public meeting places with capacity, indoor/outdoor
              and how many matches each has hosted. Written as a base View with
              an explicit get() and a hand-written queryset, so the work a
-             generic view does for you is visible.
-  Status   : TODO - stub committed on main
+             generic view does for you is visible. Filterable by ?setting=
+             (indoor/outdoor) and ?seats=N, which answers the real product
+             question "which venues can seat a squad of N?" and is how the
+             empty state is reached without deleting data.
+  Status   : DONE - 2026-09-20
 
 --------------------------------------------------------------------------------
 KIND B2 - Generic Class-Based View (ListView / DetailView)           [GRADED]
@@ -182,7 +220,18 @@ HttpResponse vs render()
 
 Base CBV vs Generic CBV
 -----------------------
-  [Prathamesh] TODO - what did you have to write by hand in get()?
+  [Prathamesh] Writing the base View made visible everything ListView does
+               silently. In get() I had to build the queryset myself, apply
+               each filter by hand, name the context keys, choose the template
+               path, and shape every row - four jobs ListView infers from a
+               single `model =` attribute. It is more code for the same page.
+               What I gained was control: the filters interact (setting plus
+               seats), the empty-state message changes depending on WHICH
+               filter emptied the list, and the rows are pre-shaped so a
+               model-agnostic template can render them. ListView would have
+               fought me on all three. My rule now: generic view when the page
+               is a plain list of one model; base View when the response
+               depends on more than the model.
   [Kritika]    TODO - what did ListView give you for free, and where did it
                       get in the way when you added the ?college= filter?
 
