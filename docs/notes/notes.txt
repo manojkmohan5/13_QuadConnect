@@ -58,6 +58,40 @@ Next:
   - Four feature branches, one per member. See docs/build_tasks/.
 
 --------------------------------------------------------------------------------
+WEEK 4  (w/c 2026-09-14)  -  feature/feedback-views  [Dhruv]
+--------------------------------------------------------------------------------
+Done:
+  - feedback_summary FBV using loader.get_template() + HttpResponse, with
+    request passed to .render(). Does not call render().
+  - _feedback_summary_data() helper doing the whole aggregation in a single
+    aggregate() with Count(..., filter=Q(...)) rather than four queries.
+  - feedback_summary.html extending base.html: three stat cards, a 1-5 star
+    distribution with percentage bars, the four enjoyment factors, and an
+    explicit privacy statement.
+  - Screenshot 01_fbv_httpresponse.png.
+
+Fixed during review before merge:
+  - CRITICAL: the template was committed as "feedback_summary.html;" with a
+    trailing semicolon in the FILENAME, while the view loaded
+    "connect/feedback_summary.html". /feedback/summary/ returned a 500
+    (TemplateDoesNotExist). This had already been merged, so main was broken.
+    Renamed the file.
+  - notes.txt had not been updated: KIND A1 still said TODO and the
+    HttpResponse vs render() reflection was blank.
+  - No screenshot had been taken.
+
+Verified:
+  - manage.py check                     -> 0 issues
+  - /feedback/summary/                  200 (was 500)
+  - every other route                   200 / 302
+  - loader.get_template + HttpResponse, render() NOT used
+  - request passed to .render()
+  - privacy: 2 stored private_note values, neither rendered; no per-student
+    attribution; privacy statement present on the page
+  - 2 SQL queries
+  - empty state renders (forced in a rolled-back transaction, db untouched)
+
+--------------------------------------------------------------------------------
 WEEK 4  (w/c 2026-09-14)  -  feature/location-views  [Prathamesh]
 --------------------------------------------------------------------------------
 Done:
@@ -128,13 +162,16 @@ KIND A1 - Function-Based View returning HttpResponse manually        [GRADED]
   URL      : /feedback/summary/          name="connect:feedback-summary"
   Model    : ExperienceFeedback
   Template : connect/feedback_summary.html, loaded with loader.get_template()
-             and wrapped in HttpResponse (NOT render()).
+             and wrapped in HttpResponse (NOT render()). request is passed as
+             the second argument to .render() so context processors run.
   Purpose  : Aggregate private post-experience feedback into a single
-             read-only summary - average rating, how many students opted in to
-             stay connected, and which enjoyment factors came up most. Built
-             with the manual HttpResponse path to show the request/response
-             cycle without the render() shortcut hiding it.
-  Status   : TODO - stub committed on main
+             read-only summary - total submissions, average rating, a 1-5 star
+             distribution with percentage bars, the four enjoyment factors,
+             and how many students opted in to stay connected. Aggregate only:
+             no private_note and no per-student attribution, ever. Built with
+             the manual HttpResponse path to show the request/response cycle
+             without the render() shortcut hiding it.
+  Status   : DONE - 2026-09-20
 
 --------------------------------------------------------------------------------
 KIND A2 - Function-Based View using the render() shortcut            [GRADED]
@@ -205,7 +242,24 @@ SUPPORTING (not graded)
 
 HttpResponse vs render()
 ------------------------
-  [Dhruv]      TODO - when did the manual path help, and what did it cost?
+  [Dhruv]      The manual path made the request/response cycle visible.
+               render() is really three steps welded together: load the
+               template, render it against a RequestContext, wrap the string
+               in an HttpResponse. Doing it by hand, I had to remember to pass
+               `request` into .render() - and if you forget, the page still
+               renders, it just silently loses the context processors. That is
+               a nasty failure mode render() cannot have.
+               What it cost: three extra lines and one real outage. Because
+               the template is named in a string rather than by a shortcut,
+               a typo in the filename is not caught until the view is actually
+               requested - mine shipped with a trailing semicolon in the
+               filename and returned a 500 until it was caught in review.
+               render() would have failed identically, but the lesson stands:
+               with the manual path there is nothing between you and the
+               filesystem, so LOAD THE PAGE before you call it done.
+               I would choose the manual path when the response is not a
+               plain 200 HTML page - a custom status code, a non-HTML content
+               type, or a streamed response.
   [Manojkumar] render() collapses three steps into one: it builds a
                RequestContext, loads the template, renders it, and wraps the
                result in an HttpResponse. Dhruv's view does the same work in

@@ -655,9 +655,27 @@ template chain `location_list.html → entity_list.html → base.html` ·
 
 **Decisions that differ from the build task:** None.
 
-**Gotchas for the next person:** The feedback summary must remain aggregate-only; individual ratings and `private_note` values must not be displayed.
+**Gotchas for the next person:**
+- The feedback summary must remain aggregate-only; individual ratings and
+  `private_note` values must never be displayed.
+- **`loader.get_template()` names the template in a string, so a typo in the
+  filename is not caught by `manage.py check`, by any import, or by any
+  linter — only by requesting the page.** Load the page in a browser before
+  calling a view done. `check` passing means nothing here.
 
-**Verified:** View uses `loader.get_template()` and `HttpResponse`; template extends `base.html`; no individual feedback or private notes are displayed.
+**Found in review — the page returned a 500.** The template was committed as
+`feedback_summary.html;` — a **trailing semicolon in the filename** — while the
+view loaded `connect/feedback_summary.html`. `/feedback/summary/` raised
+`TemplateDoesNotExist`. This had already been merged, so `main` was broken
+until the file was renamed. Also completed in review: `notes.txt` (kind A1 was
+still `TODO`, reflection blank) and the missing screenshot.
+
+**Verified after the fix:** `manage.py check` 0 issues · `/feedback/summary/`
+**200** (was 500) · every other route 200/302 · uses `loader.get_template` +
+`HttpResponse`, `render()` not called · `request` passed to `.render()` ·
+privacy holds — 2 stored `private_note` values, neither rendered, no
+per-student attribution, privacy statement on the page · 2 SQL queries ·
+empty state renders (forced in a rolled-back transaction).
 
 ---
 
@@ -696,15 +714,20 @@ template chain `location_list.html → entity_list.html → base.html` ·
 5. **`UniqueConstraint` cannot span relations** (see §6).
 6. **`private_note` is private.** Never render it, and never show per-student
    ratings. Aggregate only.
-7. **Check colour contrast before committing a new colour.** Five pairs in
+7. **`manage.py check` does not open your page.** A template referenced by
+   string — `loader.get_template("...")`, `render(request, "...")`,
+   `template_name` — is only resolved at request time. A filename typo passes
+   every static check and 500s in the browser. One shipped to `main` as
+   `feedback_summary.html;`. **Always load the page.**
+8. **Check colour contrast before committing a new colour.** Five pairs in
    the original palette sat between 4.33:1 and 4.47:1 — under the 4.5:1 AA
    minimum, and invisible to the eye. Compute the ratio; do not judge it.
-8. **PyMuPDF `insert_textbox` renders nothing** when the rect is too short —
+9. **PyMuPDF `insert_textbox` renders nothing** when the rect is too short —
    silently, no exception. Relevant if anyone regenerates the wireframe PNGs.
-9. **IEEEtran `\maketitle` cannot run mid-document** — the P1-A1 paper was two
+10. **IEEEtran `\maketitle` cannot run mid-document** — the P1-A1 paper was two
    documents merged with `pypdf`. Its LaTeX sources were deleted; changing
    those PDFs means rebuilding from scratch.
-10. **8 models vs P1-A1's "recommended 3–5."** The binding rule was a minimum of
+11. **8 models vs P1-A1's "recommended 3–5."** The binding rule was a minimum of
    2 per feature. Do not "fix" this by collapsing models — it would force
    nullable columns meaningless for half the rows.
 
