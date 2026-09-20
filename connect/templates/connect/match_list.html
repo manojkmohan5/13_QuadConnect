@@ -1,0 +1,26 @@
+{% extends "connect/entity_list.html" %}
+{% comment %}
+Matches page.
+
+Everything about rendering a list - the loop, the row layout, the empty
+state - is inherited from entity_list.html, which is shared with the campus
+locations page. This template adds only the week filter, so the shared
+template never has to know that matches have weeks.
+{% endcomment %}
+
+{% block filters %}
+  <form class="filter" method="get" action="{% url 'connect:match-list' %}">
+    <label for="week">Week starting</label>
+    <input type="date" id="week" name="week" value="{{ selected_week }}"
+           list="known-weeks">
+    <datalist id="known-weeks">
+      {% for week in available_weeks %}
+        <option value="{{ week|date:'Y-m-d' }}"></option>
+      {% endfor %}
+    </datalist>
+    <button type="submit">Filter</button>
+    {% if selected_week %}
+      <a class="clear" href="{% url 'connect:match-list' %}">Clear filter</a>
+    {% endif %}
+  </form>
+{% endblock %}

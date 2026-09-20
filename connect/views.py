@@ -15,9 +15,12 @@ broken mid-integration. Each owner replaces their own stub on their own
 feature branch; nobody needs to touch base.html or another owner's section.
 """
 
+from datetime import date
+
 from django.db.models import Avg, Count
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils.timezone import localtime
 from django.views import View
 
 from .models import (
@@ -81,13 +84,102 @@ def feedback_summary(request):
 # ===========================================================================
 
 
+def _match_rows(matches):
+    """Shape a Match queryset into rows for the shared list template.
+
+    `entity_list.html` knows nothing about any model - it renders plain
+    dicts. Turning a Match into one of those dicts is the view's job, which
+    is what lets the same template serve this page and the campus-location
+    page from two different view styles.
+
+    Expects the queryset to be annotated with `headcount`.
+    """
+    rows = []
+    for match in matches:
+        activity = (match.suggested_activity.name
+                    if match.suggested_activity else "No activity suggested")
+        # localtime() converts the stored UTC value to America/Chicago.
+        # %-I is glibc-only, so strip the leading zero by hand for Windows.
+        when = localtime(match.scheduled_for)
+        when_str = (when.strftime("%a %d %b, ")
+                    + when.strftime("%I:%M %p").lstrip("0"))
+        rows.append({
+            "title": match.get_connection_type_display(),
+            "subtitle": f"{match.location.name} - "
+                        f"{match.location.street_address}",
+            "meta": [
+                when_str,
+                f"{match.headcount} student"
+                f"{'' if match.headcount == 1 else 's'}",
+                activity,
+                f"Code {match.check_in_code}",
+            ],
+            "badge": match.get_status_display(),
+        })
+    return rows
+
+
 def match_list(request):
-    """STUB - replace on branch feature/match-views."""
-    return HttpResponse(
-        "<h1>Matches</h1><p>Not implemented yet. "
-        "Owner: Manojkumar Mohankumar.</p>",
-        content_type="text/html",
+    """List every weekly scheduled experience, optionally filtered by week.
+
+    The graded `render()` view: it queries the model, builds a context
+    dictionary, and hands both to the render() shortcut. Compare with
+    `feedback_summary` above, which does the same job the long way.
+    """
+    raw_week = (request.GET.get("week") or "").strip()
+    selected_week, bad_date = None, False
+
+    if raw_week:
+        try:
+            selected_week = date.fromisoformat(raw_week)
+        except ValueError:
+            # A hand-typed query string should not produce a 500.
+            bad_date = True
+
+    matches = (
+        Match.objects
+        .select_related("location", "suggested_activity")
+        .annotate(headcount=Count("participants"))
     )
+    if selected_week:
+        matches = matches.filter(week_start=selected_week)
+    elif bad_date:
+        matches = matches.none()
+
+    # Empty states differ by cause: an unreadable date, a week with nothing
+    # scheduled, and a database with no matches at all are three different
+    # problems and deserve three different messages.
+    if bad_date:
+        empty_title = "Could not read that date"
+        empty_message = (f'"{raw_week}" is not a date. Use the format '
+                         f'YYYY-MM-DD, for example 2026-09-07.')
+    elif selected_week:
+        empty_title = f"No matches for the week of {selected_week:%d %b %Y}"
+        empty_message = ("No experience was scheduled that week. Clear the "
+                         "filter to see every match.")
+    else:
+        empty_title = "No matches scheduled yet"
+        empty_message = ("Matches appear here once a weekly matching cycle "
+                         "runs. Run python manage.py seed_demo_data to load "
+                         "sample data.")
+
+    context = {
+        "page_title": "Matches - QuadConnect",
+        "heading": "Weekly matches",
+        "subtitle": "Every scheduled experience, newest cycle first. "
+                    "Each match is one real meeting at an approved campus "
+                    "location.",
+        "items": _match_rows(matches),
+        "empty_title": empty_title,
+        "empty_message": empty_message,
+        # For the filter form in match_list.html.
+        "selected_week": raw_week,
+        "available_weeks": (
+            Match.objects.order_by("-week_start")
+            .values_list("week_start", flat=True).distinct()
+        ),
+    }
+    return render(request, "connect/match_list.html", context)
 
 
 # ===========================================================================

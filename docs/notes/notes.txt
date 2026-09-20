@@ -57,6 +57,28 @@ Verified:
 Next:
   - Four feature branches, one per member. See docs/build_tasks/.
 
+--------------------------------------------------------------------------------
+WEEK 3  (w/c 2026-09-07)  -  feature/match-views  [Manojkumar]
+--------------------------------------------------------------------------------
+Done:
+  - match_list FBV using render(), with a ?week=YYYY-MM-DD filter.
+  - connect/match_list.html extends the shared entity_list.html and overrides
+    only {% block filters %}, so the shared template was not modified at all.
+  - Three distinct empty states: unreadable date, valid week with nothing
+    scheduled, and no matches in the database at all.
+  - Screenshot docs/screenshots/02_fbv_render.png.
+
+Verified:
+  - manage.py check                              -> 0 issues
+  - /matches/                     200, 3 rows
+  - /matches/?week=2026-09-07     200, 2 rows
+  - /matches/?week=2026-08-31     200, 1 row
+  - /matches/?week=1999-01-01     200, empty state "No matches for the week of"
+  - /matches/?week=banana         200, empty state "Could not read that date"
+                                  (not a 500)
+  - template chain: match_list.html -> entity_list.html -> base.html
+  - 2 SQL queries for 3 matches; count does not scale with rows.
+
 
 ================================================================================
 2. VIEW REGISTER   (P1-A2 Section 2 - name, type and purpose of each view)
@@ -88,12 +110,16 @@ KIND A2 - Function-Based View using the render() shortcut            [GRADED]
   Owner    : Manojkumar Mohankumar (mm240)
   URL      : /matches/                   name="connect:match-list"
   Model    : Match
-  Template : connect/entity_list.html   (SHARED - also used by kind B1)
+  Template : connect/match_list.html, which extends the SHARED
+             connect/entity_list.html (also rendered by kind B1). The shared
+             template owns the loop, the row layout and the empty state; the
+             child adds only the week filter form, so the shared template
+             never has to know that matches have weeks.
   Purpose  : List every weekly scheduled experience with its location,
              activity, participant count and status, filterable by week via
              ?week=YYYY-MM-DD. The filter is what makes the empty state
              reachable without deleting data.
-  Status   : TODO - stub committed on main
+  Status   : DONE - 2026-09-09
 
 --------------------------------------------------------------------------------
 KIND B1 - Base Class-Based View (inherits django.views.View)         [GRADED]
@@ -142,7 +168,17 @@ SUPPORTING (not graded)
 HttpResponse vs render()
 ------------------------
   [Dhruv]      TODO - when did the manual path help, and what did it cost?
-  [Manojkumar] TODO - what did render() save you compared with the manual path?
+  [Manojkumar] render() collapses three steps into one: it builds a
+               RequestContext, loads the template, renders it, and wraps the
+               result in an HttpResponse. Dhruv's view does the same work in
+               four explicit lines. In practice the shortcut mattered less
+               for the typing it saved than for what it prevents forgetting -
+               with loader.get_template() you must remember to pass `request`
+               into .render(), and if you skip it the page still renders but
+               the context processors silently do not run. render() cannot be
+               got wrong that way. I would reach for the manual path only
+               when the response is not a plain 200 HTML page: a custom
+               status code, a non-HTML content type, or a streamed response.
 
 Base CBV vs Generic CBV
 -----------------------

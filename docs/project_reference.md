@@ -40,8 +40,8 @@ link resolves today, and each developer replaces exactly one stub.
 | Owner | Branch | View kind | Route | Status |
 |---|---|---|---|---|
 | Kritika Agrawal | `feature/profile-views` | Generic CBV | `/students/` | ⬜ NOT STARTED |
-| Manojkumar Mohankumar | `feature/match-views` | FBV `render()` | `/matches/` | ⬜ NOT STARTED |
-| Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ⬜ NOT STARTED |
+| Manojkumar Mohankumar | `feature/match-views` | FBV `render()` | `/matches/` | ✅ DONE — `match_list` with `?week=` filter, renders the shared list template |
+| Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ⬜ DONE - Locations |
 | Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ⬜ NOT STARTED |
 
 **Whoever completes a branch:** updating this file is
@@ -527,6 +527,30 @@ visible when the branches came together — conflicts hit, behaviour that broke
 on integration, decisions reversed. That merge entry is the part that is
 easiest to skip and most valuable later.
 
+### `main` — accessibility fix · 2026-09-09 · Manojkumar
+**Shipped:** shared palette now meets WCAG 2.1 AA, plus explicit focus rings.
+
+**Files changed:** `connect/templates/connect/base.html` only.
+
+**Why:** an audit of the rendered colour combinations found five text pairs
+under the 4.5:1 minimum for normal text — `--muted` on the page background
+(4.47:1, used by subtitles, section headers and the footer), `--accent` on the
+page background (4.46:1, links), and `--accent` on `--accent-soft` (4.33:1,
+the status badges). All were marginal, none was visible by eye, all were
+failures. Darkened `--muted` `#6b7280`→`#666e7b` and `--accent`
+`#c8461e`→`#c0421c`; everything now measures 4.67:1 or better.
+
+Also added `:focus-visible` outlines — the browser default ring is easy to
+lose against the card background and 2.4.7 requires focus to be visible at
+all times.
+
+**Gotchas for the next person:** this lands in `base.html`, which feature
+branches must not edit. Merge `main` into your branch to pick it up. If you
+introduce a new colour, check it before you commit — the pairs that failed
+were all "looks fine" greys and oranges.
+
+**Verified:** all seven rendered pairs ≥4.67:1 · `manage.py check` 0 issues.
+
 ### `main` — P1-A2 scaffold · 2026-09-09 · Manojkumar
 Repo initialised as `13_QuadConnect`, 15 commits. Flattened so the repo root
 is the Django project root. Split settings into a package and fixed `BASE_DIR`
@@ -543,11 +567,56 @@ and the README. Verified from a clean clone: migrate, seed, dev check, prod
 *Not started. Replace this block when done: what shipped, files touched,
 decisions that differ from the build task, anything the next person needs.*
 
-### ⬜ `feature/match-views` — Manojkumar
-*Not started.*
+### ✅ `feature/match-views` — Manojkumar Mohankumar — 2026-09-09
+**Shipped:** `/matches/` lists every scheduled experience with location,
+activity, headcount and status, filterable by `?week=YYYY-MM-DD`.
+
+**Files added:** `connect/templates/connect/match_list.html` (25 lines —
+extends `entity_list.html`, overrides only `{% block filters %}`);
+`docs/screenshots/02_fbv_render.png`.
+
+**Files changed:** `connect/views.py` — Section A2 only: added `_match_rows()`
+helper and the real `match_list` view, plus `date` and `localtime` imports.
+`connect/urls.py` untouched (the stub already pointed at `views.match_list`).
+`docs/notes/notes.txt` — view register, reflection, weekly log.
+
+**Decisions that differ from the build task:** none in substance. Took
+Option A for the filter (child template extending the shared one) as the task
+recommended. Used `<input type="date">` rather than a `<select>` of known
+weeks, because the native picker is free and a hand-typed query string still
+has to be handled either way.
+
+**Gotchas for the next person:**
+- `strftime("%-I")` to strip a leading zero from the hour is **glibc-only and
+  crashes on Windows**. Use `.strftime("%I:%M %p").lstrip("0")` instead. This
+  bit during development.
+- `entity_list.html` exposes `{% block filters %}`, so a view can add filter
+  UI by extending it rather than editing it. Prathamesh should do the same
+  for `?setting=` — neither of us needs to modify the shared template.
+- Times are stored UTC and localised to America/Chicago by `localtime()`. A
+  raw shell dump shows 19:00 where the page correctly shows 2:00 PM. Not a
+  bug.
+
+**Verified:** `manage.py check` 0 issues · `/matches/` 200 with 3 rows ·
+`?week=2026-09-07` 2 rows · `?week=2026-08-31` 1 row · `?week=1999-01-01` and
+`?week=banana` both 200 with *different* empty-state messages, neither a 500 ·
+template chain `match_list.html → entity_list.html → base.html` ·
+2 SQL queries for 3 matches, flat as rows grow · reflected `?week=` value is
+HTML-escaped, no XSS · no 5xx on empty, whitespace, impossible-date,
+duplicated or path-traversal query values.
+
+**Found during the post-build audit:** the shared palette failed WCAG 2.1 AA
+contrast in five places. Fixed on `main` (see the entry below) and merged in,
+which is why this branch contains a merge commit.
 
 ### ⬜ `feature/location-views` — Prathamesh
-*Not started.*
+- Implemented CampusLocationListView using Django's base View class.
+- Added manual CampusLocation queryset with approved-location filtering
+  and match-count annotation.
+- Added indoor/outdoor filtering through location_list.html extending
+  the shared entity_list.html template.
+- Wired the /locations/ route using CampusLocationListView.as_view().
+- Added required Base CBV screenshot and reflection notes.
 
 ### ⬜ `feature/feedback-views` — Dhruv
 *Not started.*
@@ -589,12 +658,15 @@ decisions that differ from the build task, anything the next person needs.*
 5. **`UniqueConstraint` cannot span relations** (see §6).
 6. **`private_note` is private.** Never render it, and never show per-student
    ratings. Aggregate only.
-7. **PyMuPDF `insert_textbox` renders nothing** when the rect is too short —
+7. **Check colour contrast before committing a new colour.** Five pairs in
+   the original palette sat between 4.33:1 and 4.47:1 — under the 4.5:1 AA
+   minimum, and invisible to the eye. Compute the ratio; do not judge it.
+8. **PyMuPDF `insert_textbox` renders nothing** when the rect is too short —
    silently, no exception. Relevant if anyone regenerates the wireframe PNGs.
-8. **IEEEtran `\maketitle` cannot run mid-document** — the P1-A1 paper was two
+9. **IEEEtran `\maketitle` cannot run mid-document** — the P1-A1 paper was two
    documents merged with `pypdf`. Its LaTeX sources were deleted; changing
    those PDFs means rebuilding from scratch.
-9. **8 models vs P1-A1's "recommended 3–5."** The binding rule was a minimum of
+10. **8 models vs P1-A1's "recommended 3–5."** The binding rule was a minimum of
    2 per feature. Do not "fix" this by collapsing models — it would force
    nullable columns meaningless for half the rows.
 
