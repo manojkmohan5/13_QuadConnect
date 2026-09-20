@@ -42,7 +42,7 @@ link resolves today, and each developer replaces exactly one stub.
 | Kritika Agrawal | `feature/profile-views` | Generic CBV | `/students/` | ⬜ NOT STARTED |
 | Manojkumar Mohankumar | `feature/match-views` | FBV `render()` | `/matches/` | ✅ DONE — `match_list` with `?week=` filter, renders the shared list template |
 | Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ✅ DONE — `CampusLocationListView` base CBV with setting + seats filters, reuses the shared list template |
-| Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ⬜ NOT STARTED |
+| Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ✅ DONE — aggregate feedback summary with rating distribution, enjoyment metrics, and connection preferences |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -645,8 +645,19 @@ template chain `location_list.html → entity_list.html → base.html` ·
 1 SQL query · reflected `?seats=` value HTML-escaped · `entity_list.html` and
 `base.html` unmodified by this branch.
 
-### ⬜ `feature/feedback-views` — Dhruv
-*Not started.*
+### ✅ `feature/feedback-views` - Dhruv Thaker - 2026-09-20
+
+**Shipped:** Implemented the aggregate feedback summary at `/feedback/summary/`, including total submissions, average rating, rating distribution, enjoyment metrics, and stay-connected preferences.
+
+**Files added:** `connect/templates/connect/feedback_summary.html`.
+
+**Files changed:** `connect/views.py` — replaced the feedback stub with an `HttpResponse` FBV using `loader.get_template()` and added aggregate feedback calculations.
+
+**Decisions that differ from the build task:** None.
+
+**Gotchas for the next person:** The feedback summary must remain aggregate-only; individual ratings and `private_note` values must not be displayed.
+
+**Verified:** View uses `loader.get_template()` and `HttpResponse`; template extends `base.html`; no individual feedback or private notes are displayed.
 
 ---
 
