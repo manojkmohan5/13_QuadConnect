@@ -17,9 +17,10 @@ feature branch; nobody needs to touch base.html or another owner's section.
 
 from datetime import date
 
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Q
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.template import loader
 from django.utils.timezone import localtime
 from django.views import View
 
@@ -68,11 +69,80 @@ def home(request):
 # ===========================================================================
 
 
+def _feedback_summary_data():
+    """Build aggregate data for the private feedback summary."""
+
+    summary = ExperienceFeedback.objects.aggregate(
+        total=Count("id"),
+        average_rating=Avg("rating"),
+        wants_connection=Count(
+            "id",
+            filter=Q(wants_to_stay_connected=True),
+        ),
+        conversation=Count(
+            "id",
+            filter=Q(enjoyed_conversation=True),
+        ),
+        shared_interests=Count(
+            "id",
+            filter=Q(enjoyed_shared_interests=True),
+        ),
+        activity=Count(
+            "id",
+            filter=Q(enjoyed_activity=True),
+        ),
+        comfortable=Count(
+            "id",
+            filter=Q(felt_comfortable=True),
+        ),
+    )
+
+    total = summary["total"]
+
+    if total:
+        counts_by_rating = dict(
+            ExperienceFeedback.objects
+            .values("rating")
+            .annotate(count=Count("id"))
+            .values_list("rating", "count")
+        )
+
+        distribution = [
+            (
+                stars,
+                counts_by_rating.get(stars, 0),
+                round(counts_by_rating.get(stars, 0) * 100 / total, 1),
+            )
+            for stars in range(1, 6)
+        ]
+    else:
+        distribution = []
+
+    enjoyment = [
+        ("Enjoyed conversation", summary["conversation"]),
+        ("Enjoyed shared interests", summary["shared_interests"]),
+        ("Enjoyed the activity", summary["activity"]),
+        ("Felt comfortable", summary["comfortable"]),
+    ]
+
+    return {
+        "total": total,
+        "average_rating": summary["average_rating"],
+        "distribution": distribution,
+        "enjoyment": enjoyment,
+        "wants_connection": summary["wants_connection"],
+    }
+
+
 def feedback_summary(request):
-    """STUB - replace on branch feature/feedback-views."""
+    """Show an aggregate-only summary of private experience feedback."""
+
+    context = _feedback_summary_data()
+
+    template = loader.get_template("connect/feedback_summary.html")
+
     return HttpResponse(
-        "<h1>Feedback summary</h1>"
-        "<p>Not implemented yet. Owner: Dhruv Thaker.</p>",
+        template.render(context, request),
         content_type="text/html",
     )
 
