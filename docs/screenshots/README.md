@@ -11,6 +11,7 @@ including the address bar**, so the URL is part of the proof.
 | `04_cbv_generic.png` | `/students/` | Generic CBV | Kritika |
 | `05_list_normal.png` | `/students/` | List, populated | Kritika |
 | `06_list_empty.png` | `/students/?college=Nonexistent` | Empty state | Kritika |
+| `07_cbv_base_empty.png` | `/locations/?seats=25` | Empty state, base CBV | Prathamesh |
 
 Files 05 and 06 are the Section 3 evidence: the same template rendering a
 populated list and its `{% empty %}` branch.
