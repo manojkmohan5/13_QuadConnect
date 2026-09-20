@@ -1,0 +1,9 @@
+{% extends "connect/entity_list.html" %}
+
+{% block filters %}
+<div class="filters">
+    <a href="{% url 'connect:location-list' %}">All</a>
+    <a href="?setting=indoor">Indoor</a>
+    <a href="?setting=outdoor">Outdoor</a>
+</div>
+{% endblock %}

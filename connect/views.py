@@ -172,7 +172,7 @@ class CampusLocationListView(View):
             "empty_message": empty_message,
         }
 
-        return render(request, "connect/entity_list.html", context)
+        return render(request, "connect/location_list.html", context)
 
 
 # ===========================================================================
