@@ -221,7 +221,21 @@ class CampusLocationListView(View):
 
     def get(self, request):
         setting = request.GET.get("setting", "").strip().lower()
+        raw_seats = (request.GET.get("seats") or "").strip()
 
+        # "Which venues can seat a squad of N?" is a real product question:
+        # Squad Connect groups are 4-8 students, so a venue that seats 6
+        # cannot host all of them. A hand-typed value must not 500.
+        min_seats, bad_seats = None, False
+        if raw_seats:
+            try:
+                min_seats = int(raw_seats)
+            except ValueError:
+                bad_seats = True
+
+        # Only approved venues are ever schedulable. Unapproved rows exist so
+        # a venue can be retired without losing the history of matches held
+        # there - see docs/project_reference.md section 6.
         queryset = (
             CampusLocation.objects.annotate(
                 match_count=Count("matches")
@@ -235,11 +249,26 @@ class CampusLocationListView(View):
         elif setting == "outdoor":
             queryset = queryset.filter(is_indoor=False)
 
+        if min_seats is not None:
+            queryset = queryset.filter(capacity__gte=min_seats)
+        elif bad_seats:
+            queryset = queryset.none()
+
         items = self._build_items(queryset)
 
-        if items:
-            empty_title = ""
-            empty_message = ""
+        # Empty states differ by cause, so the reader learns what to change.
+        if bad_seats:
+            empty_title = "Could not read that group size"
+            empty_message = (
+                f'"{raw_seats}" is not a number. Enter a whole number of '
+                f"students, for example 8."
+            )
+        elif min_seats is not None:
+            empty_title = f"No approved venue seats {min_seats} students"
+            empty_message = (
+                "The largest approved venue is smaller than that group. "
+                "Try a smaller group size, or clear the filter."
+            )
         elif setting == "indoor":
             empty_title = "No indoor venues approved"
             empty_message = (
@@ -253,15 +282,23 @@ class CampusLocationListView(View):
         else:
             empty_title = "No approved campus locations"
             empty_message = (
-                "Matches cannot be scheduled until a venue is approved."
+                "Matches cannot be scheduled until a venue is approved. "
+                "Run python manage.py seed_demo_data to load sample venues."
             )
 
         context = {
-            "page_title": "Campus Locations",
-            "entity_name": "Campus Locations",
+            "page_title": "Campus locations - QuadConnect",
+            "heading": "Approved campus locations",
+            "subtitle": (
+                "Only approved public venues are listed. Every QuadConnect "
+                "match is scheduled at one of these."
+            ),
             "items": items,
             "empty_title": empty_title,
             "empty_message": empty_message,
+            # For the filter controls in location_list.html.
+            "selected_setting": setting,
+            "selected_seats": raw_seats,
         }
 
         return render(request, "connect/location_list.html", context)
