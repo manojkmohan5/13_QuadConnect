@@ -645,7 +645,7 @@ template chain `location_list.html → entity_list.html → base.html` ·
 1 SQL query · reflected `?seats=` value HTML-escaped · `entity_list.html` and
 `base.html` unmodified by this branch.
 
-### DONE `feature/feedback-views` - Dhruv Thaker - 2026-09-20
+### ✅ `feature/feedback-views` - Dhruv Thaker - 2026-09-20
 
 **Shipped:** Implemented the aggregate feedback summary at `/feedback/summary/`, including total submissions, average rating, rating distribution, enjoyment metrics, and stay-connected preferences.
 
