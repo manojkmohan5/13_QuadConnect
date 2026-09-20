@@ -1,0 +1,96 @@
+{% extends "connect/base.html" %}
+
+{% block title %}Feedback Summary - QuadConnect{% endblock %}
+
+{% block heading %}Feedback summary{% endblock %}
+
+{% block subtitle %}
+<p class="sub">
+  An aggregate view of post-experience feedback. Individual responses remain private.
+</p>
+{% endblock %}
+
+{% block content %}
+
+<div class="grid">
+
+  <div class="card stat">
+    <div class="n">{{ total }}</div>
+    <div class="l">Feedback submissions</div>
+  </div>
+
+  <div class="card stat">
+    <div class="n">
+      {% if average_rating %}
+        {{ average_rating|floatformat:1 }} / 5
+      {% else %}
+        —
+      {% endif %}
+    </div>
+    <div class="l">Average rating</div>
+  </div>
+
+  <div class="card stat">
+    <div class="n">{{ wants_connection }}</div>
+    <div class="l">Want to stay connected</div>
+  </div>
+
+</div>
+
+<h2 class="section">Rating distribution</h2>
+
+{% for stars, count, percent in distribution %}
+<div class="card" style="margin-bottom: 10px;">
+  <div class="row">
+    <div>
+      <div class="title">
+        {{ stars }} star{{ stars|pluralize }}
+      </div>
+      <div class="meta">
+        {{ count }} response{{ count|pluralize }}
+      </div>
+    </div>
+
+    <div class="badge">{{ percent }}%</div>
+  </div>
+
+  <div
+    style="margin-top: 10px; background: var(--line); height: 8px; border-radius: 999px;"
+    role="presentation"
+  >
+    <div
+      style="width: {{ percent }}%; background: var(--accent); height: 8px; border-radius: 999px;"
+      role="presentation"
+    ></div>
+  </div>
+</div>
+
+{% empty %}
+<div class="empty">
+  <div class="big">No feedback submitted yet</div>
+  <p>
+    Feedback will appear here once students complete a match and submit
+    their post-experience feedback.
+  </p>
+</div>
+{% endfor %}
+
+<h2 class="section">What students enjoyed</h2>
+
+<div class="grid">
+
+  {% for label, count in enjoyment %}
+  <div class="card stat">
+    <div class="n">{{ count }}</div>
+    <div class="l">{{ label }}</div>
+  </div>
+  {% endfor %}
+
+</div>
+
+<p class="meta" style="margin-top: 24px;">
+  Feedback is private and shown here only in aggregate.
+  Individual ratings and private notes are never displayed.
+</p>
+
+{% endblock %}
