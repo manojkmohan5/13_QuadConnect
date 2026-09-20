@@ -41,7 +41,7 @@ link resolves today, and each developer replaces exactly one stub.
 |---|---|---|---|---|
 | Kritika Agrawal | `feature/profile-views` | Generic CBV | `/students/` | ⬜ NOT STARTED |
 | Manojkumar Mohankumar | `feature/match-views` | FBV `render()` | `/matches/` | ✅ DONE — `match_list` with `?week=` filter, renders the shared list template |
-| Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ⬜ NOT STARTED |
+| Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ⬜ DONE - Locations |
 | Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ⬜ NOT STARTED |
 
 **Whoever completes a branch:** updating this file is
@@ -610,7 +610,13 @@ contrast in five places. Fixed on `main` (see the entry below) and merged in,
 which is why this branch contains a merge commit.
 
 ### ⬜ `feature/location-views` — Prathamesh
-*Not started.*
+- Implemented CampusLocationListView using Django's base View class.
+- Added manual CampusLocation queryset with approved-location filtering
+  and match-count annotation.
+- Added indoor/outdoor filtering through location_list.html extending
+  the shared entity_list.html template.
+- Wired the /locations/ route using CampusLocationListView.as_view().
+- Added required Base CBV screenshot and reflection notes.
 
 ### ⬜ `feature/feedback-views` — Dhruv
 *Not started.*
