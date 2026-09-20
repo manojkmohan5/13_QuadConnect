@@ -35,8 +35,11 @@ urlpatterns = [
 
     # --- Prathamesh Mulay - Base CBV -------------------------------------
     # Replace with CampusLocationListView.as_view()
-    path("locations/", views.campus_location_list_stub, name="location-list"),
-
+    path(
+        "locations/",
+        views.CampusLocationListView.as_view(),
+        name="location-list",
+    ),
     # --- Dhruv Thaker - HttpResponse FBV ---------------------------------
     path("feedback/summary/", views.feedback_summary, name="feedback-summary"),
 ]
