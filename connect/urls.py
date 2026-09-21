@@ -25,9 +25,9 @@ urlpatterns = [
     path("", views.home, name="home"),
 
     # --- Kritika Agrawal - Generic CBV -----------------------------------
-    # Replace with StudentProfileListView.as_view() / DetailView.as_view()
-    path("students/", views.student_profile_list_stub, name="student-list"),
-    path("students/<int:pk>/", views.student_profile_detail_stub,
+    path("students/", views.StudentProfileListView.as_view(),
+         name="student-list"),
+    path("students/<int:pk>/", views.StudentProfileDetailView.as_view(),
          name="student-detail"),
 
     # --- Manojkumar Mohankumar - render() FBV ----------------------------
