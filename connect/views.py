@@ -34,7 +34,6 @@ from .models import (
     StudentProfile,
 )
 
-
 # ===========================================================================
 # Home - shared dashboard (owned by main, do not claim as a graded view)
 # ===========================================================================
@@ -174,14 +173,14 @@ def _match_rows(matches):
         when = localtime(match.scheduled_for)
         when_str = (when.strftime("%a %d %b, ")
                     + when.strftime("%I:%M %p").lstrip("0"))
+        plural = "" if match.headcount == 1 else "s"
         rows.append({
             "title": match.get_connection_type_display(),
             "subtitle": f"{match.location.name} - "
                         f"{match.location.street_address}",
             "meta": [
                 when_str,
-                f"{match.headcount} student"
-                f"{'' if match.headcount == 1 else 's'}",
+                f"{match.headcount} student{plural}",
                 activity,
                 f"Code {match.check_in_code}",
             ],

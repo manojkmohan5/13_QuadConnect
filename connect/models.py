@@ -18,7 +18,6 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-
 # ---------------------------------------------------------------------------
 # Choice vocabularies. Kept as TextChoices rather than free text so that the
 # matching engine can compare preferences without normalising strings.

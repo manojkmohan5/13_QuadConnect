@@ -19,7 +19,6 @@ from .models import (
     StudentProfile,
 )
 
-
 # ---------------------------------------------------------------------------
 # Inlines - make relationships editable from the parent record.
 # ---------------------------------------------------------------------------
