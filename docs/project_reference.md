@@ -25,7 +25,7 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | **P1-A2** — Fullstack Development + GitHub Secrets (30 pts) |
+| **Assignment in flight** | **P1-A2** — Fullstack Development + GitHub Secrets (30 pts) — all four views merged |
 | **Last completed** | P1-A1 — Product + Data Models + UI/UX (35 pts) |
 | **`main` status** | Scaffold complete and verified. Dev **and** prod both boot clean. |
 | **What remains** | Four feature branches, one per developer. Then merge, screenshot, submit. |
@@ -39,7 +39,7 @@ link resolves today, and each developer replaces exactly one stub.
 
 | Owner | Branch | View kind | Route | Status |
 |---|---|---|---|---|
-| Kritika Agrawal | `feature/profile-views` | Generic CBV | `/students/` | ⬜ NOT STARTED |
+| Kritika Agrawal | `feature/profile-views` | Generic CBV | `/students/` | ✅ DONE — `StudentProfileListView` + `DetailView`, `?college=` filter, default template naming |
 | Manojkumar Mohankumar | `feature/match-views` | FBV `render()` | `/matches/` | ✅ DONE — `match_list` with `?week=` filter, renders the shared list template |
 | Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ✅ DONE — `CampusLocationListView` base CBV with setting + seats filters, reuses the shared list template |
 | Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ✅ DONE — aggregate feedback summary with rating distribution, enjoyment metrics, and connection preferences |
@@ -563,9 +563,43 @@ notes with the VIEW REGISTER, per-developer build tasks, screenshot manifest),
 and the README. Verified from a clean clone: migrate, seed, dev check, prod
 `check --deploy` all pass; all six routes return 200.
 
-### ⬜ `feature/profile-views` — Kritika
-*Not started. Replace this block when done: what shipped, files touched,
-decisions that differ from the build task, anything the next person needs.*
+### ✅ `feature/profile-views` — Kritika Agrawal — 2026-09-20
+**Shipped:** `/students/` lists the verified roster with college, connection
+preference, social energy and interest count, filterable by `?college=` and
+paginated at 10. `/students/<pk>/` shows one student's preferences,
+interests, availability and match history.
+
+**Files added:** `connect/templates/connect/studentprofile_list.html`,
+`connect/templates/connect/studentprofile_detail.html`,
+`docs/screenshots/04_cbv_generic.png`, `05_list_normal.png`,
+`06_list_empty.png`.
+
+**Files changed:** `connect/views.py` — Section B2 only: both stubs replaced
+with `StudentProfileListView` and `StudentProfileDetailView`.
+`connect/urls.py` — both routes to `.as_view()`. `docs/notes/notes.txt`.
+
+**Decisions that differ from the build task:** none. `template_name` is
+deliberately **not** set — the templates are found by Django's naming
+convention (`<app>/<model>_list.html`), which is what makes this view the
+counterpoint to Prathamesh's hand-written base CBV. Matches and locations set
+their template explicitly, so the project shows both conventions.
+
+**Gotchas for the next person:**
+- **`annotate()` silently breaks pagination.** Adding `Count(...)` puts a
+  `GROUP BY` on the query, and Django then drops `Meta.ordering` from a
+  grouped query. Pagination becomes non-deterministic — a row can appear on
+  two pages or none. Django only raises `UnorderedObjectListWarning`, not an
+  error, so it passes `manage.py check`. Always `.order_by()` explicitly
+  after an `annotate()` on a paginated list.
+- A generic CBV stops saving you much once the template needs context the
+  model does not carry: the filter goes in `get_queryset()`, the filter's own
+  UI state goes in `get_context_data()`, and both must call `super()`.
+
+**Verified:** `manage.py check` 0 issues **and no warnings** · `/students/`
+200 with 8 · `?college=Grainger` 3 · `?college=Nonexistent` 200 with the
+empty state · `/students/1/` 200 · `/students/9999/` **404** · templates
+resolved by convention · reflected `?college=` value HTML-escaped ·
+`queryset.ordered` is `True`.
 
 ### ✅ `feature/match-views` — Manojkumar Mohankumar — 2026-09-09
 **Shipped:** `/matches/` lists every scheduled experience with location,
@@ -714,20 +748,24 @@ empty state renders (forced in a rolled-back transaction).
 5. **`UniqueConstraint` cannot span relations** (see §6).
 6. **`private_note` is private.** Never render it, and never show per-student
    ratings. Aggregate only.
-7. **`manage.py check` does not open your page.** A template referenced by
+7. **`annotate()` drops `Meta.ordering` and breaks pagination.** A `Count`
+   annotation adds a `GROUP BY`, and Django ignores default ordering on a
+   grouped query. Paginated rows then repeat or vanish. It surfaces only as
+   `UnorderedObjectListWarning`. Always `.order_by()` after `annotate()`.
+8. **`manage.py check` does not open your page.** A template referenced by
    string — `loader.get_template("...")`, `render(request, "...")`,
    `template_name` — is only resolved at request time. A filename typo passes
    every static check and 500s in the browser. One shipped to `main` as
    `feedback_summary.html;`. **Always load the page.**
-8. **Check colour contrast before committing a new colour.** Five pairs in
+9. **Check colour contrast before committing a new colour.** Five pairs in
    the original palette sat between 4.33:1 and 4.47:1 — under the 4.5:1 AA
    minimum, and invisible to the eye. Compute the ratio; do not judge it.
-9. **PyMuPDF `insert_textbox` renders nothing** when the rect is too short —
+10. **PyMuPDF `insert_textbox` renders nothing** when the rect is too short —
    silently, no exception. Relevant if anyone regenerates the wireframe PNGs.
-10. **IEEEtran `\maketitle` cannot run mid-document** — the P1-A1 paper was two
+11. **IEEEtran `\maketitle` cannot run mid-document** — the P1-A1 paper was two
    documents merged with `pypdf`. Its LaTeX sources were deleted; changing
    those PDFs means rebuilding from scratch.
-11. **8 models vs P1-A1's "recommended 3–5."** The binding rule was a minimum of
+12. **8 models vs P1-A1's "recommended 3–5."** The binding rule was a minimum of
    2 per feature. Do not "fix" this by collapsing models — it would force
    nullable columns meaningless for half the rows.
 
