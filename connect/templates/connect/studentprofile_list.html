@@ -1,0 +1,98 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Student roster.
+
+The filename is not arbitrary: ListView looks for
+<app>/<model_name_lowercased>_list.html by convention, so naming this file
+studentprofile_list.html is what lets the view omit `template_name` entirely.
+The matches and locations pages set their template explicitly instead, so the
+project demonstrates both conventions.
+{% endcomment %}
+
+{% block title %}Students - QuadConnect{% endblock %}
+{% block heading %}Verified students{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    Every student who has completed UIUC SSO verification and onboarding.
+    {% if selected_college %}
+      Showing {{ page_obj.paginator.count }} of {{ total_count }}.
+    {% else %}
+      {{ total_count }} in total.
+    {% endif %}
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  <form class="filter" method="get" action="{% url 'connect:student-list' %}">
+    <label for="college">College contains</label>
+    <input type="text" id="college" name="college" list="known-colleges"
+           value="{{ selected_college }}" placeholder="e.g. Grainger">
+    <datalist id="known-colleges">
+      {% for college in colleges %}<option value="{{ college }}"></option>{% endfor %}
+    </datalist>
+    <button type="submit">Filter</button>
+    {% if selected_college %}
+      <a class="clear" href="{% url 'connect:student-list' %}">Clear filter</a>
+    {% endif %}
+  </form>
+
+  {% for student in students %}
+    <div class="card" style="margin-bottom:10px;">
+      <div class="row">
+        <div>
+          <div class="title">
+            <a href="{% url 'connect:student-detail' student.pk %}">
+              {{ student.full_name }}
+            </a>
+          </div>
+          <div class="subtitle">
+            {{ student.college }}{% if student.department %} &middot;
+            {{ student.department }}{% endif %}
+          </div>
+          <div class="meta">
+            <span>{{ student.net_id }}</span>
+            <span>{{ student.get_social_energy_display }}</span>
+            <span>{{ student.get_conversation_style_display }}</span>
+            <span>{{ student.interest_count }}
+              interest{{ student.interest_count|pluralize }}</span>
+          </div>
+        </div>
+        <span class="badge">{{ student.get_preferred_connection_display }}</span>
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty">
+      {% if selected_college %}
+        <div class="big">No students in a college matching
+          &ldquo;{{ selected_college }}&rdquo;</div>
+        <p>
+          No verified student has a college matching that text.
+          <a href="{% url 'connect:student-list' %}">Clear the filter</a>
+          to see all {{ total_count }} students.
+        </p>
+      {% else %}
+        <div class="big">No students yet</div>
+        <p>
+          Students appear here once they complete SSO verification and
+          onboarding. Run <code>python manage.py seed_demo_data</code> to load
+          the sample roster.
+        </p>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  {% if is_paginated %}
+    <div class="filter" style="margin-top:16px;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if selected_college %}&college={{ selected_college|urlencode }}{% endif %}">Previous</a>
+      {% endif %}
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if selected_college %}&college={{ selected_college|urlencode }}{% endif %}">Next</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+{% endblock %}
