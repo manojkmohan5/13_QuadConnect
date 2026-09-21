@@ -23,6 +23,7 @@ from django.shortcuts import render
 from django.template import loader
 from django.utils.timezone import localtime
 from django.views import View
+from django.views.generic import DetailView, ListView
 
 from .models import (
     CampusLocation,
@@ -382,20 +383,77 @@ class CampusLocationListView(View):
 # ===========================================================================
 
 
-def student_profile_list_stub(request):
-    """STUB - replace with StudentProfileListView on
-    branch feature/profile-views."""
-    return HttpResponse(
-        "<h1>Students</h1><p>Not implemented yet. Owner: Kritika Agrawal.</p>",
-        content_type="text/html",
-    )
+class StudentProfileListView(ListView):
+    """Browse the verified student roster, filterable by college.
+
+    The graded generic view. Setting `model` is enough for ListView to build
+    the queryset, name the context, paginate, and find
+    connect/studentprofile_list.html by its own naming convention - so no
+    `template_name` is set here on purpose. Compare with
+    `CampusLocationListView` above, which does all four by hand.
+    """
+
+    model = StudentProfile
+    context_object_name = "students"
+    paginate_by = 10
+
+    def get_queryset(self):
+        """Apply the optional ?college= filter on top of the default order.
+
+        The interest count is annotated rather than counted per row, so the
+        list costs the same number of queries whatever its length.
+        """
+        # annotate() adds a GROUP BY, and Django drops Meta.ordering from a
+        # grouped query - which makes pagination non-deterministic (a student
+        # can appear on two pages, or none). Re-apply the ordering explicitly.
+        queryset = StudentProfile.objects.annotate(
+            interest_count=Count("interest_links")
+        ).order_by("full_name", "net_id")
+        college = (self.request.GET.get("college") or "").strip()
+        if college:
+            queryset = queryset.filter(college__icontains=college)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """Add what the filter box and the empty state need to explain
+        themselves: the current filter, the colleges that actually exist,
+        and the unfiltered total."""
+        context = super().get_context_data(**kwargs)
+        context["selected_college"] = (
+            self.request.GET.get("college") or ""
+        ).strip()
+        context["colleges"] = (
+            StudentProfile.objects.order_by("college")
+            .values_list("college", flat=True)
+            .distinct()
+        )
+        context["total_count"] = StudentProfile.objects.count()
+        return context
 
 
-def student_profile_detail_stub(request, pk):
-    """STUB - replace with StudentProfileDetailView on
-    branch feature/profile-views."""
-    return HttpResponse(
-        f"<h1>Student {pk}</h1><p>Not implemented yet. "
-        f"Owner: Kritika Agrawal.</p>",
-        content_type="text/html",
-    )
+class StudentProfileDetailView(DetailView):
+    """One student's profile: preferences, interests, availability, history.
+
+    DetailView handles the primary-key lookup and the 404 for a missing
+    student, which is the other half of what the generic views buy you.
+    """
+
+    model = StudentProfile
+    context_object_name = "student"
+
+    def get_context_data(self, **kwargs):
+        """Prefetch the related rows the template walks, so the page costs a
+        fixed number of queries rather than one per interest."""
+        context = super().get_context_data(**kwargs)
+        student = self.object
+        context["interest_links"] = (
+            student.interest_links.select_related("interest")
+            .order_by("-is_primary", "interest__name")
+        )
+        context["slots"] = student.availability_slots.all()
+        context["participations"] = (
+            student.match_participations
+            .select_related("match", "match__location")
+            .order_by("-match__scheduled_for")
+        )
+        return context

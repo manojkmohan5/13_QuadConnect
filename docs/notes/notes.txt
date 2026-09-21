@@ -58,6 +58,38 @@ Next:
   - Four feature branches, one per member. See docs/build_tasks/.
 
 --------------------------------------------------------------------------------
+WEEK 4  (w/c 2026-09-14)  -  feature/profile-views  [Kritika]
+--------------------------------------------------------------------------------
+Done:
+  - StudentProfileListView (ListView): model, context_object_name="students",
+    paginate_by=10, ?college= filter in get_queryset(), and the filter box
+    context in get_context_data(). No template_name - the template is found
+    by Django's naming convention, which is the point of the exercise.
+  - StudentProfileDetailView (DetailView) with prefetched interests,
+    availability and match history; 404 for a missing pk comes free.
+  - studentprofile_list.html and studentprofile_detail.html, both extending
+    base.html, both with loop + {% empty %}.
+  - Screenshots 04_cbv_generic.png, 05_list_normal.png, 06_list_empty.png.
+
+Fixed during review before merge:
+  - annotate(Count(...)) adds a GROUP BY, and Django drops Meta.ordering from
+    a grouped query. Pagination became non-deterministic and Django only
+    raised UnorderedObjectListWarning, not an error. Fixed with an explicit
+    .order_by("full_name", "net_id") after the annotate.
+
+Verified:
+  - manage.py check                          -> 0 issues, no warnings
+  - /students/                               200, 8 students
+  - /students/?college=Grainger              200, 3 students
+  - /students/?college=Nonexistent           200, EMPTY STATE
+  - /students/1/                             200
+  - /students/9999/                          404 (DetailView handles it)
+  - templates resolved by convention:
+        connect/studentprofile_list.html, connect/studentprofile_detail.html
+  - reflected ?college= value HTML-escaped
+  - queryset.ordered is True, so pagination is stable
+
+--------------------------------------------------------------------------------
 WEEK 4  (w/c 2026-09-14)  -  feature/feedback-views  [Dhruv]
 --------------------------------------------------------------------------------
 Done:
@@ -218,14 +250,16 @@ KIND B2 - Generic Class-Based View (ListView / DetailView)           [GRADED]
   URL      : /students/                  name="connect:student-list"
              /students/<pk>/             name="connect:student-detail"
   Model    : StudentProfile
-  Template : connect/studentprofile_list.html   (Django default naming)
+  Template : connect/studentprofile_list.html   (Django default naming -
+             no template_name is set; ListView finds it by convention)
              connect/studentprofile_detail.html
   Purpose  : Browse the verified student roster with their college, connection
-             preference and social energy, filterable by ?college=. Uses
-             ListView so pagination, context_object_name and template naming
-             come for free; DetailView shows one student's interests and
-             availability.
-  Status   : TODO - stub committed on main
+             preference, social energy and interest count, filterable by
+             ?college= and paginated at 10. Uses ListView so pagination,
+             context_object_name and template naming come for free;
+             DetailView adds the pk lookup, the 404, and one student's
+             preferences, interests, availability and match history.
+  Status   : DONE - 2026-09-20
 
 --------------------------------------------------------------------------------
 SUPPORTING (not graded)
@@ -286,13 +320,46 @@ Base CBV vs Generic CBV
                fought me on all three. My rule now: generic view when the page
                is a plain list of one model; base View when the response
                depends on more than the model.
-  [Kritika]    TODO - what did ListView give you for free, and where did it
-                      get in the way when you added the ?college= filter?
+  [Kritika]    ListView gave me four things without my writing them: the
+               queryset from a single `model =` line, the context name,
+               pagination, and the template path by naming convention. Set
+               model and context_object_name and the page exists. Prathamesh
+               wrote all four by hand in get() for the same shape of page.
+               Where it got in the way: the ?college= filter has to go in
+               get_queryset(), and anything the TEMPLATE needs but the
+               queryset does not carry - the current filter value, the list
+               of colleges, the unfiltered total - has to go in a separate
+               get_context_data(). One feature, two overridden methods, and
+               you must remember to call super() in both. A plain function
+               would have built one dict in one place.
+               The real trap: I annotated the queryset with a Count, which
+               adds a GROUP BY, and Django then DROPS Meta.ordering from a
+               grouped query. Pagination silently became non-deterministic -
+               a student could appear on two pages or none - and it only
+               surfaced as an UnorderedObjectListWarning, not an error. Fixed
+               with an explicit .order_by() after the annotate.
+               My rule: generic view when the page is a plain list of one
+               model; the moment the template needs context the model does
+               not have, the saving starts to disappear.
 
 Team-level observation
 ----------------------
-  TODO after integration - which of the four would you reach for by default
-  in the rest of this project, and why?
+  Having built all four over the same data, we would default to the generic
+  CBV for anything that is genuinely "a list of one model" or "one row of one
+  model" - it is the least code and the behaviour is predictable. We would
+  reach for a plain function with render() the moment a page needs context
+  the model does not carry, because one function building one dict is easier
+  to read than two overridden methods calling super().
+  The base View earns its place rarely: only when the response depends on
+  something other than the model, and the generic machinery would be fought
+  rather than used. The manual HttpResponse path we would keep for responses
+  that are not plain HTML pages - a custom status code, a file download, a
+  streamed response.
+  The wider lesson from integration was not about views at all. Three of the
+  four branches had a defect that no static check could catch - an unstyled
+  CSS class, a filename typo that 500'd, an ordering bug that only warned.
+  All three needed someone to open the page. manage.py check passing is not
+  evidence that a page works.
 
 
 ================================================================================

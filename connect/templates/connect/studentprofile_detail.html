@@ -1,0 +1,104 @@
+{% extends "connect/base.html" %}
+{% comment %}
+One student's profile. Named by DetailView's convention
+(<app>/<model>_detail.html) for the same reason as the list template.
+
+Privacy note: this is an internal/admin-facing view of the roster. It shows a
+student's own onboarding answers and their match history - it never shows
+another student's feedback about them. ExperienceFeedback.private_note is
+deliberately absent.
+{% endcomment %}
+
+{% block title %}{{ student.full_name }} - QuadConnect{% endblock %}
+{% block heading %}{{ student.full_name }}{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    {{ student.net_id }} &middot; {{ student.college }}
+    {% if student.department %} &middot; {{ student.department }}{% endif %}
+    &middot; <a href="{% url 'connect:student-list' %}">Back to all students</a>
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  <h2 class="section">Matching preferences</h2>
+  <div class="grid">
+    <div class="card stat">
+      <div class="n">{{ student.get_preferred_connection_display }}</div>
+      <div class="l">Connection type</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ student.get_social_energy_display }}</div>
+      <div class="l">Social energy</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ student.get_conversation_style_display }}</div>
+      <div class="l">Conversation style</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ student.get_group_preference_display }}</div>
+      <div class="l">Group preference</div>
+    </div>
+  </div>
+
+  <h2 class="section">Interests</h2>
+  {% for link in interest_links %}
+    <div class="card" style="margin-bottom:8px;">
+      <div class="row">
+        <div>
+          <div class="title">{{ link.interest.name }}</div>
+          <div class="meta">
+            <span>{{ link.interest.get_category_display }}</span>
+          </div>
+        </div>
+        {% if link.is_primary %}<span class="badge">Starred</span>{% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty">
+      <div class="big">No interests selected</div>
+      <p>This student has not completed the interests step of onboarding,
+         so they cannot be matched yet.</p>
+    </div>
+  {% endfor %}
+
+  <h2 class="section">Weekend availability</h2>
+  {% for slot in slots %}
+    <div class="card" style="margin-bottom:8px;">
+      <div class="title">
+        {{ slot.get_weekday_display }} &middot; {{ slot.get_time_block_display }}
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty">
+      <div class="big">No availability given</div>
+      <p>Availability is a hard constraint on matching. Without at least one
+         slot this student cannot be scheduled.</p>
+    </div>
+  {% endfor %}
+
+  <h2 class="section">Match history</h2>
+  {% for p in participations %}
+    <div class="card" style="margin-bottom:8px;">
+      <div class="row">
+        <div>
+          <div class="title">{{ p.match.get_connection_type_display }}</div>
+          <div class="subtitle">{{ p.match.location.name }}</div>
+          <div class="meta">
+            <span>{{ p.match.scheduled_for|date:"D j M Y, g:i A" }}</span>
+            <span>Fit {{ p.compatibility_score }}</span>
+            {% if p.match_reason %}<span>{{ p.match_reason }}</span>{% endif %}
+          </div>
+        </div>
+        <span class="badge">{{ p.get_response_display }}</span>
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty">
+      <div class="big">No matches yet</div>
+      <p>This student has not been placed in a weekly matching cycle.</p>
+    </div>
+  {% endfor %}
+
+{% endblock %}
