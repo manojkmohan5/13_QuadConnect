@@ -6,8 +6,9 @@ text and error messages are defined once. Rendered with
 {{ field.as_field_group }}, each field gets a <label>, and Django adds
 aria-describedby (help text and error) and aria-invalid="true" on error.
 
-    StudentSearchForm   GET   /search/   roster filters, shareable URL
-    NetIDLookupForm     POST  /search/   NetID lookup, kept out of the URL
+    StudentSearchForm             GET   /search/     roster filters, shareable URL
+    NetIDLookupForm               POST  /search/     NetID lookup, kept out of the URL
+    CampusLocationSuggestionForm  POST  /locations/  suggest a venue (creates a row)
 """
 
 import re
@@ -104,3 +105,61 @@ class NetIDLookupForm(QuadForm):
                 "jordan4. Remove any spaces, symbols or @illinois.edu."
             )
         return net_id
+
+
+class CampusLocationSuggestionForm(forms.ModelForm):
+    """Suggest a new meeting venue. Creates an unapproved CampusLocation.
+
+    `fields` is a whitelist: is_approved is deliberately absent, so no
+    POST can approve its own suggestion, even one hand-crafted to include
+    is_approved=on. The view saves every suggestion as unapproved; staff
+    approve it in Django Admin.
+    """
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = CampusLocation
+        fields = ["name", "street_address", "arrival_note", "is_indoor", "capacity"]
+        labels = {
+            "name": "Venue name",
+            "arrival_note": "Where to meet (optional)",
+            "is_indoor": "Indoors",
+            "capacity": "Seats",
+        }
+        help_texts = {
+            "name": "A public, staffed place on or near campus.",
+            "street_address": "e.g. 1401 W Green St, Urbana.",
+            "arrival_note": "e.g. Main entrance, ground floor lobby.",
+            "is_indoor": "Untick for an outdoor spot such as the Main Quad.",
+            "capacity": "The largest group it seats comfortably, 2 to 50.",
+        }
+        error_messages = {
+            "name": {
+                "unique": "That venue is already listed or waiting for "
+                          "review. Check the list above, or name a "
+                          "different place.",
+                "required": "Enter the venue's name, e.g. Illini Union.",
+            },
+            "street_address": {
+                "required": "Enter a street address so students can find "
+                            "it, e.g. 1401 W Green St, Urbana.",
+            },
+            "capacity": {
+                "required": "Enter how many people it seats, from 2 to 50.",
+                "invalid": "Enter a whole number of seats, from 2 to 50.",
+                "min_value": "A meetup needs at least 2 seats. Enter 2 to 50.",
+                "max_value": "Squads are small; enter 50 seats or fewer.",
+            },
+        }
+
+    def clean_name(self):
+        # "  illini union " must collide with "Illini Union", not slip past
+        # the unique check as a near-duplicate.
+        name = " ".join(self.cleaned_data["name"].split())
+        if CampusLocation.objects.filter(name__iexact=name).exists():
+            raise forms.ValidationError(
+                self.Meta.error_messages["name"]["unique"])
+        return name
