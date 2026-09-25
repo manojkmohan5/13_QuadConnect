@@ -22,6 +22,7 @@ from django.db.models import Avg, Count, Prefetch, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template import loader
+from django.urls import reverse
 from django.utils.timezone import localtime
 from django.views import View
 from django.views.generic import DetailView, ListView
@@ -333,6 +334,10 @@ class CampusLocationListView(View):
         Success redirects (Post/Redirect/Get), so reloading the page cannot
         submit the same suggestion twice. A failure re-renders the list with
         each error next to its field.
+
+        The redirect names #main because the form posts to #suggest, and a
+        browser carries that fragment through a redirect that has none of
+        its own: the page would open scrolled past the success message.
         """
         form = CampusLocationSuggestionForm(request.POST)
         if form.is_valid():
@@ -343,7 +348,7 @@ class CampusLocationListView(View):
                 f'Thanks. "{venue.name}" was sent for review and will be '
                 f"listed here once staff approve it."
             ))
-            return redirect("connect:location-list")
+            return redirect(reverse("connect:location-list") + "#main")
         return self._render(request, form)
 
     def _render(self, request, form):

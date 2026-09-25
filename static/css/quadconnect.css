@@ -115,6 +115,9 @@ header.site a:focus-visible { outline-color: var(--accent-on-dark); }
   box-shadow: var(--shadow-lift);
 }
 .skip-link:focus { top: 12px; }
+/* <main> takes focus only as the skip link's (or a redirect's #main)
+   target. It is not a control and never in the Tab order, so no ring. */
+main[tabindex="-1"]:focus { outline: none; }
 
 .visually-hidden {
   position: absolute !important;

@@ -308,7 +308,7 @@ class LocationFormTests(QuadConnectData):
         # follow=True: the flash message is shown once, on the page the
         # redirect lands on.
         response = self.client.post(self.url, self.valid(is_approved="on"), follow=True)
-        self.assertEqual(response.redirect_chain, [(self.url, 302)])
+        self.assertEqual(response.redirect_chain, [(self.url + "#main", 302)])
         venue = CampusLocation.objects.get(name="Siebel Center for Design")
         self.assertFalse(venue.is_approved)  # the smuggled is_approved=on is ignored
         self.assertContains(response, "was sent for review")
