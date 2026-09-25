@@ -1,0 +1,103 @@
+{% extends "connect/base.html" %}
+{% comment %}
+API documentation (P1-A3 Section 6). The Content-Type values and the sample
+body are read from the real views on every request (see connect/api.py).
+{% endcomment %}
+
+{% block title %}API - QuadConnect{% endblock %}
+{% block heading %}QuadConnect API{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    A read-only JSON API over public data: approved venues and the match
+    schedule. No student names, NetIDs, emails, check-in codes or feedback
+    are ever returned. Every endpoint is read-only and answers GET.
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  <ul class="list">
+    <li class="card">
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/locations/</h2>
+      <p>Approved campus venues. Class-based view (<code>LocationListAPI</code>) returning
+         <code>JsonResponse</code>.</p>
+      <div class="scroll">
+        <table>
+          <caption class="visually-hidden">Query parameters for /api/locations/</caption>
+          <thead><tr><th scope="col">Parameter</th><th scope="col">Values</th><th scope="col">Filters on</th></tr></thead>
+          <tbody>
+            <tr><td><code>setting</code></td><td><code>indoor</code> or <code>outdoor</code></td><td>is_indoor</td></tr>
+            <tr><td><code>min_seats</code></td><td>whole number, 1 or more</td><td>capacity__gte</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="form-note">Try:
+        {% for url in examples.locations %}<a href="{{ url }}">{{ url }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}
+      </p>
+    </li>
+
+    <li class="card">
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/matches/</h2>
+      <p>The weekly match schedule, newest first. Function-based view (<code>match_list_api</code>)
+         returning <code>JsonResponse</code>. Participants appear only as a count.</p>
+      <div class="scroll">
+        <table>
+          <caption class="visually-hidden">Query parameters for /api/matches/</caption>
+          <thead><tr><th scope="col">Parameter</th><th scope="col">Values</th><th scope="col">Filters on</th></tr></thead>
+          <tbody>
+            <tr><td><code>week</code></td><td>date the week starts, <code>YYYY-MM-DD</code></td><td>week_start</td></tr>
+            <tr><td><code>type</code></td><td><code>FRIEND</code> or <code>SQUAD</code></td><td>connection_type__exact</td></tr>
+            <tr><td><code>status</code></td><td><code>PROPOSED</code>, <code>CONFIRMED</code>, <code>COMPLETED</code>, <code>CANCELLED</code></td><td>status__exact</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="form-note">Try:
+        {% for url in examples.matches %}<a href="{{ url }}">{{ url }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}
+      </p>
+    </li>
+
+    <li class="card">
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/locations.txt</h2>
+      <p>The same venues, one per line, through plain <code>HttpResponse</code>. Takes the same
+         parameters as <code>/api/locations/</code>.</p>
+      <p class="form-note">Try:
+        {% for url in examples.text %}<a href="{{ url }}">{{ url }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}
+      </p>
+    </li>
+  </ul>
+
+  <h2 class="section">Responses</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3 class="card-title">Success: 200</h3>
+      <p>Every JSON list has the same shape: <code>count</code>, the <code>filters</code> that
+         were applied, and <code>results</code>. Each result carries a <code>url</code> to its
+         page on the site, built from the model's <code>get_absolute_url()</code>.</p>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Bad parameter: 400</h3>
+      <p>An invalid value is never ignored. The response names each bad parameter and how to
+         fix it:</p>
+      <pre class="code"><code>{"error": "Invalid query parameter.",
+ "fields": {"min_seats": ["Use a whole number, e.g. min_seats=8."]}}</code></pre>
+    </div>
+  </div>
+
+  <h2 class="section">HttpResponse vs JsonResponse</h2>
+  <div class="card scroll">
+    <table>
+      <caption>Content-Type each response class sends, read live from the views</caption>
+      <thead><tr><th scope="col">Endpoint</th><th scope="col">Built with</th><th scope="col">Content-Type</th><th scope="col">What the client does with it</th></tr></thead>
+      <tbody>
+        <tr><td><code>/api/locations/</code></td><td><code>JsonResponse(dict)</code></td><td><code>{{ json_type }}</code></td><td>Parses it as data: <code>response.json()</code></td></tr>
+        <tr><td><code>/api/locations.txt</code></td><td><code>HttpResponse(str, content_type=...)</code></td><td><code>{{ text_type }}</code></td><td>Shows it as text, unformatted</td></tr>
+        <tr><td>any page</td><td><code>HttpResponse(str)</code></td><td><code>{{ html_type }}</code></td><td>Renders it as a web page</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section">Live sample: GET /api/locations/</h2>
+  <pre class="code" tabindex="0" role="region" aria-label="Sample JSON response"><code>{{ sample }}</code></pre>
+
+{% endblock %}

@@ -57,6 +57,8 @@ because the link then points at the section, not at the page being shown.
          {% if u == 'feedback-summary' %}class="active" aria-current="page"{% endif %}>Feedback</a>
       <a href="{% url 'connect:insights' %}"
          {% if u == 'insights' %}class="active" aria-current="page"{% endif %}>Insights</a>
+      <a href="{% url 'connect:api-docs' %}"
+         {% if u == 'api-docs' %}class="active" aria-current="page"{% endif %}>API</a>
     </nav>
     {% endwith %}
   </div>

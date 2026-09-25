@@ -445,6 +445,19 @@ details.data summary { cursor: pointer; font-weight: 600; font-size: 14px; }
 
 /* --- API docs ------------------------------------------------------------ */
 .endpoint { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 14px; }
+pre.code {
+  margin: 0;
+  padding: 16px 18px;
+  max-height: 420px;
+  overflow: auto;
+  background: var(--ink);
+  color: var(--nav-text);      /* 9.67:1 on --ink */
+  border-radius: var(--radius);
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+pre.code code { background: none; padding: 0; font-size: inherit; color: inherit; }
+/* Short examples inside a card wrap instead of scrolling sideways. */
+.card pre.code { margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .method {
   display: inline-block;
   font-size: 11px;

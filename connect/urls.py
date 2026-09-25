@@ -17,7 +17,7 @@ branch. The path and the name must not change - base.html reverses all of them.
 
 from django.urls import path
 
-from . import charts, views
+from . import api, charts, views
 
 app_name = "connect"
 
@@ -57,4 +57,10 @@ urlpatterns = [
          name="chart-students-by-college"),
     path("insights/interest-categories.png", charts.interest_categories_png,
          name="chart-interest-categories"),
+
+    # --- P1-A3 Section 6 - read-only JSON API -----------------------------
+    path("api/", api.api_docs, name="api-docs"),
+    path("api/locations/", api.LocationListAPI.as_view(), name="api-locations"),
+    path("api/matches/", api.match_list_api, name="api-matches"),
+    path("api/locations.txt", api.location_list_text, name="api-locations-text"),
 ]
