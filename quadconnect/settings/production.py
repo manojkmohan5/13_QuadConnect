@@ -37,6 +37,21 @@ if _ssl:
     SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# --- Static files: cache busting ------------------------------------------
+# collectstatic writes each file a second time under a content-hashed name
+# (quadconnect.css -> quadconnect.3f2a9c1b.css) plus a manifest, and
+# {% static %} looks names up in that manifest. A changed file gets a new
+# URL, so browsers can cache static files forever yet never serve a stale
+# stylesheet. WhiteNoise sends the far-future cache headers and a gzip copy.
+# Development keeps the default storage, so no collectstatic is needed there.
+# Deploy step: python manage.py collectstatic --noinput
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # Surface errors in the log rather than swallowing them behind DEBUG=False.
 LOGGING = {
     "version": 1,
