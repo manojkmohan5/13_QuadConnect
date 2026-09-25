@@ -1,0 +1,23 @@
+# Lint rules for QuadConnect. CI runs `ruff check .` with this file
+# (.github/workflows/deploy.yml, ruff 0.16.4), and so should you before
+# pushing, so both see the same findings.
+#
+# An explicit list, because newer ruff defaults include RUF012, which flags
+# every Django Meta/admin list (fields = [...]) even though that is how
+# Django is written.
+target-version = "py311"
+
+[lint]
+select = [
+    "E4", "E7", "E9", "F",  # pycodestyle errors and pyflakes: real mistakes
+    "I",                    # import order
+    "B",                    # bugbear: likely bugs
+    "ISC",                  # implicit string concatenation
+    "DJ",                   # Django-specific checks
+    "UP",                   # modern syntax for Python 3.11
+    "S",                    # security (bandit)
+]
+
+[lint.per-file-ignores]
+# Test fixtures create users with throwaway passwords.
+"connect/tests.py" = ["S106"]

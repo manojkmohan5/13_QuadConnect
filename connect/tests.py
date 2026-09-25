@@ -299,10 +299,12 @@ class LocationFormTests(QuadConnectData):
                 "is_indoor": "on", "capacity": "10"}
         return {**data, **overrides}
 
+    def titles(self, response):
+        return [item["title"] for item in response.context["items"]]
+
     def test_get_filters_use_query_parameters(self):
-        titles = lambda r: [i["title"] for i in r.context["items"]]
-        self.assertEqual(titles(self.client.get(self.url, {"seats": "15"})), ["Main Quad"])
-        self.assertEqual(titles(self.client.get(self.url, {"setting": "indoor"})), ["Illini Union"])
+        self.assertEqual(self.titles(self.client.get(self.url, {"seats": "15"})), ["Main Quad"])
+        self.assertEqual(self.titles(self.client.get(self.url, {"setting": "indoor"})), ["Illini Union"])
 
     def test_valid_post_saves_unapproved_venue_and_redirects(self):
         # follow=True: the flash message is shown once, on the page the

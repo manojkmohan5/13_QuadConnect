@@ -123,7 +123,7 @@ def students_by_college_png(request):
         return _no_data(fig, title)
 
     # barh draws from the bottom up; reverse so the largest college is on top.
-    colleges, friend, squad = (list(reversed(col)) for col in zip(*rows))
+    colleges, friend, squad = (list(reversed(col)) for col in zip(*rows, strict=True))
     ax = fig.subplots()
     for values, left, style, label in (
         (friend, None, FRIEND, ConnectionType.FRIEND.label),
@@ -160,7 +160,7 @@ def interest_categories_png(request):
     if not rows:
         return _no_data(fig, title)
 
-    keys, labels, counts = zip(*rows)
+    keys, labels, counts = zip(*rows, strict=True)
     ax = fig.subplots()
     wedges, _, percents = ax.pie(
         counts,
@@ -173,13 +173,13 @@ def interest_categories_png(request):
         wedgeprops={"edgecolor": "white", "linewidth": 1.5},
         textprops={"color": "white", "fontsize": 11, "fontweight": "bold"},
     )
-    for text, key in zip(percents, keys):
+    for text, key in zip(percents, keys, strict=True):
         text.set_path_effects([patheffects.withStroke(
             linewidth=4, foreground=CATEGORY_STYLE[key]["color"])])
     _title(fig, title)
     # "outside" legends are laid out by the constrained engine, so a long
     # category name cannot be clipped at the edge of the image.
-    fig.legend(wedges, [f"{label} ({n})" for label, n in zip(labels, counts)],
+    fig.legend(wedges, [f"{label} ({n})" for label, n in zip(labels, counts, strict=True)],
                title="Category (selections)", loc="outside right center",
                frameon=False)
     ax.set_aspect("equal")
