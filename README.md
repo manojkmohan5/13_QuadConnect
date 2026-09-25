@@ -48,7 +48,10 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>. Run the test suite with
-`python manage.py test connect` (43 tests).
+`python manage.py test connect` (45 tests).
+
+The first command after installing pauses for a while (up to a minute on
+Windows) while Matplotlib builds its font cache. That happens once.
 
 `db.sqlite3` is intentionally **not** committed — a tracked binary conflicts on
 every branch. `seed_demo_data` is idempotent and rebuilds the same dataset, so
@@ -84,6 +87,7 @@ through each model's `get_absolute_url()`, so every URL pattern is written once,
 in `urls.py`. The flow is models (`get_absolute_url()` calls `reverse()`) →
 urls (named routes with `<int:pk>`) → views (`DetailView`) → templates
 (`{{ match.get_absolute_url }}`).
+Screenshots: [01](docs/screenshots/p1-a3/01_home.png), [02](docs/screenshots/p1-a3/02_nav_active_state.png), [03](docs/screenshots/p1-a3/03_detail_via_link.png).
 
 ### 2. ORM queries: search with GET and POST
 
@@ -98,6 +102,7 @@ NetID stays out of the URL, browser history, server logs and `Referer`. Below
 the results the page shows a total (`aggregate(Count, Avg)`) and grouped
 summaries (`values("college").annotate(Count(...))`, interests ranked by
 `annotate(Count("profile_links"))`), every loop with an `{% empty %}` branch.
+Screenshots: [04](docs/screenshots/p1-a3/04_search_get_results.png), [05](docs/screenshots/p1-a3/05_search_aggregates.png), [06](docs/screenshots/p1-a3/06_search_post_lookup.png).
 
 ### 3. Static files and UI
 
@@ -111,6 +116,7 @@ contrast, focus is always visible, there is a skip link, and every page fits a
 375 px phone screen. WhiteNoise serves the files in development and
 production; in production they are stored under content-hashed names for
 cache busting (see [Running in development vs production](#running-in-development-vs-production)).
+Screenshots: [07](docs/screenshots/p1-a3/07_css_applied.png), [08](docs/screenshots/p1-a3/08_cache_busting_page.png), [09](docs/screenshots/p1-a3/09_cache_busting_file.png).
 
 ### 4. Charts with Matplotlib
 
@@ -122,6 +128,7 @@ its own endpoint (`/insights/students-by-college.png`,
 saves into a `BytesIO` buffer and returns `HttpResponse(content_type="image/png")`.
 The page gives each chart a caption, alt text and a data table, all built from
 the same rows. Code: [`connect/charts.py`](connect/charts.py).
+Screenshots: [10](docs/screenshots/p1-a3/10_insights_page.png), [11](docs/screenshots/p1-a3/11_insights_pie_and_table.png), [12](docs/screenshots/p1-a3/12_chart_png_endpoint.png).
 
 ### 5. Forms on a class-based view
 
@@ -132,6 +139,7 @@ methods. **GET** reads the `?setting=` and `?seats=` filters. **POST** submits
 and redirects (Post/Redirect/Get). An invalid form re-renders with an error
 summary and a message next to each field. `is_approved` is not a form field,
 so no request can approve its own suggestion; staff approve in Django Admin.
+Screenshots: [13](docs/screenshots/p1-a3/13_form_post_errors.png), [14](docs/screenshots/p1-a3/14_form_post_success.png).
 
 ### 6. JSON API
 
@@ -168,6 +176,7 @@ parses it as data. `HttpResponse` sends whatever string it is given, labelled
 `text/html` unless told otherwise; `/api/locations.txt` sends the same venues as
 `text/plain`. The API never returns student names, NetIDs, emails, check-in
 codes, feedback or unapproved venues.
+Screenshots: [15](docs/screenshots/p1-a3/15_api_locations_json.png), [16](docs/screenshots/p1-a3/16_api_matches_json.png), [17](docs/screenshots/p1-a3/17_api_bad_param_400.png), [18](docs/screenshots/p1-a3/18_api_text_plain.png), [19](docs/screenshots/p1-a3/19_api_docs_mime.png).
 
 ---
 
@@ -306,7 +315,7 @@ with `{% url 'connect:match-list' %}` rather than hard-coding paths.
     ├── forms.py                  search, NetID lookup, venue suggestion
     ├── charts.py                 Matplotlib charts and the Insights page
     ├── api.py                    JSON API and its docs page
-    ├── tests.py                  43 tests, one class per P1-A3 section
+    ├── tests.py                  45 tests, one class per P1-A3 section
     ├── urls.py                   all routes named
     ├── admin.py                  all 8 models registered, with inlines
     ├── templates/connect/        base.html, shared entity_list.html, pages

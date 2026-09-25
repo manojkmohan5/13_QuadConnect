@@ -49,7 +49,7 @@ Done, by assignment section:
       Staff approve from the admin list (is_approved is list_editable).
   S6  connect/api.py: /api/locations/ (CBV), /api/matches/ (FBV),
       /api/locations.txt (plain HttpResponse, text/plain) and /api/ docs.
-  Tests: connect/tests.py, 43 tests, one class per section.
+  Tests: connect/tests.py, 45 tests, one class per section.
   Screenshots: docs/screenshots/p1-a3/, 19 files, indexed in
       docs/screenshots/README.md.
 
@@ -72,7 +72,7 @@ Found and fixed along the way:
     any annotation or aggregate.
 
 Verified:
-  - manage.py test connect                         -> 43 tests, OK
+  - manage.py test connect                         -> 45 tests, OK
   - manage.py check                                -> 0 issues
   - check --deploy, production, DJANGO_SECURE_SSL=1 -> 0 issues
   - production with DJANGO_ALLOWED_HOSTS empty     -> RuntimeError (fail fast)
@@ -99,6 +99,16 @@ CI (added after the build):
   - verify_constraints now exits 1 when a check fails; before, it always
     exited 0, so no script could ever notice a broken constraint.
   - ruff.toml fixes the lint rules so CI and local runs agree.
+
+Final audit against the assignment text:
+  - base.html's footer linked "/admin/" as a literal path, and the staff
+    note on /locations/ linked the admin changelist the same way; both
+    now use {% url %}, as do the filter and pagination links. A test now
+    fails if any template hard-codes a path again, and another renders
+    the pager (it only appears past 10 students). 45 tests.
+  - JSON screenshots retaken zoomed in, so they stay readable when GitHub
+    scales them down; the API docs screenshot now shows the whole
+    Content-Type table.
 
 --------------------------------------------------------------------------------
 WEEK 3  (w/c 2026-09-07)  -  P1-A2 scaffold
@@ -392,6 +402,10 @@ S6 - How we plan to create the API, and what data it will serve
   with text/plain, to show the MIME difference: JsonResponse serialises a
   dict and sends application/json, HttpResponse sends a string as whatever
   content_type says (text/html by default).
+  Observed in the browser: Chrome shows its "Pretty-print" toggle only for
+  the application/json responses; the text/plain one is shown as bare
+  text (screenshots 15 and 18). A client calling response.json() on the
+  .txt endpoint gets a parse error, because it is not JSON.
 
   What (now): public-by-design data only.
     - approved venues: name, address, arrival note, indoor/outdoor, seats,
@@ -688,6 +702,10 @@ Team-level observation
 - UniqueConstraint cannot span relations, so "one match per student per week"
   is NOT enforceable in the model layer. It has to live in the matching
   service when we build it. Carried over from P1-A1.
+- Venue suggestions (P1-A3 Section 5) are anonymous and not rate-limited.
+  They are never published before review, but nothing stops a flood of
+  unapproved rows. Require login (and throttle) before real students use
+  it.
 - Still unspecified: the matching algorithm itself. compatibility_score and
   match_reason exist as fields but nothing computes them outside seed data.
   This is the biggest open design question for the next assignment.
