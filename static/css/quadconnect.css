@@ -83,6 +83,10 @@ code {
   padding: 1px 6px;
   border-radius: 4px;
 }
+/* Long ORM calls and URLs wrap instead of widening the page (WCAG 1.4.10).
+   break-word, not anywhere: it leaves min-content alone, so flex items such
+   as the nav links still wrap whole rather than breaking mid-word. */
+code, a { overflow-wrap: break-word; }
 
 /* WCAG 2.1 2.4.7 - focus is always visible, never removed. */
 a:focus-visible,
@@ -482,6 +486,10 @@ footer.site a { color: var(--muted); }
 
 /* --- Responsive ---------------------------------------------------------- */
 @media (max-width: 640px) {
+  /* Eight nav links wrap to three rows here; a sticky header would then
+     cover a sixth of the screen for good, so let it scroll away. */
+  header.site { position: static; }
+  html { scroll-padding-top: 0; }
   .bar { gap: 12px; padding: 10px 16px; }
   main { padding: 24px 16px 56px; }
   .hero { padding: 28px 22px; }
