@@ -38,8 +38,9 @@ project demonstrates both conventions.
     {% endif %}
   </form>
 
+  <ul class="list">
   {% for student in students %}
-    <div class="card" style="margin-bottom:10px;">
+    <li class="card">
       <div class="row">
         <div>
           <div class="title">
@@ -61,9 +62,9 @@ project demonstrates both conventions.
         </div>
         <span class="badge">{{ student.get_preferred_connection_display }}</span>
       </div>
-    </div>
+    </li>
   {% empty %}
-    <div class="empty">
+    <li class="empty">
       {% if selected_college %}
         <div class="big">No students in a college matching
           &ldquo;{{ selected_college }}&rdquo;</div>
@@ -80,11 +81,12 @@ project demonstrates both conventions.
           the sample roster.
         </p>
       {% endif %}
-    </div>
+    </li>
   {% endfor %}
+  </ul>
 
   {% if is_paginated %}
-    <div class="filter" style="margin-top:16px;">
+    <nav class="filter pager" aria-label="Pagination">
       {% if page_obj.has_previous %}
         <a href="?page={{ page_obj.previous_page_number }}{% if selected_college %}&college={{ selected_college|urlencode }}{% endif %}">Previous</a>
       {% endif %}
@@ -92,7 +94,7 @@ project demonstrates both conventions.
       {% if page_obj.has_next %}
         <a href="?page={{ page_obj.next_page_number }}{% if selected_college %}&college={{ selected_college|urlencode }}{% endif %}">Next</a>
       {% endif %}
-    </div>
+    </nav>
   {% endif %}
 
 {% endblock %}

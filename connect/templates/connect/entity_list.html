@@ -33,8 +33,9 @@ filter_html    bool  set truthy by a view that renders its own filter block
 
   {% block filters %}{% endblock %}
 
+  <ul class="list">
   {% for item in items %}
-    <div class="card" style="margin-bottom:10px;">
+    <li class="card">
       <div class="row">
         <div>
           <div class="title">
@@ -52,12 +53,13 @@ filter_html    bool  set truthy by a view that renders its own filter block
         </div>
         {% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
       </div>
-    </div>
+    </li>
   {% empty %}
-    <div class="empty">
+    <li class="empty">
       <div class="big">{{ empty_title|default:"Nothing to show yet" }}</div>
       <p>{{ empty_message|default:"There are no records matching this view." }}</p>
-    </div>
+    </li>
   {% endfor %}
+  </ul>
 
 {% endblock %}

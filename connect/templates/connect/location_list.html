@@ -12,20 +12,17 @@ venues have a capacity or an indoor/outdoor setting.
   <div class="filter">
     <span>Setting</span>
     <a href="{% url 'connect:location-list' %}"
-       {% if not selected_setting %}aria-current="page"
-       style="font-weight:600;text-decoration:underline"{% endif %}>All</a>
+       {% if not selected_setting %}aria-current="page"{% endif %}>All</a>
     <a href="?setting=indoor"
-       {% if selected_setting == 'indoor' %}aria-current="page"
-       style="font-weight:600;text-decoration:underline"{% endif %}>Indoor</a>
+       {% if selected_setting == 'indoor' %}aria-current="page"{% endif %}>Indoor</a>
     <a href="?setting=outdoor"
-       {% if selected_setting == 'outdoor' %}aria-current="page"
-       style="font-weight:600;text-decoration:underline"{% endif %}>Outdoor</a>
+       {% if selected_setting == 'outdoor' %}aria-current="page"{% endif %}>Outdoor</a>
   </div>
 
   <form class="filter" method="get" action="{% url 'connect:location-list' %}">
     <label for="seats">Seats at least</label>
     <input type="number" id="seats" name="seats" min="2" max="50"
-           value="{{ selected_seats }}" placeholder="e.g. 8" style="width:90px">
+           value="{{ selected_seats }}" placeholder="e.g. 8">
     {% if selected_setting %}
       <input type="hidden" name="setting" value="{{ selected_setting }}">
     {% endif %}

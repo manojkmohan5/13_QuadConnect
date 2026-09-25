@@ -43,8 +43,9 @@ deliberately absent.
   </div>
 
   <h2 class="section">Interests</h2>
+  <ul class="list">
   {% for link in interest_links %}
-    <div class="card" style="margin-bottom:8px;">
+    <li class="card">
       <div class="row">
         <div>
           <div class="title">{{ link.interest.name }}</div>
@@ -54,33 +55,37 @@ deliberately absent.
         </div>
         {% if link.is_primary %}<span class="badge">Starred</span>{% endif %}
       </div>
-    </div>
+    </li>
   {% empty %}
-    <div class="empty">
+    <li class="empty">
       <div class="big">No interests selected</div>
       <p>This student has not completed the interests step of onboarding,
          so they cannot be matched yet.</p>
-    </div>
+    </li>
   {% endfor %}
+  </ul>
 
   <h2 class="section">Weekend availability</h2>
+  <ul class="list">
   {% for slot in slots %}
-    <div class="card" style="margin-bottom:8px;">
+    <li class="card">
       <div class="title">
         {{ slot.get_weekday_display }} &middot; {{ slot.get_time_block_display }}
       </div>
-    </div>
+    </li>
   {% empty %}
-    <div class="empty">
+    <li class="empty">
       <div class="big">No availability given</div>
       <p>Availability is a hard constraint on matching. Without at least one
          slot this student cannot be scheduled.</p>
-    </div>
+    </li>
   {% endfor %}
+  </ul>
 
   <h2 class="section">Match history</h2>
+  <ul class="list">
   {% for p in participations %}
-    <div class="card" style="margin-bottom:8px;">
+    <li class="card">
       <div class="row">
         <div>
           <div class="title">{{ p.match.get_connection_type_display }}</div>
@@ -93,12 +98,13 @@ deliberately absent.
         </div>
         <span class="badge">{{ p.get_response_display }}</span>
       </div>
-    </div>
+    </li>
   {% empty %}
-    <div class="empty">
+    <li class="empty">
       <div class="big">No matches yet</div>
       <p>This student has not been placed in a weekly matching cycle.</p>
-    </div>
+    </li>
   {% endfor %}
+  </ul>
 
 {% endblock %}

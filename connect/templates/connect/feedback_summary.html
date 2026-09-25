@@ -39,8 +39,9 @@
 
 <h2 class="section">Rating distribution</h2>
 
+<ul class="list">
 {% for stars, count, percent in distribution %}
-<div class="card" style="margin-bottom: 10px;">
+<li class="card">
   <div class="row">
     <div>
       <div class="title">
@@ -54,26 +55,22 @@
     <div class="badge">{{ percent }}%</div>
   </div>
 
-  <div
-    style="margin-top: 10px; background: var(--line); height: 8px; border-radius: 999px;"
-    role="presentation"
-  >
-    <div
-      style="width: {{ percent }}%; background: var(--accent); height: 8px; border-radius: 999px;"
-      role="presentation"
-    ></div>
+  {# Decorative: the percentage is already given as text in the badge. #}
+  <div class="bar-track" aria-hidden="true">
+    <div class="bar-fill" style="width: {{ percent }}%;"></div>
   </div>
-</div>
+</li>
 
 {% empty %}
-<div class="empty">
+<li class="empty">
   <div class="big">No feedback submitted yet</div>
   <p>
     Feedback will appear here once students complete a match and submit
     their post-experience feedback.
   </p>
-</div>
+</li>
 {% endfor %}
+</ul>
 
 <h2 class="section">What students enjoyed</h2>
 
@@ -88,7 +85,7 @@
 
 </div>
 
-<p class="meta" style="margin-top: 24px;">
+<p class="note">
   Feedback is private and shown here only in aggregate.
   Individual ratings and private notes are never displayed.
 </p>

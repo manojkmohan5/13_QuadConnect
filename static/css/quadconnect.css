@@ -252,6 +252,8 @@ h3.card-title { font-size: 16px; margin: 0 0 4px; letter-spacing: -0.01em; }
   padding: 16px 20px;
   box-shadow: var(--shadow);
 }
+/* Record lists are real <ul>s so screen readers announce "list, N items". */
+ul.list { list-style: none; margin: 0; padding: 0; }
 .list > .card + .card { margin-top: 10px; }
 .card.linked { transition: box-shadow 0.15s ease, transform 0.15s ease; }
 .card.linked:hover { box-shadow: var(--shadow-lift); transform: translateY(-1px); }
@@ -317,6 +319,8 @@ h3.card-title { font-size: 16px; margin: 0 0 4px; letter-spacing: -0.01em; }
 .empty .big { font-size: 16.5px; font-weight: 650; margin-bottom: 6px; }
 .empty p { color: var(--muted); margin: 0 auto; max-width: 480px; }
 
+.note { margin: 24px 0 0; font-size: 13.5px; color: var(--muted); }
+
 /* Rating-distribution bars on the feedback summary. Width is data-driven
    and set inline by the template; everything else lives here. */
 .bar-track { margin-top: 10px; background: var(--line); height: 8px; border-radius: 999px; }
@@ -360,6 +364,10 @@ h3.card-title { font-size: 16px; margin: 0 0 4px; letter-spacing: -0.01em; }
 .filter button:hover,
 .form button:hover { background: var(--ink-2); }
 .filter a.clear { font-size: 13.5px; color: var(--muted); }
+.filter input[type="number"] { width: 90px; }
+/* Current filter choice: weight and colour, never colour alone (WCAG 1.4.1). */
+.filter a[aria-current="page"] { color: var(--ink); font-weight: 700; }
+.pager { margin-top: 16px; }
 
 .form { display: flex; flex-direction: column; gap: 14px; }
 .form .field { display: flex; flex-direction: column; gap: 5px; }
