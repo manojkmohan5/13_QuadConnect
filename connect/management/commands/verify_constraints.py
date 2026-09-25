@@ -5,6 +5,8 @@ Run with:  python manage.py verify_constraints
 
 Every check runs inside a transaction that is rolled back afterwards, so this
 command is safe to run repeatedly and never mutates the submitted database.
+It needs the seed data (python manage.py seed_demo_data) and exits with
+status 1 if any check fails.
 
 Checks performed
 ----------------
@@ -25,7 +27,7 @@ on_delete
 """
 
 from django.contrib.auth.models import User
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError, transaction
 from django.db.models import ProtectedError
 
@@ -77,6 +79,9 @@ class Command(BaseCommand):
         self.stdout.write(style(
             f"\n{self.passed}/{total} checks passed, {self.failed} failed.\n"
         ))
+        if self.failed:
+            # A non-zero exit is what lets CI fail on a broken constraint.
+            raise CommandError(f"{self.failed} of {total} checks failed.")
 
     # -- reporting helpers ----------------------------------------------
     def ok(self, label, detail):
