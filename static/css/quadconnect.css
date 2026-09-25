@@ -57,7 +57,9 @@
 /* --- Base --------------------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* Anchor jumps and keyboard focus stop below the sticky header
+   instead of under it (WCAG 2.2 SC 2.4.11, focus not obscured). */
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 80px; }
 
 body {
   margin: 0;
@@ -376,7 +378,10 @@ ul.list { list-style: none; margin: 0; padding: 0; }
 /* .helptext is the class Django's own field template gives help text. */
 .form .help, .form .helptext { font-size: 12.5px; color: var(--muted); margin: 0; }
 .form .field-error { font-size: 13px; color: var(--danger); font-weight: 600; margin: 0; }
-.form [aria-invalid="true"] { border-color: var(--danger); border-width: 2px; }
+/* Element-qualified so it outranks ".form input[type=text]" above. */
+.form input[aria-invalid="true"],
+.form select[aria-invalid="true"],
+.form textarea[aria-invalid="true"] { border-color: var(--danger); border-width: 2px; }
 .form .errorlist { list-style: none; margin: 0; padding: 0; color: var(--danger);
                    font-size: 13px; font-weight: 600; }
 .form-note { font-size: 13px; color: var(--muted); margin: 4px 0 14px; }
