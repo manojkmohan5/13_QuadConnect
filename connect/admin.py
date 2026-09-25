@@ -137,6 +137,9 @@ class CampusLocationAdmin(admin.ModelAdmin):
                     "is_approved", "hosted_matches")
     list_filter = ("is_indoor", "is_approved")
     search_fields = ("name", "street_address")
+    # Venue suggestions from /locations/ arrive unapproved; staff review
+    # them by filtering on is_approved and ticking it here.
+    list_editable = ("is_approved",)
 
     @admin.display(description="Matches hosted")
     def hosted_matches(self, obj):
