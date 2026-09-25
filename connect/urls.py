@@ -17,7 +17,7 @@ branch. The path and the name must not change - base.html reverses all of them.
 
 from django.urls import path
 
-from . import views
+from . import charts, views
 
 app_name = "connect"
 
@@ -49,4 +49,12 @@ urlpatterns = [
          name="location-detail"),
     # --- Dhruv Thaker - HttpResponse FBV ---------------------------------
     path("feedback/summary/", views.feedback_summary, name="feedback-summary"),
+
+    # --- P1-A3 Section 4 - Matplotlib charts ------------------------------
+    # The page, and one image/png endpoint per chart.
+    path("insights/", charts.insights, name="insights"),
+    path("insights/students-by-college.png", charts.students_by_college_png,
+         name="chart-students-by-college"),
+    path("insights/interest-categories.png", charts.interest_categories_png,
+         name="chart-interest-categories"),
 ]

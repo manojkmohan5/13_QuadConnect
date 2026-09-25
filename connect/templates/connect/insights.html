@@ -1,0 +1,111 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Insights (P1-A3 Section 4). Each <img> points at a view that draws the
+chart with Matplotlib and returns image/png. The alt text, caption and
+table are built from the same ORM rows as the image, so they always agree.
+{% endcomment %}
+
+{% block title %}Insights - QuadConnect{% endblock %}
+{% block heading %}Insights{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    Charts drawn by Matplotlib from live ORM aggregates. Each image is a PNG
+    generated on request at its own URL, so it always shows current data.
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  {# Stacked, not side by side: at half width the chart text gets too small. #}
+  <div class="stack">
+
+    <section class="card" aria-labelledby="fig1-title">
+      <h2 class="card-title" id="fig1-title">Who is on QuadConnect</h2>
+      <figure class="chart">
+        {% if colleges %}
+          <img src="{% url 'connect:chart-students-by-college' %}"
+               alt="{{ college_alt }}" width="1200" height="675">
+        {% else %}
+          <div class="empty">
+            <div class="big">No students yet</div>
+            <p>{{ college_alt }}</p>
+          </div>
+        {% endif %}
+        <figcaption>
+          Figure 1. Verified students per college, stacked by the connection
+          type each prefers. Computed with
+          <code>values("college").annotate(Count(...))</code>.
+          <a href="{% url 'connect:chart-students-by-college' %}">Open the PNG</a>
+        </figcaption>
+      </figure>
+      <details class="data">
+        <summary>Numbers behind Figure 1</summary>
+        <div class="scroll">
+          <table>
+            <caption class="visually-hidden">Students per college by preferred connection</caption>
+            <thead>
+              <tr>
+                <th scope="col">College</th>
+                <th scope="col" class="num">Friend</th>
+                <th scope="col" class="num">Squad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for college, friend, squad in colleges %}
+                <tr><td>{{ college }}</td><td class="num">{{ friend }}</td><td class="num">{{ squad }}</td></tr>
+              {% empty %}
+                <tr><td colspan="3">No students yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="fig2-title">
+      <h2 class="card-title" id="fig2-title">What students are into</h2>
+      <figure class="chart">
+        {% if categories %}
+          <img src="{% url 'connect:chart-interest-categories' %}"
+               alt="{{ category_alt }}" width="1200" height="675">
+        {% else %}
+          <div class="empty">
+            <div class="big">No interests picked yet</div>
+            <p>{{ category_alt }}</p>
+          </div>
+        {% endif %}
+        <figcaption>
+          Figure 2. Share of every interest students selected, by category.
+          Grouped across a relation with
+          <code>values("interest__category").annotate(Count("id"))</code>.
+          <a href="{% url 'connect:chart-interest-categories' %}">Open the PNG</a>
+        </figcaption>
+      </figure>
+      <details class="data">
+        <summary>Numbers behind Figure 2</summary>
+        <div class="scroll">
+          <table>
+            <caption class="visually-hidden">Interest selections by category</caption>
+            <thead>
+              <tr>
+                <th scope="col">Category</th>
+                <th scope="col" class="num">Selections</th>
+                <th scope="col" class="num">Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for label, count, percent in categories %}
+                <tr><td>{{ label }}</td><td class="num">{{ count }}</td><td class="num">{{ percent }}%</td></tr>
+              {% empty %}
+                <tr><td colspan="3">No interests picked yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+  </div>
+
+{% endblock %}
