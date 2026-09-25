@@ -5,13 +5,22 @@ gives the grader a jumping-off point to each of the four graded views.
 {% endcomment %}
 
 {% block title %}QuadConnect - Home{% endblock %}
-{% block heading %}QuadConnect{% endblock %}
 
-{% block subtitle %}
-  <p class="sub">
-    A verified campus social discovery platform &mdash; The Connectors, Team 13.
-    Manage records in <a href="/admin/">Django Admin</a>.
-  </p>
+{# Replaces base.html's plain <h1> header with the landing-page hero. #}
+{% block page_header %}
+  <section class="hero" aria-labelledby="hero-title">
+    <p class="eyebrow">Verified UIUC students only</p>
+    <h1 id="hero-title">Meet people. Build friendships. IRL.</h1>
+    <p class="lead">
+      QuadConnect matches verified Illinois students into weekend meetups,
+      one-on-one or in small squads, at approved campus locations, based on
+      shared interests and when they are free.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
+      <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
+    </div>
+  </section>
 {% endblock %}
 
 {% block content %}
@@ -27,8 +36,9 @@ gives the grader a jumping-off point to each of the four graded views.
   </div>
 
   <h2 class="section">Recent matches</h2>
+  <ul class="list">
   {% for match in recent_matches %}
-    <div class="card" style="margin-bottom:10px;">
+    <li class="card">
       <div class="row">
         <div>
           <div class="title">{{ match.get_connection_type_display }}</div>
@@ -41,13 +51,14 @@ gives the grader a jumping-off point to each of the four graded views.
         </div>
         <span class="badge">{{ match.get_status_display }}</span>
       </div>
-    </div>
+    </li>
   {% empty %}
-    <div class="empty">
+    <li class="empty">
       <div class="big">No matches yet</div>
       <p>Run <code>python manage.py seed_demo_data</code> to load sample data.</p>
-    </div>
+    </li>
   {% endfor %}
+  </ul>
 
   <h2 class="section">Feedback</h2>
   <div class="card">
