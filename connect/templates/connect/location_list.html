@@ -17,9 +17,9 @@ is POST with {% csrf_token %} (it creates a row).
     <span>Setting</span>
     <a href="{% url 'connect:location-list' %}"
        {% if not selected_setting %}aria-current="page"{% endif %}>All</a>
-    <a href="?setting=indoor"
+    <a href="{% url 'connect:location-list' %}?setting=indoor"
        {% if selected_setting == 'indoor' %}aria-current="page"{% endif %}>Indoor</a>
-    <a href="?setting=outdoor"
+    <a href="{% url 'connect:location-list' %}?setting=outdoor"
        {% if selected_setting == 'outdoor' %}aria-current="page"{% endif %}>Outdoor</a>
   </div>
 
@@ -90,7 +90,7 @@ is POST with {% csrf_token %} (it creates a row).
         {% endfor %}
       </ul>
       <p class="form-note">Approve a venue by ticking "Is approved" in
-        <a href="/admin/connect/campuslocation/?is_approved__exact=0">Django Admin</a>.</p>
+        <a href="{% url 'admin:connect_campuslocation_changelist' %}?is_approved__exact=0">Django Admin</a>.</p>
     {% endif %}
   </section>
 {% endblock %}

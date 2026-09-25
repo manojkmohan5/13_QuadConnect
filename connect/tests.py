@@ -10,6 +10,8 @@ name exact rows. EmptyDatabaseTests checks the empty states separately.
 import importlib
 import json
 import os
+import pathlib
+import re
 from datetime import date, datetime
 from unittest import mock
 from zoneinfo import ZoneInfo
@@ -143,6 +145,26 @@ class UrlLinkingTests(QuadConnectData):
         self.assertEqual(self.client.get(url).status_code, 404)
         self.client.force_login(self.staff)
         self.assertSays(self.client.get(url), "Only staff can see this page")
+
+    def test_templates_never_hard_code_paths(self):
+        # Section 1: every link comes from {% url %}, {% static %} or
+        # get_absolute_url(), never a literal "/path/" or "?query".
+        templates = pathlib.Path(__file__).parent / "templates" / "connect"
+        for template in sorted(templates.glob("*.html")):
+            literal = re.findall(r'(?:href|src|action)="[/?][^"]*"',
+                                 template.read_text(encoding="utf-8"))
+            self.assertEqual(literal, [], template.name)
+
+    def test_pagination_links_are_reversed(self):
+        for n in range(10):  # with Cy, 11 media students: one past a page
+            StudentProfile.objects.create(
+                user=User.objects.create_user(f"extra{n}"), net_id=f"extra{n}",
+                illinois_email=f"extra{n}@illinois.edu", full_name=f"Extra {n}",
+                college="College of Media")
+        first = self.client.get("/students/", {"college": "media"})
+        self.assertContains(first, 'href="/students/?page=2&amp;college=media"')
+        second = self.client.get("/students/", {"page": 2, "college": "media"})
+        self.assertContains(second, 'href="/students/?page=1&amp;college=media"')
 
     def test_nav_marks_list_page_and_detail_page_differently(self):
         list_page = self.client.get("/matches/").content.decode()
