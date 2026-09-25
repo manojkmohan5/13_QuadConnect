@@ -44,5 +44,5 @@ same code run with production settings (`DEBUG=False`) after `collectstatic`.
 | `15_api_locations_json.png` | 6 | JSON output, class-based endpoint, filtered |
 | `16_api_matches_json.png` | 6 | JSON output, function-based endpoint, filtered |
 | `17_api_bad_param_400.png` | 6 | 400 response naming each bad parameter |
-| `18_api_text_plain.png` | 6 | Same data through `HttpResponse`, `text/plain` |
+| `18_api_text_plain.png` | 6 | Same data through `HttpResponse`, `text/plain`: no Pretty-print toggle, unlike the JSON in 15 |
 | `19_api_docs_mime.png` | 6 | Content-Type of each response class, read live |
