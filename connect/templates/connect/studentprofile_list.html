@@ -40,11 +40,11 @@ project demonstrates both conventions.
 
   <ul class="list">
   {% for student in students %}
-    <li class="card">
+    <li class="card linked">
       <div class="row">
         <div>
           <div class="title">
-            <a href="{% url 'connect:student-detail' student.pk %}">
+            <a href="{{ student.get_absolute_url }}">
               {{ student.full_name }}
             </a>
           </div>

@@ -17,6 +17,7 @@ wireframe deck, so that every stored field has a visible reason to exist:
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.urls import reverse
 
 # ---------------------------------------------------------------------------
 # Choice vocabularies. Kept as TextChoices rather than free text so that the
@@ -216,6 +217,15 @@ class StudentProfile(models.Model):
     def __str__(self):
         return f"{self.full_name} ({self.net_id})"
 
+    def get_absolute_url(self):
+        """This student's profile page, e.g. /students/3/.
+
+        Templates link with {{ student.get_absolute_url }} instead of
+        rebuilding the path, so the URL pattern is defined in one place.
+        Django Admin also uses it for the "View on site" button.
+        """
+        return reverse("connect:student-detail", kwargs={"pk": self.pk})
+
 
 class Interest(models.Model):
     """
@@ -366,6 +376,10 @@ class CampusLocation(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        """This venue's page, e.g. /locations/2/. Staff-only if unapproved."""
+        return reverse("connect:location-detail", kwargs={"pk": self.pk})
+
 
 class Match(models.Model):
     """
@@ -425,6 +439,10 @@ class Match(models.Model):
             f"{self.get_connection_type_display()} at {self.location.name} "
             f"on {self.scheduled_for:%b %d %H:%M}"
         )
+
+    def get_absolute_url(self):
+        """This match's page, e.g. /matches/5/."""
+        return reverse("connect:match-detail", kwargs={"pk": self.pk})
 
 
 class MatchParticipant(models.Model):
