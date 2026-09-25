@@ -11,8 +11,11 @@ The four graded P1-A2 views:
     /locations/           connect:location-list      Base CBV      Prathamesh
     /feedback/summary/    connect:feedback-summary   HttpResponse  Dhruv
 
-Each owner swaps their own line from the stub to the real view on their own
-branch. The path and the name must not change - base.html reverses all of them.
+P1-A3 added detail pages (/matches/<pk>/, /locations/<pk>/), search
+(/search/), charts (/insights/...) and the JSON API (/api/...), each under a
+comment naming its assignment section. Paths and names must not change
+without updating base.html and the models' get_absolute_url(), which
+reverse them.
 """
 
 from django.urls import path
@@ -38,8 +41,7 @@ urlpatterns = [
     path("matches/<int:pk>/", views.MatchDetailView.as_view(),
          name="match-detail"),
 
-    # --- Prathamesh Mulay - Base CBV -------------------------------------
-    # Replace with CampusLocationListView.as_view()
+    # --- Prathamesh Mulay - Base CBV (POST added in P1-A3 Section 5) --------
     path(
         "locations/",
         views.CampusLocationListView.as_view(),
@@ -47,6 +49,7 @@ urlpatterns = [
     ),
     path("locations/<int:pk>/", views.CampusLocationDetailView.as_view(),
          name="location-detail"),
+
     # --- Dhruv Thaker - HttpResponse FBV ---------------------------------
     path("feedback/summary/", views.feedback_summary, name="feedback-summary"),
 

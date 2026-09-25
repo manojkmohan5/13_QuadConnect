@@ -1,7 +1,7 @@
 """
 Views for the connect app.
 
-P1-A2 requires four kinds of view over the same domain. Each is owned by one
+P1-A2 required four kinds of view over the same domain. Each was built by one
 team member and lives in its own clearly-marked section below:
 
     Section A1  HttpResponse FBV   feedback_summary          Dhruv Thaker
@@ -9,10 +9,15 @@ team member and lives in its own clearly-marked section below:
     Section B1  Base CBV (View)    CampusLocationListView    Prathamesh Mulay
     Section B2  Generic CBV        StudentProfileListView    Kritika Agrawal
 
-The four stubs below are placeholders committed on `main` so that
-`base.html` can reverse every nav link from day one and the site is never
-broken mid-integration. Each owner replaces their own stub on their own
-feature branch; nobody needs to touch base.html or another owner's section.
+P1-A3 added, next to the view each extends:
+
+    MatchDetailView            Generic CBV, /matches/<pk>/         (Section 1)
+    CampusLocationDetailView   Generic CBV, /locations/<pk>/       (Section 1)
+    CampusLocationListView     now also handles POST               (Section 5)
+    StudentSearchView          Base CBV, GET + POST, /search/      (Section 2)
+
+The charts (Section 4) live in charts.py and the JSON API (Section 6) in
+api.py.
 """
 
 from datetime import date
