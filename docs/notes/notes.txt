@@ -8,17 +8,87 @@ Everyone appends; nobody deletes another person's entry.
 
 Sections:
   1. WEEKLY LOG
-  2. VIEW REGISTER  (P1-A2 Section 2 requirement)
-  3. REFLECTION     (P1-A2 bonus)
-  4. NOTES FOR TEAMMATES
-  5. REMINDERS & DEADLINES
-  6. CHALLENGES & OPEN QUESTIONS
-  7. CLARIFICATIONS RECEIVED
+  2. P1-A3 ANSWERS  (the notes.txt deliverables of P1-A3 Sections 1-6)
+  3. VIEW REGISTER  (P1-A2 Section 2 requirement)
+  4. REFLECTION     (P1-A2 bonus)
+  5. NOTES FOR TEAMMATES
+  6. REMINDERS & DEADLINES
+  7. CHALLENGES & OPEN QUESTIONS
+  8. CLARIFICATIONS RECEIVED
 
 
 ================================================================================
 1. WEEKLY LOG
 ================================================================================
+
+--------------------------------------------------------------------------------
+WEEK 5  (w/c 2026-09-21)  -  P1-A3 on feature/p1-a3  [Manojkumar]
+--------------------------------------------------------------------------------
+Branch feature/p1-a3, cut from main at df2c1d1. NOT merged yet: main stays
+exactly as submitted for P1-A2 until that grade is back.
+
+Done, by assignment section:
+  S1  get_absolute_url() on StudentProfile, Match and CampusLocation. New
+      MatchDetailView (/matches/<pk>/) and CampusLocationDetailView
+      (/locations/<pk>/; unapproved venues are staff-only). Every list row,
+      the home page and the detail pages link through get_absolute_url().
+      The nav grew to 8 links, all {% url %}, current one aria-current.
+  S2  /search/ (StudentSearchView): GET roster search, POST NetID lookup
+      with {% csrf_token %}, total and grouped aggregates, {% empty %} on
+      every loop.
+  S3  static/ with css/quadconnect.css, img/logo.svg and the Inter font.
+      WhiteNoise in both environments; content-hashed filenames in
+      production (cache-busting bonus). Every inline style="" moved into
+      the stylesheet except the data-driven width of the rating bars.
+  S4  connect/charts.py: a stacked bar chart and a pie chart from ORM
+      aggregates, each its own PNG endpoint (Figure -> BytesIO ->
+      HttpResponse image/png); /insights/ shows both with captions, alt
+      text and data tables.
+  S5  CampusLocationListView gained post(): the "Suggest a venue" ModelForm,
+      saved unapproved, then Post/Redirect/Get with a success message.
+      Staff approve from the admin list (is_approved is list_editable).
+  S6  connect/api.py: /api/locations/ (CBV), /api/matches/ (FBV),
+      /api/locations.txt (plain HttpResponse, text/plain) and /api/ docs.
+  Tests: connect/tests.py, 43 tests, one class per section.
+  Screenshots: docs/screenshots/p1-a3/, 19 files, indexed in
+      docs/screenshots/README.md.
+
+Found and fixed along the way:
+  - The locations page said "Hosted 1 matches" (A2).
+  - The A2 input border, #e3e3e0 on white, is 1.3:1 and fails WCAG 1.4.11
+    (UI boundaries need 3:1). The new --field-border is 3.14:1.
+  - The red border on invalid fields never showed: .form [aria-invalid]
+    lost on specificity to .form input[type="text"].
+  - The seats input said min="0" and had no max. The model's 2-50
+    validators never reach the widget; the form now sets both.
+  - After a successful suggestion the page opened scrolled past the
+    success message, because the form's #suggest fragment survived the
+    redirect. The redirect now names #main.
+  - Chart captions widened the Insights page to 387px on a 375px phone,
+    and the sticky header covered a sixth of the screen there. Both fixed.
+  - Trap worth knowing: annotate(Count("interest_links")) on a query already
+    filtered through interest_links counts only the links that matched the
+    filter. Search results are re-selected through a pk__in subquery before
+    any annotation or aggregate.
+
+Verified:
+  - manage.py test connect                         -> 43 tests, OK
+  - manage.py check                                -> 0 issues
+  - check --deploy, production, DJANGO_SECURE_SSL=1 -> 0 issues
+  - production with DJANGO_ALLOWED_HOSTS empty     -> RuntimeError (fail fast)
+  - makemigrations --check                         -> no changes; P1-A3 needs
+                                                      no migration
+  - verify_constraints                             -> 11/11 passed
+  - ruff                                           -> 33 findings, all of
+        two kinds: RUF012 "mutable class attribute" on Django Meta/admin
+        lists (idiomatic Django; 27 already on main, 4 from the new
+        ModelForm's Meta) and two noqa comments already on main
+  - collectstatic + DEBUG=False: page links quadconnect.<hash>.css, served
+    with Cache-Control: max-age=315360000, public, immutable and gzip
+  - every page fits a 375px screen; every new colour pair meets WCAG AA;
+    Tab reaches the skip link first and focus stays visible
+  - mutation checks: removing .distinct(), the is_approved=False line, or
+    the API's min_value each makes a test fail
 
 --------------------------------------------------------------------------------
 WEEK 3  (w/c 2026-09-07)  -  P1-A2 scaffold
@@ -180,7 +250,164 @@ Verified:
 
 
 ================================================================================
-2. VIEW REGISTER   (P1-A2 Section 2 - name, type and purpose of each view)
+2. P1-A3 ANSWERS   (notes.txt deliverables, one block per assignment section)
+================================================================================
+
+--------------------------------------------------------------------------------
+S1 - For which feature is get_absolute_url() useful?
+--------------------------------------------------------------------------------
+  Any feature that links to one record from more than one place. For us that
+  is the match. A match is linked from the match list, the home page's
+  recent matches, every student's match history, every venue page, and the
+  "url" field of the JSON API. All five call match.get_absolute_url(), so
+  the /matches/<pk>/ pattern is written exactly once, in urls.py. If the URL
+  changes later (say to /week/<date>/match/<pk>/), that is a one-line edit
+  instead of five template edits, and a link can never drift out of step.
+
+  It pays off in three more places:
+    - Django Admin shows a "View on site" button on every model that has it.
+    - The API turns it into a full link with
+      request.build_absolute_uri(obj.get_absolute_url()).
+    - Templates read as intent: {{ student.get_absolute_url }} says "link to
+      this student", where {% url 'connect:student-detail' student.pk %}
+      says how to build the path.
+  Student profiles and venues use it the same way. Feedback deliberately has
+  no detail page and no get_absolute_url(): it is private.
+
+--------------------------------------------------------------------------------
+S2 - Why the roster search is GET and the NetID lookup is POST
+--------------------------------------------------------------------------------
+  GET: results should load the same from the same link. /search/?q=gaming
+  can be bookmarked, shared with a teammate, reloaded and reached with the
+  back button, and it changes nothing on the server.
+  POST: the data should stay hidden. A NetID identifies one person. In a GET
+  URL it would land in browser history, the server's access log, any proxy
+  log, and the Referer header sent to the next site the user clicks through
+  to. In a POST body it goes to none of those. {% csrf_token %} protects the
+  form. The page renders straight from the POST instead of redirecting,
+  because a redirect would have to put the NetID back into a URL.
+
+--------------------------------------------------------------------------------
+S3 - Static file organisation
+--------------------------------------------------------------------------------
+  One project-level static/ directory (STATICFILES_DIRS), split by type:
+      static/css/quadconnect.css     the whole design
+      static/img/logo.svg            header logo and favicon
+      static/fonts/                  Inter woff2 + its SIL OFL licence
+  Project-level, not connect/static/connect/, because the only consumer is
+  base.html, which is site-wide; the connect app has no assets of its own.
+  If an app ever does, they go in <app>/static/<app>/ so two apps' files
+  called style.css cannot collide. Templates reach every file through
+  {% static %}, never a hard-coded /static/ path, so STATIC_URL or the
+  storage backend can change without touching a template. The font is
+  self-hosted so a page load makes no third-party request, which suits an
+  app whose premise is student privacy.
+
+--------------------------------------------------------------------------------
+S3 - Cache busting (explained, and implemented for the bonus)
+--------------------------------------------------------------------------------
+  The problem: browsers cache quadconnect.css. Cache it for a long time and
+  returning visitors keep the OLD stylesheet after we deploy a change. Cache
+  it briefly and every page view re-checks the file. Cache busting removes
+  the trade-off by changing a file's URL whenever its content changes: an
+  old URL can then be cached forever, because it will never mean anything
+  else.
+
+  How it is implemented (quadconnect/settings/production.py):
+      STORAGES["staticfiles"] =
+          "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    - python manage.py collectstatic --noinput copies every file into
+      staticfiles/ a second time under a name with a hash of its content,
+      plus staticfiles.json mapping each name to its hashed name.
+    - {% static 'css/quadconnect.css' %} looks the name up in that manifest
+      and prints /static/css/quadconnect.9d7082daf6a5.css (the build in
+      screenshots 08 and 09).
+    - url() references inside the CSS are rewritten too: the font becomes
+      fonts/inter-latin-wght-normal.260c81a4759b.woff2.
+    - WhiteNoise serves hashed files with
+          Cache-Control: max-age=315360000, public, immutable
+      and a gzip copy (4.8 KB instead of 16 KB). The unhashed name gets
+      only max-age=60.
+  Changing one character of the CSS changes its hash, so the next page
+  links a new URL and every browser fetches it at once.
+  Development keeps Django's default storage, so no collectstatic is needed
+  while editing. Deploy step: collectstatic --noinput. staticfiles/ is
+  gitignored.
+
+--------------------------------------------------------------------------------
+S4 - Memory when generating charts
+--------------------------------------------------------------------------------
+  - matplotlib.figure.Figure, never pyplot. pyplot keeps every figure in a
+    global registry until plt.close(), so a view that forgets to close one
+    leaks a figure per request. A bare Figure is freed when the view
+    returns. pyplot's default backend on this machine is also TkAgg, a GUI
+    backend that must not run inside a web server.
+  - The PNG is written into an in-memory BytesIO buffer and sent with
+    HttpResponse(content_type="image/png"). Nothing touches the disk and
+    there are no temp files to clean up.
+  - Fixed figsize (8 x 4.5 in) and dpi (150) cap each render at 1200 x 675
+    px. The RGBA canvas is about 3 MB; the measured peak for a whole render
+    was about 9 MiB, and the PNG sent is 48-66 KB.
+  - Measured: 120 renders in one process retained about 240 KiB in total
+    (Matplotlib's bounded text-layout caches), and no pyplot figures were
+    left open. A leaked figure would cost megabytes per render.
+
+--------------------------------------------------------------------------------
+S5 - Adapting a class-based view to GET and POST
+--------------------------------------------------------------------------------
+  CampusLocationListView is a base View, so adapting it meant adding post()
+  next to get(); both call one _render() so the list, filters and empty
+  states are identical either way.
+    GET   ?setting= and ?seats= filter the list. Nothing changes on the
+          server, so the filters belong in a shareable URL.
+    POST  "Suggest a venue" creates a row, so it must never happen on a GET
+          (a link, a prefetch, a crawler). Valid: save unapproved, add a
+          message, redirect (Post/Redirect/Get, so a reload cannot submit it
+          twice). Invalid: re-render with an error summary and each error
+          next to its field.
+  The ModelForm's fields list is a whitelist that leaves out is_approved, so
+  even a hand-crafted POST with is_approved=on cannot approve itself (there
+  is a test for exactly that).
+
+--------------------------------------------------------------------------------
+S6 - How we plan to create the API, and what data it will serve
+--------------------------------------------------------------------------------
+  How (now): Django's own JsonResponse, no framework. A class-based View for
+  the resource-style list (LocationListAPI, which can gain a detail or a
+  post() later), a function-based view for a single-purpose query
+  (match_list_api). Query parameters are validated with forms.Form classes;
+  a bad value gets a 400 JSON body naming the parameter and how to fix it,
+  never a silent fallback. Every list has the same shape: count, filters,
+  results. /api/locations.txt is the same data through plain HttpResponse
+  with text/plain, to show the MIME difference: JsonResponse serialises a
+  dict and sends application/json, HttpResponse sends a string as whatever
+  content_type says (text/html by default).
+
+  What (now): public-by-design data only.
+    - approved venues: name, address, arrival note, indoor/outdoor, seats,
+      matches hosted, page URL
+    - the match schedule: type, status, week, local time with UTC offset,
+      venue, suggested activity, participant COUNT, page URL
+  Never: student names, NetIDs, emails, check-in codes, feedback, private
+  notes, unapproved venue suggestions. A test checks the payloads.
+
+  Planned next:
+    1. Version the prefix (/api/v1/) before any outside client depends on it.
+    2. Authenticated endpoints for the signed-in student only:
+         GET  /api/v1/me/match/                this week's match, including
+                                               their own check-in code
+         POST /api/v1/matches/<pk>/check-in/   Screen 8
+         POST /api/v1/matches/<pk>/feedback/   Screen 9
+       These change data, so they need login plus CSRF or token auth. At that
+       point we would move to Django REST Framework for serializers,
+       permissions and throttling rather than hand-roll them.
+    3. Pagination (?page=) once lists outgrow one response.
+  First consumers we have in mind: the campus map on Screen 8, which needs
+  venues, and a phone-sized schedule view.
+
+
+================================================================================
+3. VIEW REGISTER   (P1-A2 Section 2 - name, type and purpose of each view)
 ================================================================================
 
 The view marked GRADED for each of the four required kinds is the one wired to
@@ -269,9 +496,30 @@ SUPPORTING (not graded)
   Purpose  : Dashboard proving the data model is queryable outside Django
              Admin, and the entry point a grader lands on.
 
+--------------------------------------------------------------------------------
+ADDED IN P1-A3  (all by Manojkumar, on feature/p1-a3)
+--------------------------------------------------------------------------------
+  MatchDetailView            Generic CBV (DetailView)   /matches/<pk>/
+      One match: time, venue, activity, participants with fit and reason.
+  CampusLocationDetailView   Generic CBV (DetailView)   /locations/<pk>/
+      One venue and its matches; unapproved venues are 404 except to staff.
+  StudentSearchView          Base CBV (View), GET+POST  /search/
+      GET roster search and POST NetID lookup with aggregates (Section 2).
+  CampusLocationListView     Base CBV, now GET+POST     /locations/
+      A2 view; post() added for "Suggest a venue" (Section 5).
+  insights                   FBV, render()              /insights/
+  students_by_college_png    FBV, HttpResponse PNG      /insights/students-by-college.png
+  interest_categories_png    FBV, HttpResponse PNG      /insights/interest-categories.png
+      Matplotlib charts from ORM aggregates (Section 4).
+  LocationListAPI            Base CBV, JsonResponse     /api/locations/
+  match_list_api             FBV, JsonResponse          /api/matches/
+  location_list_text         FBV, HttpResponse text     /api/locations.txt
+  api_docs                   FBV, render()              /api/
+      Read-only JSON API and its documentation (Section 6).
+
 
 ================================================================================
-3. REFLECTION   (P1-A2 bonus - fill in after your view works)
+4. REFLECTION   (P1-A2 bonus - fill in after your view works)
 ================================================================================
 
 HttpResponse vs render()
@@ -363,13 +611,20 @@ Team-level observation
 
 
 ================================================================================
-4. NOTES FOR TEAMMATES
+5. NOTES FOR TEAMMATES
 ================================================================================
 
 - Your build instructions are in docs/build_tasks/<yourname>_*.md. Read the
   whole file before writing code; it lists the exact files you may touch.
-- DO NOT edit base.html. All four routes are already named and reversed there.
-  If you think you need to change it, message the group instead.
+- (P1-A2 rule, for integration) DO NOT edit base.html. All four routes are
+  already named and reversed there. If you think you need to change it,
+  message the group instead.
+  P1-A3 changed it once, on feature/p1-a3: base.html now loads the static
+  files and has 8 nav links. Adding a page? Add its nav link there, with the
+  same aria-current pattern as the others.
+- Styling lives in static/css/quadconnect.css. No style="" attributes in
+  templates, and measure any new colour against WCAG AA before using it.
+- Run python manage.py test connect before you push.
 - DO NOT edit another owner's section of views.py. The file is divided by
   commented section headers.
 - entity_list.html is SHARED by Manojkumar and Prathamesh. Agree before
@@ -388,7 +643,7 @@ Team-level observation
 
 
 ================================================================================
-5. REMINDERS & DEADLINES
+6. REMINDERS & DEADLINES
 ================================================================================
 
 - P1-A2 due Monday 23:59. Submit ONE item: the public GitHub repository link.
@@ -402,19 +657,24 @@ Team-level observation
       05_list_normal.png         a populated list
       06_list_empty.png          the same list with a filter that matches nothing
 - Late policy is strict: -10%/24h, zero after 48h.
+- P1-A3 (Manojkumar only): built on feature/p1-a3. Merge it to main only once
+  the P1-A2 grade is back, then submit the public repository link.
+  Screenshots are in docs/screenshots/p1-a3/.
+  Production needs one extra deploy step now: collectstatic --noinput.
 
 
 ================================================================================
-6. CHALLENGES & OPEN QUESTIONS
+7. CHALLENGES & OPEN QUESTIONS
 ================================================================================
 
 - BASE_DIR had to change from parent.parent to parent.parent.parent when
   settings became a package. It fails silently if you miss it: Django looks
   for db.sqlite3 one directory too deep and creates an empty one. Worth
   knowing if anyone restructures again.
-- With DEBUG=False, runserver will not serve /static/. Our CSS is inline in
-  base.html so production mode renders correctly today. The moment we add real
-  static assets we need WhiteNoise or a collectstatic step - not before.
+- RESOLVED in P1-A3: with DEBUG=False, runserver will not serve /static/, so
+  A2 kept its CSS inline. P1-A3 moved the CSS to static/ and added
+  WhiteNoise in the same change, so production still renders. It now needs
+  collectstatic before it starts.
 - UniqueConstraint cannot span relations, so "one match per student per week"
   is NOT enforceable in the model layer. It has to live in the matching
   service when we build it. Carried over from P1-A1.
@@ -424,7 +684,7 @@ Team-level observation
 
 
 ================================================================================
-7. CLARIFICATIONS RECEIVED
+8. CLARIFICATIONS RECEIVED
 ================================================================================
 
 - P1-A1 named two different superusers (mohitg2 in section 4, tester in the
