@@ -25,15 +25,16 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | **P1-A2** — Fullstack Development + GitHub Secrets (30 pts) — all four views merged |
-| **Last completed** | P1-A1 — Product + Data Models + UI/UX (35 pts) |
-| **`main` status** | Scaffold complete and verified. Dev **and** prod both boot clean. |
-| **What remains** | Four feature branches, one per developer. Then merge, screenshot, submit. |
+| **Assignment in flight** | **P1-A3** — URLs, ORM, static files, charts, forms, API (60 pts) — built by Manojkumar alone on `feature/p1-a3`, verified, **not merged** |
+| **Last completed** | P1-A2 — Fullstack Development + GitHub Secrets (30 pts) — submitted, awaiting grade |
+| **`main` status** | Exactly as submitted for P1-A2 (`df2c1d1`). Do not push to it until the P1-A2 grade is back. |
+| **What remains** | Review `feature/p1-a3`, merge it to `main` once P1-A2 is graded, submit the repo URL. |
 
-`main` currently ships: split settings, `.env` handling, `base.html`, a shared
-list template, a home dashboard, and **all four graded routes already named
-and wired to owner-marked stub views**. The site is never broken: every nav
-link resolves today, and each developer replaces exactly one stub.
+`main` ships P1-A2: split settings, `.env` handling, `base.html`, the shared
+list template, a home dashboard and the four graded views. `feature/p1-a3`
+adds everything in §9's P1-A3 entry: detail pages, search, static files with
+cache busting, Matplotlib charts, a POST form on a CBV, a JSON API, and a
+43-test suite.
 
 ### Status board — UPDATE YOUR ROW WHEN YOU FINISH
 
@@ -43,6 +44,7 @@ link resolves today, and each developer replaces exactly one stub.
 | Manojkumar Mohankumar | `feature/match-views` | FBV `render()` | `/matches/` | ✅ DONE — `match_list` with `?week=` filter, renders the shared list template |
 | Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ✅ DONE — `CampusLocationListView` base CBV with setting + seats filters, reuses the shared list template |
 | Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ✅ DONE — aggregate feedback summary with rating distribution, enjoyment metrics, and connection preferences |
+| Manojkumar Mohankumar (P1-A3, solo) | `feature/p1-a3` | all six A3 sections | `/search/`, `/matches/<pk>/`, `/locations/<pk>/`, `/insights/`, `/api/` | ✅ DONE, not merged — see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -82,11 +84,11 @@ handed forward to the next assignment as-is.
 | **Course** | INFO 490 (`info_490_120268_265091`), Fall 2026, UIUC |
 | **Team** | The Connectors · **Team 13** |
 | **Prototype** | <https://trek-galaxy-20520998.figma.site/> |
-| **Stack** | Django 5.2.17 · Python 3.11 · SQLite · `python-dotenv` |
+| **Stack** | Django 5.2.17 · Python 3.11 · SQLite · `python-dotenv` · WhiteNoise · Matplotlib (A3) |
 | **Platform** | Windows 11, PowerShell + Git Bash |
 
 No JavaScript framework, no CSS framework, no build step. Server-rendered
-Django templates with inline CSS.
+Django templates and one stylesheet in `static/css/` (inline CSS until A3).
 
 ### Members and feature ownership
 
@@ -194,9 +196,11 @@ the same models as a foundation.
 ├── .gitignore                     .env on line 1
 ├── .env                           IGNORED — never committed
 ├── .env.example                   committed, placeholders only
-├── requirements.txt               Django 5.2.17, python-dotenv
+├── requirements.txt               Django 5.2.17, python-dotenv, whitenoise, matplotlib
 ├── manage.py                      -> quadconnect.settings.development
 ├── db.sqlite3                     IGNORED — rebuild with seed_demo_data
+├── static/                        (A3) css/quadconnect.css, img/logo.svg, fonts/
+├── staticfiles/                   IGNORED — collectstatic output (production)
 ├── docs/
 │   ├── wireframes/
 │   │   ├── v1/                    10 PNGs: 9 screens + flow
@@ -205,26 +209,30 @@ the same models as a foundation.
 │   ├── branching_strategy/        diagram.png + branching.md
 │   ├── notes/notes.txt            weekly log, VIEW REGISTER, REFLECTION
 │   ├── build_tasks/               one spec per developer + shared rules
-│   ├── screenshots/               README.md manifest + 6 captures
+│   ├── screenshots/               README.md manifest, A2 captures, p1-a3/ (19)
 │   ├── er_diagram.pdf
 │   └── data_model_notes.md        why each model and on_delete exists
 ├── quadconnect/
 │   ├── settings/
 │   │   ├── base.py                shared; reads .env; BASE_DIR 3 levels up
 │   │   ├── development.py         DEBUG=True
-│   │   └── production.py          DEBUG=False + security headers
+│   │   └── production.py          DEBUG=False + security headers + hashed static
 │   ├── urls.py                    /admin/ and '' -> connect.urls
 │   ├── wsgi.py  asgi.py           -> quadconnect.settings.production
 └── connect/
-    ├── models.py                  8 models — FROZEN for P1-A2
-    ├── views.py                   divided into one section per owner
+    ├── models.py                  8 models; A3 added get_absolute_url() to 3 (no migration)
+    ├── views.py                   one section per owner, plus A3 sections
+    ├── forms.py                   (A3) search, NetID lookup, venue suggestion
+    ├── charts.py                  (A3) Matplotlib charts + Insights page
+    ├── api.py                     (A3) JSON API + docs page
+    ├── tests.py                   (A3) 43 tests, one class per A3 section
     ├── urls.py                    every route named, namespace "connect"
     ├── admin.py                   all 8 registered, with inlines
     ├── migrations/0001_initial.py
     ├── templates/connect/
-    │   ├── base.html              OWNED BY main — do not edit on a branch
+    │   ├── base.html              site shell; A3 moved its CSS to static/
     │   ├── entity_list.html       SHARED — model-agnostic list
-    │   └── home.html
+    │   └── home.html, *_detail.html, student_search.html, insights.html, api_docs.html, ...
     └── management/commands/
         ├── seed_demo_data.py      idempotent
         └── verify_constraints.py  11 checks, all rolled back
@@ -259,6 +267,13 @@ Production **fails fast**: unset `DJANGO_ALLOWED_HOSTS` raises `RuntimeError`
 at startup rather than silently serving any `Host` header. With
 `DJANGO_SECURE_SSL=1`, `check --deploy` reports **zero issues** (HSTS, SSL
 redirect, secure cookies all switch on).
+
+**Static files (A3).** `STATICFILES_DIRS = [BASE_DIR / "static"]`. WhiteNoise
+serves them in both environments (`WhiteNoiseMiddleware` straight after
+`SecurityMiddleware`, and `whitenoise.runserver_nostatic` so dev behaves like
+prod). Production uses `CompressedManifestStaticFilesStorage`: content-hashed
+names, `immutable` caching, gzip. **Production needs
+`collectstatic --noinput` before it starts**; development does not.
 
 ### `.env` keys
 
@@ -448,8 +463,15 @@ yours.
 | `/matches/` | `connect:match-list` | FBV `render()` | Manojkumar | `entity_list.html` (shared) |
 | `/locations/` | `connect:location-list` | Base CBV | Prathamesh | `entity_list.html` (shared) |
 | `/feedback/summary/` | `connect:feedback-summary` | FBV `HttpResponse` | Dhruv | `feedback_summary.html` |
+| `/search/` | `connect:student-search` | Base CBV, GET+POST | A3 | `student_search.html` |
+| `/matches/<pk>/` | `connect:match-detail` | Generic CBV | A3 | `match_detail.html` (default naming) |
+| `/locations/<pk>/` | `connect:location-detail` | Generic CBV | A3 | `campuslocation_detail.html` (default naming) |
+| `/insights/` + two `.png` | `connect:insights`, `connect:chart-*` | FBV, `image/png` | A3 | `insights.html` |
+| `/api/`, `/api/locations/`, `/api/matches/`, `/api/locations.txt` | `connect:api-*` | CBV + FBV, `JsonResponse` / `HttpResponse` | A3 | `api_docs.html` for `/api/` |
 
-Everything is namespaced: `{% url 'connect:match-list' %}`.
+`/locations/` also gained `post()` in A3 (venue suggestions). Everything is
+namespaced: `{% url 'connect:match-list' %}`. Links to a single record always
+go through `get_absolute_url()` (`StudentProfile`, `Match`, `CampusLocation`).
 
 ### Template architecture
 
@@ -462,9 +484,13 @@ Everything is namespaced: `{% url 'connect:match-list' %}`.
   dicts (`title`, `subtitle`, `meta`, `badge`, `url`) so the template does not
   know what a Match or a CampusLocation is. Two owners render it from
   different view styles; that is the "template reuse" deliverable.
-- CSS is **inline in `base.html`** on purpose: with `DEBUG=False`, `runserver`
-  will not serve `/static/`, so this keeps production mode rendering without
-  `collectstatic`. Add WhiteNoise only when real static assets arrive.
+  A3 added `{% block after_list %}` below the list (the venue form uses it).
+- ~~CSS is inline in `base.html`~~ (A2). Since A3 the design lives in
+  `static/css/quadconnect.css`, loaded with `{% static %}`, and WhiteNoise
+  keeps `DEBUG=False` rendering. No `style=""` attributes in templates except
+  the data-driven width of the rating bars. `base.html` also gained
+  `{% block page_header %}` (home replaces it with the hero) and a flash
+  message region.
 
 ---
 
@@ -476,9 +502,12 @@ python manage.py migrate
 python manage.py seed_demo_data      # idempotent
 python manage.py verify_constraints  # 11/11 pass
 python manage.py check
+python manage.py test connect        # 43 tests (A3)
 
 DJANGO_SETTINGS_MODULE=quadconnect.settings.production \
   python manage.py check --deploy    # 0 issues with DJANGO_SECURE_SSL=1
+DJANGO_SETTINGS_MODULE=quadconnect.settings.production \
+  python manage.py collectstatic --noinput   # before running production (A3)
 ```
 
 ### Superusers — both, password `uiuc12345`
@@ -526,6 +555,48 @@ adds a short merge entry of their own recording anything that only became
 visible when the branches came together — conflicts hit, behaviour that broke
 on integration, decisions reversed. That merge entry is the part that is
 easiest to skip and most valuable later.
+
+### DONE `feature/p1-a3` - Manojkumar Mohankumar - 2026-09-24
+**Shipped:** all six P1-A3 sections, solo, on one branch cut from `main` at
+`df2c1d1`: detail pages linked through `get_absolute_url()`, a GET + POST
+search with aggregates, the site CSS moved to `static/` with production cache
+busting, two Matplotlib charts served as PNG endpoints, a POST "suggest a
+venue" form on the locations CBV, and a read-only JSON API. **Not merged** —
+`main` stays as submitted for P1-A2 until that grade is back.
+
+**Files added:** `static/css/quadconnect.css`, `static/img/logo.svg`,
+`static/fonts/` (Inter + OFL), `connect/forms.py`, `connect/charts.py`,
+`connect/api.py`, `connect/tests.py` (was a stub), templates
+`match_detail.html`, `campuslocation_detail.html`, `student_search.html`,
+`insights.html`, `api_docs.html`, `docs/screenshots/p1-a3/` (19).
+
+**Files changed:** `requirements.txt` (whitenoise, matplotlib);
+`settings/base.py` (`STATICFILES_DIRS`, WhiteNoise middleware,
+`runserver_nostatic`); `settings/production.py` (manifest storage);
+`models.py` (`get_absolute_url()` ×3, no migration); `views.py` (detail views,
+search, `CampusLocationListView.post()`, row URLs, plural fix); `urls.py`
+(10 new routes); `admin.py` (`is_approved` list-editable); `base.html`
+(static assets, 8-link nav with `aria-current`, messages, `page_header`
+block); every template (inline styles → classes, lists → `<ul>`);
+README, notes.txt, this file.
+
+**Decisions that differ from the plan:** match and venue detail pages shipped
+in one commit because each links to the other. The NetID lookup renders from
+the POST instead of redirecting, since a redirect would put the NetID in a
+URL. Unapproved venues are 404 for non-staff rather than shown with a
+banner, so unreviewed suggestions are never published.
+
+**Gotchas for the next person:** see §11 traps 13–19. The expensive ones:
+filtering through a relation and then annotating a `Count` over the same
+relation counts only the filtered rows; model validators never reach form
+widgets; a form action's `#fragment` survives the redirect after it.
+
+**Verified:** 43 tests pass; `check` clean; `check --deploy` 0 issues with
+SSL on; `makemigrations --check` no changes; `verify_constraints` 11/11; prod
+with `DEBUG=False` serves `quadconnect.<hash>.css` as `immutable` + gzip; every
+page fits 375 px; new colour pairs ≥ WCAG AA; keyboard reaches the skip link
+first; mutation checks confirm the key tests fail when the code they guard is
+removed.
 
 ### `main` — accessibility fix · 2026-09-09 · Manojkumar
 **Shipped:** shared palette now meets WCAG 2.1 AA, plus explicit focus rings.
@@ -740,9 +811,10 @@ empty state renders (forced in a rolled-back transaction).
 2. **`.as_view()` is required** for CBVs in `urls.py`. Forgetting it gives
    `__init__() takes 1 positional argument but 2 were given`, which does not
    point at the cause.
-3. **`DEBUG=False` stops `runserver` serving `/static/`.** Our CSS is inline,
-   so prod renders fine today. Adding static assets means adding WhiteNoise at
-   the same time.
+3. **`DEBUG=False` stops `runserver` serving `/static/`.** A2 kept its CSS
+   inline for that reason. A3 moved it to `static/` and added WhiteNoise in the
+   same change. Production now needs `collectstatic --noinput` first, or every
+   `{% static %}` raises (the manifest does not exist yet).
 4. **`db.sqlite3` is gitignored.** Never `git add -f` it — a tracked binary
    conflicts on every branch. Re-run `seed_demo_data` instead.
 5. **`UniqueConstraint` cannot span relations** (see §6).
@@ -768,6 +840,32 @@ empty state renders (forced in a rolled-back transaction).
 12. **8 models vs P1-A1's "recommended 3–5."** The binding rule was a minimum of
    2 per feature. Do not "fix" this by collapsing models — it would force
    nullable columns meaningless for half the rows.
+13. **Filter through a relation, then `Count` it, and you count only the rows
+   that matched.** `filter(interest_links__interest__name__icontains="gam")
+   .annotate(n=Count("interest_links"))` gives each student the number of
+   *matching* interests, not all of them, because Django reuses the join.
+   Re-select first: `StudentProfile.objects.filter(pk__in=matches.values("pk"))`.
+14. **Spanning a to-many relation in `filter()` duplicates rows.** A student
+   with two matching interests comes back twice. Add `.distinct()` (the
+   search does, and a test proves it).
+15. **Model validators never reach the form widget.** `CampusLocation.capacity`
+   validates 2–50, but its `ModelForm` input rendered `min="0"` (from
+   `PositiveSmallIntegerField`) and no `max`. Set widget attrs in the form.
+16. **A form action's `#fragment` survives the redirect after the POST.** The
+   venue form posts to `#suggest`, so after Post/Redirect/Get the browser
+   reopened at the form, below the success message. Give the redirect its
+   own fragment (`#main`).
+17. **CSS specificity: `.form [aria-invalid="true"]` loses to
+   `.form input[type="text"]`.** The error border never showed. Qualify it
+   with the element (`.form input[aria-invalid="true"]`).
+18. **Never `pyplot` in a view.** It keeps every figure in a global registry
+   until `plt.close()` (a leak per request), and its default backend here is
+   TkAgg, a GUI. Build `matplotlib.figure.Figure` directly and save into
+   `BytesIO`. First Matplotlib import builds a font cache (~45 s, once).
+19. **Windows tooling:** text-mode `subprocess` stdin turns LF line endings
+   into CRLF, so a patch piped to `git apply` stops matching; pass bytes.
+   Bash heredocs can eat backslashes in inline Python (this entry lost its
+   own escape examples that way); write the script to a file instead.
 
 ---
 
@@ -780,12 +878,16 @@ IEEE two-column after the original was single-column), the Wireframes PDF
 with those kept as an iteration-v2 appendix), and the Django project ZIP.
 Deliverables live outside this repo in the workspace `SUBMIT/` folder.
 
-### P1-A2 — Fullstack Development + GitHub Secrets (30 pts) — in flight
-Section 1 structure/security/GitHub: **done on `main`**.
-Sections 2 and 3 views/templates: **four feature branches pending**.
-Submission is one item: the public GitHub repository URL.
-Instructor `27guptamohit` is added as a collaborator **last**, after all four
-branches merge.
+### P1-A2 — Fullstack Development + GitHub Secrets (30 pts) — submitted
+Section 1 structure/security/GitHub done on `main`; the four feature
+branches merged one at a time (see §9). Submission was one item: the public
+GitHub repository URL. Awaiting the grade.
+
+### P1-A3 — URLs, ORM, static files, charts, forms, API (60 pts) — in flight
+Built by Manojkumar alone on `feature/p1-a3`; all six sections done and
+verified (§9). Merge to `main` only after the P1-A2 grade is back, then
+submit the public repository URL. The notes.txt answers the assignment asks
+for are in its section 2; screenshots in `docs/screenshots/p1-a3/`.
 
 ### Next
 The matching algorithm remains the biggest open design question:
