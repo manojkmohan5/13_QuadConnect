@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>QuadConnect</title>
+  <!-- Four quadrants of a campus quad; the two accent squares are the
+       connection made across it. Self-contained background so the same
+       file works on the dark header and as a favicon on a light tab. -->
+  <rect width="32" height="32" rx="8" fill="#1f2933"/>
+  <rect x="6" y="6" width="9" height="9" rx="2.5" fill="#ff8a5c"/>
+  <rect x="17" y="6" width="9" height="9" rx="2.5" fill="#f6f6f4"/>
+  <rect x="6" y="17" width="9" height="9" rx="2.5" fill="#f6f6f4"/>
+  <rect x="17" y="17" width="9" height="9" rx="2.5" fill="#ff8a5c"/>
+</svg>

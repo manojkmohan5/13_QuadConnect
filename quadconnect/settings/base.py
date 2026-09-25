@@ -60,6 +60,10 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    # Must sit above staticfiles: stops runserver serving /static/ itself,
+    # so development serves static files through WhiteNoise exactly as
+    # production does (same MIME types, same headers).
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
 
     # QuadConnect domain app: the verified connection lifecycle.
@@ -68,6 +72,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves static files in every environment, straight after
+    # SecurityMiddleware as WhiteNoise requires. With DEBUG=True it reads
+    # from the finders; with DEBUG=False it serves collected files.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -128,6 +136,17 @@ USE_TZ = True
 
 # --- Static files ---------------------------------------------------------
 STATIC_URL = "static/"
+
+# Site-wide assets live in one project-level static/ directory, because the
+# site-wide base template is their only consumer:
+#   static/css/    quadconnect.css
+#   static/fonts/  self-hosted Inter (SIL OFL)
+#   static/img/    logo and favicon
+# App-specific assets would go in <app>/static/<app>/ once a second app
+# exists; the <app>/ namespace stops two apps' files colliding.
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# collectstatic target, gitignored. Production serves from here.
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

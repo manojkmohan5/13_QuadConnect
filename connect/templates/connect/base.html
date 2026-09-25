@@ -1,21 +1,23 @@
+{% load static %}
 {% comment %}
 Site-wide base template for QuadConnect.
 
-Every page extends this. It owns the document shell, the navigation, the
-palette and the footer, so feature templates only ever fill in a title and a
-content block.
+Every page extends this. It owns the document shell, navigation, flash
+messages and footer; the visual design lives in static/css/quadconnect.css,
+loaded through {% static %} so production can serve it under a content-hashed
+filename (cache busting - see docs/notes/notes.txt).
 
 Blocks available to children:
-    title    - text inside <title>, also rendered as the page heading
-    subtitle - optional line under the heading
-    content  - the page body (required)
-    extra_css- optional per-page styles
+    title        text inside <title>
+    page_header  the whole page header; override to replace it (home does)
+      heading    the <h1> text, inside page_header
+      subtitle   optional line under the heading, inside page_header
+    content      the page body (required)
+    extra_css    optional per-page <link>/<style>
 
-CSS is inline on purpose. With DEBUG=False, `runserver` will not serve files
-from /static/, so keeping the stylesheet in the document means production mode
-renders correctly without adding WhiteHoise or running collectstatic. When the
-project gains real static assets, move this into static/css/ and add
-WhiteNoise at the same time.
+Navigation marks the current section with class="active". The list page
+itself gets aria-current="page"; its detail pages get aria-current="true",
+because the link then points at the section, not at the page being shown.
 {% endcomment %}
 <!doctype html>
 <html lang="en">
@@ -23,167 +25,63 @@ WhiteNoise at the same time.
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}QuadConnect{% endblock %}</title>
-  <style>
-    :root {
-      --ink: #1f2933;
-      --muted: #666e7b;
-      --line: #e3e3e0;
-      --bg: #f6f6f4;
-      --card: #ffffff;
-      --accent: #c0421c;
-      --accent-soft: #fdf0eb;
-      --ok: #0b6e4f;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-    }
-    a { color: var(--accent); }
-
-    /* WCAG 2.1 AA 2.4.7 - focus must be visible at all times. The browser
-       default ring is easy to lose against the card background, so make it
-       explicit and high contrast. */
-    a:focus-visible,
-    button:focus-visible,
-    input:focus-visible,
-    select:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 2px;
-      border-radius: 3px;
-    }
-
-    /* --- header / nav --- */
-    header.site {
-      background: var(--card);
-      border-bottom: 1px solid var(--line);
-      position: sticky; top: 0; z-index: 10;
-    }
-    .bar {
-      max-width: 1040px; margin: 0 auto; padding: 12px 24px;
-      display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
-    }
-    .brand {
-      display: flex; align-items: center; gap: 8px;
-      font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
-      text-decoration: none; color: var(--ink);
-    }
-    .brand .mark {
-      width: 20px; height: 20px; border-radius: 5px;
-      background: var(--accent); display: inline-block;
-    }
-    nav.site { display: flex; gap: 18px; flex-wrap: wrap; }
-    nav.site a {
-      text-decoration: none; color: var(--muted); font-size: 14px;
-      padding-bottom: 2px; border-bottom: 2px solid transparent;
-    }
-    nav.site a:hover { color: var(--ink); }
-    nav.site a.active {
-      color: var(--ink); font-weight: 600; border-bottom-color: var(--accent);
-    }
-
-    /* --- layout --- */
-    main { max-width: 1040px; margin: 0 auto; padding: 32px 24px 64px; }
-    h1.page { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.02em; }
-    p.sub { margin: 0 0 26px; color: var(--muted); }
-    h2.section {
-      font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
-      color: var(--muted); margin: 34px 0 12px;
-    }
-
-    /* --- reusable pieces --- */
-    .card {
-      background: var(--card); border: 1px solid var(--line);
-      border-radius: 10px; padding: 16px 18px;
-    }
-    .grid {
-      display: grid; gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    }
-    .stat .n { font-size: 26px; font-weight: 600; }
-    .stat .l { font-size: 12px; color: var(--muted); }
-    .row {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      gap: 16px;
-    }
-    .row .title { font-weight: 600; }
-    .row .subtitle { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .meta { margin-top: 8px; font-size: 13px; color: var(--muted); }
-    .meta span { margin-right: 14px; white-space: nowrap; }
-    .badge {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-      text-transform: uppercase; padding: 3px 9px; border-radius: 999px;
-      background: var(--accent-soft); color: var(--accent); white-space: nowrap;
-    }
-    .empty {
-      background: var(--card); border: 1px dashed var(--line);
-      border-radius: 10px; padding: 40px 24px; text-align: center;
-    }
-    .empty .big { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-    .empty p { color: var(--muted); margin: 0 auto; max-width: 460px; }
-    .filter {
-      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-    .filter input, .filter select {
-      padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px;
-      font: inherit; font-size: 14px; background: var(--card);
-    }
-    .filter button {
-      padding: 7px 14px; border: 0; border-radius: 7px; cursor: pointer;
-      background: var(--ink); color: #fff; font: inherit; font-size: 14px;
-      font-weight: 600;
-    }
-    .filter a.clear { font-size: 13px; color: var(--muted); }
-    table { border-collapse: collapse; width: 100%; }
-    th, td {
-      text-align: left; padding: 9px 12px; border-bottom: 1px solid #eee;
-      font-size: 14px;
-    }
-    th {
-      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
-      color: var(--muted);
-    }
-    .scroll { overflow-x: auto; }
-
-    footer.site {
-      border-top: 1px solid var(--line); margin-top: 40px;
-      padding: 20px 24px; text-align: center;
-      color: var(--muted); font-size: 13px;
-    }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+  <link rel="preload" href="{% static 'fonts/inter-latin-wght-normal.woff2' %}"
+        as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/quadconnect.css' %}">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
 
+<a class="skip-link" href="#main">Skip to main content</a>
+
 <header class="site">
   <div class="bar">
     <a class="brand" href="{% url 'connect:home' %}">
-      <span class="mark"></span> QuadConnect
+      <img src="{% static 'img/logo.svg' %}" alt="" width="30" height="30">
+      QuadConnect
     </a>
-    <nav class="site">
-      <a href="{% url 'connect:home' %}">Home</a>
-      <a href="{% url 'connect:student-list' %}">Students</a>
-      <a href="{% url 'connect:match-list' %}">Matches</a>
-      <a href="{% url 'connect:location-list' %}">Locations</a>
-      <a href="{% url 'connect:feedback-summary' %}">Feedback</a>
-      <a href="/admin/">Admin</a>
+    {% with u=request.resolver_match.url_name %}
+    <nav class="site" aria-label="Main">
+      <a href="{% url 'connect:home' %}"
+         {% if u == 'home' %}class="active" aria-current="page"{% endif %}>Home</a>
+      <a href="{% url 'connect:student-list' %}"
+         {% if u == 'student-list' %}class="active" aria-current="page"{% elif u == 'student-detail' %}class="active" aria-current="true"{% endif %}>Students</a>
+      <a href="{% url 'connect:match-list' %}"
+         {% if u == 'match-list' %}class="active" aria-current="page"{% endif %}>Matches</a>
+      <a href="{% url 'connect:location-list' %}"
+         {% if u == 'location-list' %}class="active" aria-current="page"{% endif %}>Locations</a>
+      <a href="{% url 'connect:feedback-summary' %}"
+         {% if u == 'feedback-summary' %}class="active" aria-current="page"{% endif %}>Feedback</a>
     </nav>
+    {% endwith %}
   </div>
 </header>
 
-<main>
-  <h1 class="page">{% block heading %}QuadConnect{% endblock %}</h1>
-  {% block subtitle %}{% endblock %}
+<main id="main" tabindex="-1">
+  {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <p class="message message-{{ message.tags|default:'info' }}"
+           role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">
+          {{ message }}
+        </p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block page_header %}
+    <h1 class="page">{% block heading %}QuadConnect{% endblock %}</h1>
+    {% block subtitle %}{% endblock %}
+  {% endblock %}
+
   {% block content %}{% endblock %}
 </main>
 
 <footer class="site">
   QuadConnect &middot; The Connectors &middot; Team 13 &middot;
-  University of Illinois Urbana-Champaign
+  University of Illinois Urbana-Champaign &middot;
+  <a href="/admin/">Admin</a>
 </footer>
 
 </body>
