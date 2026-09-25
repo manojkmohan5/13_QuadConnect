@@ -301,12 +301,12 @@ class CampusLocationListView(View):
 
         for location in queryset:
             setting = "Indoor" if location.is_indoor else "Outdoor"
+            plural = "" if location.match_count == 1 else "es"
 
             meta = [
                 setting,
                 f"Seats up to {location.capacity}",
-                f"Hosted {location.match_count} "
-                f"match{'' if location.match_count == 1 else 'es'}",
+                f"Hosted {location.match_count} match{plural}",
             ]
 
             if location.arrival_note:
