@@ -1,0 +1,155 @@
+# CI for QuadConnect.
+#
+# One workflow with one job, triggered only by a push to feature/p1-a3, so
+# every commit gets exactly one check: "Deploy / test (push)". Every CI step
+# lives inside that job: lint, Django checks, migrations, seed data,
+# constraints, the test suite, the production deploy checks, the production
+# static build, and a smoke test of the production build.
+#
+# No matrix and no pull_request trigger on purpose: either would add checks.
+# To run this on main after merging, change the branch below.
+
+name: Deploy
+
+on:
+  push:
+    branches: [feature/p1-a3]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt ruff==0.16.4
+
+      - name: Generate a throwaway secret key
+        # Nothing in CI outlives the run, so a fresh random key per run is
+        # safer than storing one. It is masked in the logs.
+        run: |
+          key="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
+          echo "::add-mask::$key"
+          echo "DJANGO_SECRET_KEY=$key" >> "$GITHUB_ENV"
+
+      - name: Lint (ruff, rules in ruff.toml)
+        run: ruff check --output-format=github .
+
+      - name: Django system checks
+        run: python manage.py check --fail-level WARNING
+
+      - name: No model change without a migration
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Migrate a fresh database and load the seed data
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_demo_data
+
+      - name: Constraints and delete rules (verify_constraints)
+        run: python manage.py verify_constraints
+
+      - name: Test suite
+        run: python manage.py test connect --verbosity 2
+
+      - name: Production deploy checks (check --deploy)
+        env:
+          DJANGO_SETTINGS_MODULE: quadconnect.settings.production
+          DJANGO_ALLOWED_HOSTS: quadconnect.example.edu
+          DJANGO_SECURE_SSL: "1"
+        run: python manage.py check --deploy --fail-level WARNING
+
+      - name: Build production static files (collectstatic)
+        env:
+          DJANGO_SETTINGS_MODULE: quadconnect.settings.production
+          DJANGO_ALLOWED_HOSTS: 127.0.0.1
+        run: python manage.py collectstatic --noinput
+
+      - name: Boot the production build and smoke-test it
+        env:
+          DJANGO_SETTINGS_MODULE: quadconnect.settings.production
+          DJANGO_ALLOWED_HOSTS: 127.0.0.1
+          PORT: "8000"
+        run: |
+          python manage.py runserver "127.0.0.1:$PORT" --noreload > server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          base="http://127.0.0.1:$PORT"
+
+          for _ in $(seq 1 30); do
+            curl -fs -o /dev/null "$base/" && break
+            sleep 1
+          done
+          if ! curl -fs -o /dev/null "$base/"; then
+            echo "::error::The production server did not start."
+            cat server.log
+            exit 1
+          fi
+
+          # expect <status> <content type> <path>
+          expect() {
+            got="$(curl -s -o /dev/null -w '%{http_code} %{content_type}' "$base$3" || true)"
+            printf '%-36s %s\n' "$3" "$got"
+            case "$got" in
+              "$1 $2"*) ;;
+              *)
+                echo "::error::GET $3 returned '$got', expected '$1 $2'."
+                cat server.log
+                exit 1
+                ;;
+            esac
+          }
+
+          expect 200 text/html        /
+          expect 200 text/html        /students/
+          expect 200 text/html        /students/1/
+          expect 200 text/html        /search/
+          expect 200 text/html        "/search/?q=gaming"
+          expect 200 text/html        /matches/
+          expect 200 text/html        /matches/2/
+          expect 200 text/html        /locations/
+          expect 200 text/html        /locations/1/
+          expect 200 text/html        /feedback/summary/
+          expect 200 text/html        /insights/
+          expect 200 image/png        /insights/students-by-college.png
+          expect 200 image/png        /insights/interest-categories.png
+          expect 200 text/html        /api/
+          expect 200 application/json /api/locations/
+          expect 200 application/json "/api/matches/?type=SQUAD"
+          expect 400 application/json "/api/locations/?min_seats=many"
+          expect 200 text/plain       /api/locations.txt
+          expect 404 text/html        /no-such-page/
+          expect 302 text/html        /admin/
+
+          # Cache busting: the page must link a content-hashed stylesheet,
+          # served with a far-future immutable cache header.
+          css="$(curl -fs "$base/" | grep -o '/static/css/quadconnect\.[0-9a-f]\{12\}\.css' | head -n 1 || true)"
+          if [ -z "$css" ]; then
+            echo "::error::The home page does not link a content-hashed stylesheet."
+            exit 1
+          fi
+          cache="$(curl -fsI "$base$css" | tr -d '\r' | grep -i '^cache-control:' || true)"
+          echo "$css -> $cache"
+          case "$cache" in
+            *immutable*) ;;
+            *)
+              echo "::error::$css is not served with an immutable cache header."
+              exit 1
+              ;;
+          esac
