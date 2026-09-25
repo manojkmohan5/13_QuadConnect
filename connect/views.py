@@ -271,7 +271,8 @@ class CampusLocationListView(View):
             meta = [
                 setting,
                 f"Seats up to {location.capacity}",
-                f"Hosted {location.match_count} matches",
+                f"Hosted {location.match_count} "
+                f"match{'' if location.match_count == 1 else 'es'}",
             ]
 
             if location.arrival_note:
