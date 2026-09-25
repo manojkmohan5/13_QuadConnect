@@ -119,6 +119,9 @@ class CampusLocationSuggestionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("label_suffix", "")
         super().__init__(*args, **kwargs)
+        # The model's 2-50 validators do not reach the widget, which would
+        # otherwise say min="0" (from PositiveSmallIntegerField) and no max.
+        self.fields["capacity"].widget.attrs.update({"min": 2, "max": 50})
 
     class Meta:
         model = CampusLocation
