@@ -28,7 +28,7 @@ Matching exists to produce a single real-world meeting.
 Requires **Python 3.11+**. No other services — the database is SQLite.
 
 ```bash
-git clone https://github.com/<owner>/13_QuadConnect.git
+git clone https://github.com/manojkmohan5/13_QuadConnect.git
 cd 13_QuadConnect
 
 python -m venv .venv
@@ -47,7 +47,8 @@ python manage.py seed_demo_data
 python manage.py runserver
 ```
 
-Open <http://127.0.0.1:8000/>.
+Open <http://127.0.0.1:8000/>. Run the test suite with
+`python manage.py test connect` (43 tests).
 
 `db.sqlite3` is intentionally **not** committed — a tracked binary conflicts on
 every branch. `seed_demo_data` is idempotent and rebuilds the same dataset, so
@@ -65,15 +66,120 @@ exist.)
 
 ---
 
+## P1-A3 features
+
+Everything below was added in P1-A3. Each section of the assignment maps to
+one area of the code, and each has screenshots in
+[`docs/screenshots/p1-a3/`](docs/screenshots/p1-a3/) and tests in
+[`connect/tests.py`](connect/tests.py).
+
+### 1. URL linking and navigation
+
+Every page shares one navigation bar in `base.html`, built entirely with
+`{% url %}`, and the current section is highlighted and marked with
+`aria-current`. Students, matches and venues each have a detail page at
+`/students/<pk>/`, `/matches/<pk>/` and `/locations/<pk>/`; every list row, the
+home page's recent matches and the detail pages themselves link to one another
+through each model's `get_absolute_url()`, so every URL pattern is written once,
+in `urls.py`. The flow is models (`get_absolute_url()` calls `reverse()`) →
+urls (named routes with `<int:pk>`) → views (`DetailView`) → templates
+(`{{ match.get_absolute_url }}`).
+
+### 2. ORM queries: search with GET and POST
+
+`/search/` (`StudentSearchView`) has two forms. **Search the roster** is a GET
+form: name or interest (`full_name__icontains`, and
+`interest_links__interest__name__icontains` across two relations), college and
+connection type (`__exact`), and "has met at" a venue
+(`match_participations__match__location__name__exact`, three relations).
+Because it is GET, a search is a URL that can be bookmarked or shared. **Look up
+a NetID** is a POST form with `{% csrf_token %}` (`net_id__iexact`), so the
+NetID stays out of the URL, browser history, server logs and `Referer`. Below
+the results the page shows a total (`aggregate(Count, Avg)`) and grouped
+summaries (`values("college").annotate(Count(...))`, interests ranked by
+`annotate(Count("profile_links"))`), every loop with an `{% empty %}` branch.
+
+### 3. Static files and UI
+
+The design lives in [`static/css/quadconnect.css`](static/css/quadconnect.css),
+loaded in `base.html` with `{% load static %}` and `{% static %}`, alongside the
+logo (`static/img/logo.svg`) and the self-hosted Inter font (`static/fonts/`).
+**UI note:** a dark header with the four-quadrant logo, an orange accent used
+sparingly for actions and the current nav item, white cards on a warm grey
+page, and one type family throughout. Every colour pair meets WCAG 2.1 AA
+contrast, focus is always visible, there is a skip link, and every page fits a
+375 px phone screen. WhiteNoise serves the files in development and
+production; in production they are stored under content-hashed names for
+cache busting (see [Running in development vs production](#running-in-development-vs-production)).
+
+### 4. Charts with Matplotlib
+
+`/insights/` shows two charts drawn from ORM aggregations: a stacked bar chart
+of students per college by connection type, and a pie chart of interest
+selections by category, each with a title, labels and a legend. Each image is
+its own endpoint (`/insights/students-by-college.png`,
+`/insights/interest-categories.png`) that draws on a `matplotlib.figure.Figure`,
+saves into a `BytesIO` buffer and returns `HttpResponse(content_type="image/png")`.
+The page gives each chart a caption, alt text and a data table, all built from
+the same rows. Code: [`connect/charts.py`](connect/charts.py).
+
+### 5. Forms on a class-based view
+
+`/locations/` (`CampusLocationListView`, a base `View`) now handles both
+methods. **GET** reads the `?setting=` and `?seats=` filters. **POST** submits
+"Suggest a venue" (`CampusLocationSuggestionForm`, a `ModelForm` with
+`{% csrf_token %}`): it saves the venue as unapproved, shows a success message
+and redirects (Post/Redirect/Get). An invalid form re-renders with an error
+summary and a message next to each field. `is_approved` is not a form field,
+so no request can approve its own suggestion; staff approve in Django Admin.
+
+### 6. JSON API
+
+A read-only API over public data. Documentation with live examples is at
+[`/api/`](http://127.0.0.1:8000/api/); code in [`connect/api.py`](connect/api.py).
+
+| Endpoint | View | Query parameters | Returns |
+|---|---|---|---|
+| `GET /api/locations/` | `LocationListAPI` (class-based) | `setting=indoor\|outdoor`, `min_seats=<int>` | approved venues, `application/json` |
+| `GET /api/matches/` | `match_list_api` (function-based) | `week=YYYY-MM-DD`, `type=FRIEND\|SQUAD`, `status=PROPOSED\|CONFIRMED\|COMPLETED\|CANCELLED` | the match schedule, `application/json` |
+| `GET /api/locations.txt` | `location_list_text` (function-based) | same as `/api/locations/` | the same venues, `text/plain; charset=utf-8` |
+
+Every JSON list has the shape `{"count", "filters", "results"}`, and each result
+carries a `url` to its page on the site. A bad parameter is never ignored: the
+response is `400` with each bad parameter and how to fix it.
+
+```text
+GET /api/locations/?setting=indoor&min_seats=10
+
+{
+  "count": 1,
+  "filters": {"setting": "indoor", "min_seats": 10},
+  "results": [
+    {"id": 1, "name": "Illini Union", "street_address": "1401 W Green St, Urbana",
+     "arrival_note": "Main entrance, ground floor lobby", "setting": "indoor",
+     "capacity": 12, "matches_hosted": 1, "url": "http://127.0.0.1:8000/locations/1/"}
+  ]
+}
+```
+
+**HttpResponse vs JsonResponse.** `JsonResponse` serialises a dict (dates and
+decimals included) and sends `Content-Type: application/json`, so a client
+parses it as data. `HttpResponse` sends whatever string it is given, labelled
+`text/html` unless told otherwise; `/api/locations.txt` sends the same venues as
+`text/plain`. The API never returns student names, NetIDs, emails, check-in
+codes, feedback or unapproved venues.
+
+---
+
 ## Running in development vs production
 
 Settings are split into a package. Pick an environment with
 `DJANGO_SETTINGS_MODULE`.
 
-| | Module | `DEBUG` | `ALLOWED_HOSTS` |
-|---|---|---|---|
-| Development | `quadconnect.settings.development` | `True` | localhost, 127.0.0.1 |
-| Production | `quadconnect.settings.production` | `False` | **required** from `.env` |
+| | Module | `DEBUG` | `ALLOWED_HOSTS` | Static files |
+|---|---|---|---|---|
+| Development | `quadconnect.settings.development` | `True` | localhost, 127.0.0.1 | served from `static/` |
+| Production | `quadconnect.settings.production` | `False` | **required** from `.env` | hashed copies in `staticfiles/` |
 
 `manage.py` defaults to development; `wsgi.py` and `asgi.py` default to
 production, so a real deployment cannot accidentally boot with `DEBUG=True`.
@@ -82,22 +188,27 @@ production, so a real deployment cannot accidentally boot with `DEBUG=True`.
 # development (default)
 python manage.py runserver
 
-# production settings locally
-DJANGO_SETTINGS_MODULE=quadconnect.settings.production python manage.py runserver
+# production settings locally: collect the hashed static files first
+export DJANGO_SETTINGS_MODULE=quadconnect.settings.production
+python manage.py collectstatic --noinput
+python manage.py runserver
 
 # production deployment checklist
-DJANGO_SETTINGS_MODULE=quadconnect.settings.production \
-  python manage.py check --deploy
+python manage.py check --deploy
 ```
+
+**Cache busting.** In production, `collectstatic` writes each static file a
+second time under a name that includes a hash of its contents
+(`quadconnect.css` → `quadconnect.9d7082daf6a5.css`) and records the mapping in
+a manifest; `{% static %}` looks names up there. WhiteNoise serves hashed files
+with `Cache-Control: max-age=315360000, public, immutable`, so browsers cache
+them for good, and any edit produces a new name, so no browser can keep a stale
+stylesheet after a deploy. `staticfiles/` is gitignored.
 
 Production **fails fast**: if `DJANGO_ALLOWED_HOSTS` is unset it raises at
 startup rather than silently serving any `Host` header. Set
 `DJANGO_SECURE_SSL=1` behind real TLS to switch on HSTS, the SSL redirect and
 secure cookies — with that flag, `check --deploy` reports zero issues.
-
-All CSS is inline in `base.html`, so production mode renders correctly without
-`collectstatic`. When real static assets arrive, add WhiteNoise at the same
-time.
 
 ---
 
@@ -117,15 +228,25 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 
 ## URL map
 
-| Path | Name | View kind | Owner |
+| Path | Name | View | Added |
 |---|---|---|---|
-| `/` | `connect:home` | dashboard | shared |
-| `/students/` | `connect:student-list` | Generic CBV (`ListView`) | Kritika |
-| `/students/<pk>/` | `connect:student-detail` | Generic CBV (`DetailView`) | Kritika |
-| `/matches/` | `connect:match-list` | FBV using `render()` | Manojkumar |
-| `/locations/` | `connect:location-list` | Base CBV (`View`) | Prathamesh |
-| `/feedback/summary/` | `connect:feedback-summary` | FBV using `HttpResponse` | Dhruv |
-| `/admin/` | — | Django Admin | — |
+| `/` | `connect:home` | FBV, `render()` | A2 |
+| `/students/` | `connect:student-list` | Generic CBV (`ListView`) | A2 |
+| `/students/<pk>/` | `connect:student-detail` | Generic CBV (`DetailView`) | A2 |
+| `/search/` | `connect:student-search` | Base CBV (`View`), GET + POST | A3 |
+| `/matches/` | `connect:match-list` | FBV, `render()` | A2 |
+| `/matches/<pk>/` | `connect:match-detail` | Generic CBV (`DetailView`) | A3 |
+| `/locations/` | `connect:location-list` | Base CBV (`View`), GET + POST | A2, POST in A3 |
+| `/locations/<pk>/` | `connect:location-detail` | Generic CBV (`DetailView`) | A3 |
+| `/feedback/summary/` | `connect:feedback-summary` | FBV, `HttpResponse` | A2 |
+| `/insights/` | `connect:insights` | FBV, `render()` | A3 |
+| `/insights/students-by-college.png` | `connect:chart-students-by-college` | FBV, `image/png` | A3 |
+| `/insights/interest-categories.png` | `connect:chart-interest-categories` | FBV, `image/png` | A3 |
+| `/api/` | `connect:api-docs` | FBV, `render()` | A3 |
+| `/api/locations/` | `connect:api-locations` | Base CBV, `JsonResponse` | A3 |
+| `/api/matches/` | `connect:api-matches` | FBV, `JsonResponse` | A3 |
+| `/api/locations.txt` | `connect:api-locations-text` | FBV, `HttpResponse` (text/plain) | A3 |
+| `/admin/` | — | Django Admin | A1 |
 
 Every route is named and namespaced under `connect`, so templates reverse them
 with `{% url 'connect:match-list' %}` rather than hard-coding paths.
@@ -137,30 +258,36 @@ with `{% url 'connect:match-list' %}` rather than hard-coding paths.
 ```
 13_QuadConnect/
 ├── manage.py                     defaults to development settings
-├── requirements.txt
+├── requirements.txt              Django, python-dotenv, WhiteNoise, Matplotlib
 ├── .env.example                  committed; copy to .env
+├── static/                       site-wide static files ({% static %})
+│   ├── css/quadconnect.css       the whole design
+│   ├── img/logo.svg              header logo and favicon
+│   └── fonts/                    Inter (SIL Open Font License)
 ├── docs/
 │   ├── wireframes/v1/            9 screens + flow, exported as PNG
 │   ├── branching_strategy/       diagram.png + branching.md
-│   ├── notes/notes.txt           weekly log, view register, reflection
-│   ├── build_tasks/              per-developer build instructions
-│   ├── screenshots/              browser evidence
+│   ├── notes/notes.txt           weekly log, view register, P1-A3 answers
+│   ├── build_tasks/              per-developer build instructions (A2)
+│   ├── screenshots/              A2 evidence; p1-a3/ for this assignment
 │   ├── er_diagram.pdf
 │   └── data_model_notes.md       why each model and on_delete exists
 ├── quadconnect/
 │   ├── settings/
-│   │   ├── base.py               shared; reads .env
+│   │   ├── base.py               shared; reads .env; static + WhiteNoise
 │   │   ├── development.py        DEBUG=True
-│   │   └── production.py         DEBUG=False + security headers
+│   │   └── production.py         DEBUG=False, security headers, hashed static
 │   ├── urls.py  wsgi.py  asgi.py
 └── connect/                      the one domain app
-    ├── models.py                 8 models
-    ├── views.py                  divided into one section per owner
+    ├── models.py                 8 models; get_absolute_url() on 3
+    ├── views.py                  pages, detail views, search, venue suggestions
+    ├── forms.py                  search, NetID lookup, venue suggestion
+    ├── charts.py                 Matplotlib charts and the Insights page
+    ├── api.py                    JSON API and its docs page
+    ├── tests.py                  43 tests, one class per P1-A3 section
     ├── urls.py                   all routes named
     ├── admin.py                  all 8 models registered, with inlines
-    ├── templates/connect/
-    │   ├── base.html             {% block title %} / {% block content %}
-    │   └── entity_list.html      shared list template, model-agnostic
+    ├── templates/connect/        base.html, shared entity_list.html, pages
     └── management/commands/
         ├── seed_demo_data.py     idempotent sample data
         └── verify_constraints.py proves constraints and on_delete rules
@@ -202,23 +329,24 @@ the database.
 ## Contributing
 
 Read [`docs/branching_strategy/branching.md`](docs/branching_strategy/branching.md)
-first. In short: branch from `main`, stay inside your own section of
-`views.py`, never edit `base.html`, and merge one branch at a time.
+first. In short: branch from `main`, keep each change in its own section of
+`views.py`, commit in small conventional steps (`feat:`, `fix:`, `docs:`), run
+`python manage.py test connect` before pushing, and merge one branch at a time.
 
 ```bash
 git switch main && git pull
-git switch -c feature/<area>-views
+git switch -c feature/<area>
 # … work, commit in small meaningful steps …
-git push -u origin feature/<area>-views
+git push -u origin feature/<area>
 ```
 
-Per-developer build instructions live in
+Per-developer build instructions from P1-A2 live in
 [`docs/build_tasks/`](docs/build_tasks/).
 
 ---
 
 ## Tech
 
-Django 5.2.17 · Python 3.11 · SQLite · `python-dotenv`.
-No JavaScript framework, no CSS framework, no build step — templates are
-server-rendered Django templates with inline CSS.
+Django 5.2.17 · Python 3.11 · SQLite · `python-dotenv` · WhiteNoise 6.12 ·
+Matplotlib 3.11. No JavaScript framework, no CSS framework, no build step:
+server-rendered Django templates and one stylesheet.
