@@ -1,0 +1,93 @@
+{% extends "connect/base.html" %}
+{% comment %}
+One match. Named by DetailView's convention (<app>/<model>_detail.html).
+
+Every link out of this page comes from a model's get_absolute_url(): the
+venue, and each participant's profile. Participants' feedback is private
+and is never loaded here.
+{% endcomment %}
+
+{% block title %}{{ match.get_connection_type_display }} - QuadConnect{% endblock %}
+
+{% block page_header %}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'connect:match-list' %}">Matches</a> /
+    <span aria-current="page">Match {{ match.check_in_code }}</span>
+  </nav>
+  <h1 class="page">{{ match.get_connection_type_display }}</h1>
+  <p class="sub">
+    {{ match.scheduled_for|date:"l j F Y, g:i A" }} &middot;
+    {{ match.location.name }} &middot;
+    week of {{ match.week_start|date:"j M Y" }}
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  <div class="grid">
+    <div class="card stat">
+      <div class="n">{{ participants|length }}</div>
+      <div class="l">Participant{{ participants|length|pluralize }}</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ match.suggested_activity.name|default:"None" }}</div>
+      <div class="l">Suggested activity</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ match.check_in_code }}</div>
+      <div class="l">Check-in code</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ match.get_status_display }}</div>
+      <div class="l">Status</div>
+    </div>
+  </div>
+
+  <h2 class="section">Where</h2>
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="title">
+          {% if match.location.is_approved %}
+            <a href="{{ match.location.get_absolute_url }}">{{ match.location.name }}</a>
+          {% else %}
+            {{ match.location.name }}
+          {% endif %}
+        </div>
+        <div class="subtitle">{{ match.location.street_address }}</div>
+        {% if match.location.arrival_note %}
+          <div class="meta"><span>{{ match.location.arrival_note }}</span></div>
+        {% endif %}
+      </div>
+      <span class="badge">{% if match.location.is_indoor %}Indoor{% else %}Outdoor{% endif %}</span>
+    </div>
+  </div>
+
+  <h2 class="section">Participants</h2>
+  <ul class="list">
+  {% for p in participants %}
+    <li class="card linked">
+      <div class="row">
+        <div>
+          <div class="title">
+            <a href="{{ p.profile.get_absolute_url }}">{{ p.profile.full_name }}</a>
+          </div>
+          <div class="subtitle">{{ p.profile.college }}</div>
+          <div class="meta">
+            <span>Fit {{ p.compatibility_score }} / 100</span>
+            {% if p.match_reason %}<span>Matched on {{ p.match_reason }}</span>{% endif %}
+            {% if p.checked_in_at %}<span>Checked in {{ p.checked_in_at|date:"g:i A" }}</span>{% endif %}
+          </div>
+        </div>
+        <span class="badge">{{ p.get_response_display }}</span>
+      </div>
+    </li>
+  {% empty %}
+    <li class="empty">
+      <div class="big">No participants yet</div>
+      <p>Students are added to a match when the weekly matching cycle runs.</p>
+    </li>
+  {% endfor %}
+  </ul>
+
+{% endblock %}

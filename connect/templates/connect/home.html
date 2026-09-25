@@ -38,10 +38,12 @@ gives the grader a jumping-off point to each of the four graded views.
   <h2 class="section">Recent matches</h2>
   <ul class="list">
   {% for match in recent_matches %}
-    <li class="card">
+    <li class="card linked">
       <div class="row">
         <div>
-          <div class="title">{{ match.get_connection_type_display }}</div>
+          <div class="title">
+            <a href="{{ match.get_absolute_url }}">{{ match.get_connection_type_display }}</a>
+          </div>
           <div class="subtitle">{{ match.location.name }}</div>
           <div class="meta">
             <span>{{ match.scheduled_for|date:"D j M, g:i A" }}</span>

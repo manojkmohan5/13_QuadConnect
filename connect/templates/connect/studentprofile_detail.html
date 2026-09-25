@@ -10,13 +10,15 @@ deliberately absent.
 {% endcomment %}
 
 {% block title %}{{ student.full_name }} - QuadConnect{% endblock %}
-{% block heading %}{{ student.full_name }}{% endblock %}
-
-{% block subtitle %}
+{% block page_header %}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'connect:student-list' %}">Students</a> /
+    <span aria-current="page">{{ student.full_name }}</span>
+  </nav>
+  <h1 class="page">{{ student.full_name }}</h1>
   <p class="sub">
     {{ student.net_id }} &middot; {{ student.college }}
     {% if student.department %} &middot; {{ student.department }}{% endif %}
-    &middot; <a href="{% url 'connect:student-list' %}">Back to all students</a>
   </p>
 {% endblock %}
 
@@ -85,10 +87,12 @@ deliberately absent.
   <h2 class="section">Match history</h2>
   <ul class="list">
   {% for p in participations %}
-    <li class="card">
+    <li class="card linked">
       <div class="row">
         <div>
-          <div class="title">{{ p.match.get_connection_type_display }}</div>
+          <div class="title">
+            <a href="{{ p.match.get_absolute_url }}">{{ p.match.get_connection_type_display }}</a>
+          </div>
           <div class="subtitle">{{ p.match.location.name }}</div>
           <div class="meta">
             <span>{{ p.match.scheduled_for|date:"D j M Y, g:i A" }}</span>

@@ -35,7 +35,7 @@ filter_html    bool  set truthy by a view that renders its own filter block
 
   <ul class="list">
   {% for item in items %}
-    <li class="card">
+    <li class="card{% if item.url %} linked{% endif %}">
       <div class="row">
         <div>
           <div class="title">

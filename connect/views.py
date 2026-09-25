@@ -185,6 +185,7 @@ def _match_rows(matches):
                 f"Code {match.check_in_code}",
             ],
             "badge": match.get_status_display(),
+            "url": match.get_absolute_url(),
         })
     return rows
 
@@ -252,6 +253,28 @@ def match_list(request):
     return render(request, "connect/match_list.html", context)
 
 
+class MatchDetailView(DetailView):
+    """One scheduled experience: when, where, who, and why they matched.
+
+    Reached from any match row via Match.get_absolute_url(). DetailView
+    looks the match up by the <int:pk> in the URL and raises 404 for a pk
+    that does not exist. Template: connect/match_detail.html by convention.
+    """
+
+    model = Match
+    context_object_name = "match"
+    queryset = Match.objects.select_related("location", "suggested_activity")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Meta.ordering puts the best fit first. Feedback is never loaded:
+        # it is private to the student who wrote it.
+        context["participants"] = (
+            self.object.participants.select_related("profile")
+        )
+        return context
+
+
 # ===========================================================================
 # Section B1 - Base Class-Based View (inherits django.views.View)
 # OWNER: Prathamesh Mulay (pmulay2)   URL name: connect:location-list
@@ -284,7 +307,7 @@ class CampusLocationListView(View):
                     "subtitle": location.street_address,
                     "meta": meta,
                     "badge": setting,
-                    "url": None,
+                    "url": location.get_absolute_url(),
                 }
             )
 
@@ -373,6 +396,33 @@ class CampusLocationListView(View):
         }
 
         return render(request, "connect/location_list.html", context)
+
+
+class CampusLocationDetailView(DetailView):
+    """One campus venue and every match scheduled there.
+
+    An unapproved venue (retired, or suggested and not yet reviewed) is
+    visible to staff only. Everyone else gets the same 404 as a pk that
+    does not exist, so the page does not reveal that the venue exists.
+    """
+
+    model = CampusLocation
+    context_object_name = "location"
+
+    def get_queryset(self):
+        queryset = CampusLocation.objects.all()
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(is_approved=True)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["matches"] = (
+            self.object.matches.select_related("suggested_activity")
+            .annotate(headcount=Count("participants"))
+            .order_by("-scheduled_for")
+        )
+        return context
 
 
 # ===========================================================================

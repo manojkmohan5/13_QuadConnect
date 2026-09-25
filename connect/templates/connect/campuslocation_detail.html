@@ -1,0 +1,74 @@
+{% extends "connect/base.html" %}
+{% comment %}
+One campus venue. Named by DetailView's convention (<app>/<model>_detail.html).
+Each match row links to that match through Match.get_absolute_url().
+{% endcomment %}
+
+{% block title %}{{ location.name }} - QuadConnect{% endblock %}
+
+{% block page_header %}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'connect:location-list' %}">Locations</a> /
+    <span aria-current="page">{{ location.name }}</span>
+  </nav>
+  <h1 class="page">{{ location.name }}</h1>
+  <p class="sub">
+    {{ location.street_address }}
+    {% if location.arrival_note %}&middot; {{ location.arrival_note }}{% endif %}
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  {% if not location.is_approved %}
+    <div class="messages">
+      <p class="message message-info">
+        This venue is not approved, so no match can be scheduled here. Only
+        staff can see this page.
+      </p>
+    </div>
+  {% endif %}
+
+  <div class="grid">
+    <div class="card stat">
+      <div class="n">{% if location.is_indoor %}Indoor{% else %}Outdoor{% endif %}</div>
+      <div class="l">Setting</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ location.capacity }}</div>
+      <div class="l">Seats (largest squad)</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ matches|length }}</div>
+      <div class="l">Match{{ matches|length|pluralize:"es" }} hosted</div>
+    </div>
+  </div>
+
+  <h2 class="section">Matches at this venue</h2>
+  <ul class="list">
+  {% for match in matches %}
+    <li class="card linked">
+      <div class="row">
+        <div>
+          <div class="title">
+            <a href="{{ match.get_absolute_url }}">{{ match.get_connection_type_display }}</a>
+          </div>
+          <div class="meta">
+            <span>{{ match.scheduled_for|date:"D j M Y, g:i A" }}</span>
+            <span>{{ match.headcount }} student{{ match.headcount|pluralize }}</span>
+            {% if match.suggested_activity %}<span>{{ match.suggested_activity.name }}</span>{% endif %}
+          </div>
+        </div>
+        <span class="badge">{{ match.get_status_display }}</span>
+      </div>
+    </li>
+  {% empty %}
+    <li class="empty">
+      <div class="big">No matches here yet</div>
+      <p>This venue has not hosted a QuadConnect match. It becomes eligible
+         for the next weekly matching cycle while it stays approved.</p>
+    </li>
+  {% endfor %}
+  </ul>
+
+{% endblock %}
