@@ -374,6 +374,14 @@ ul.list { list-style: none; margin: 0; padding: 0; }
 .form { display: flex; flex-direction: column; gap: 14px; }
 .form .field { display: flex; flex-direction: column; gap: 5px; }
 .form .field-inline { flex-direction: row; align-items: center; gap: 8px; }
+/* Checkbox: Django renders label, help, errors, then the box; keep the box
+   its natural size instead of stretching it across the column. */
+.form .field-check input[type="checkbox"] {
+  align-self: flex-start;
+  width: 20px; height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
 .form label { font-weight: 600; font-size: 14px; }
 /* .helptext is the class Django's own field template gives help text. */
 .form .help, .form .helptext { font-size: 12.5px; color: var(--muted); margin: 0; }

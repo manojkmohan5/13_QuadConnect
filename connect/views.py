@@ -17,15 +17,16 @@ feature branch; nobody needs to touch base.html or another owner's section.
 
 from datetime import date
 
+from django.contrib import messages
 from django.db.models import Avg, Count, Prefetch, Q
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.template import loader
 from django.utils.timezone import localtime
 from django.views import View
 from django.views.generic import DetailView, ListView
 
-from .forms import NetIDLookupForm, StudentSearchForm
+from .forms import CampusLocationSuggestionForm, NetIDLookupForm, StudentSearchForm
 from .models import (
     CampusLocation,
     ExperienceFeedback,
@@ -285,7 +286,15 @@ class MatchDetailView(DetailView):
 
 
 class CampusLocationListView(View):
-    """List approved QuadConnect campus meeting locations."""
+    """List approved QuadConnect campus meeting locations.
+
+    Handles both methods (P1-A3 Section 5):
+
+    GET   reads the ?setting= and ?seats= query parameters: filtering
+          changes nothing, so it belongs in a URL that can be shared.
+    POST  submits the "Suggest a venue" form: it creates a row, so it must
+          never happen on a plain GET (a link, a prefetch, a crawler).
+    """
 
     def _build_items(self, queryset):
         items = []
@@ -316,6 +325,28 @@ class CampusLocationListView(View):
         return items
 
     def get(self, request):
+        return self._render(request, CampusLocationSuggestionForm())
+
+    def post(self, request):
+        """Save a venue suggestion, unapproved, then redirect.
+
+        Success redirects (Post/Redirect/Get), so reloading the page cannot
+        submit the same suggestion twice. A failure re-renders the list with
+        each error next to its field.
+        """
+        form = CampusLocationSuggestionForm(request.POST)
+        if form.is_valid():
+            venue = form.save(commit=False)
+            venue.is_approved = False  # the model default is True
+            venue.save()
+            messages.success(request, (
+                f'Thanks. "{venue.name}" was sent for review and will be '
+                f"listed here once staff approve it."
+            ))
+            return redirect("connect:location-list")
+        return self._render(request, form)
+
+    def _render(self, request, form):
         setting = request.GET.get("setting", "").strip().lower()
         raw_seats = (request.GET.get("seats") or "").strip()
 
@@ -351,6 +382,14 @@ class CampusLocationListView(View):
             queryset = queryset.none()
 
         items = self._build_items(queryset)
+
+        # Unapproved and never hosted a match = a suggestion awaiting review.
+        # (A retired venue always has match history; that is why it was
+        # retired instead of deleted.) Everyone sees the count; only staff
+        # see the names, because unreviewed text is not published.
+        pending = (CampusLocation.objects
+                   .filter(is_approved=False, matches__isnull=True)
+                   .order_by("name"))
 
         # Empty states differ by cause, so the reader learns what to change.
         if bad_seats:
@@ -395,6 +434,10 @@ class CampusLocationListView(View):
             # For the filter controls in location_list.html.
             "selected_setting": setting,
             "selected_seats": raw_seats,
+            # For the suggestion form in location_list.html.
+            "form": form,
+            "pending": pending if request.user.is_staff else None,
+            "pending_count": pending.count(),
         }
 
         return render(request, "connect/location_list.html", context)

@@ -6,6 +6,10 @@ The list itself - the loop, the row layout, the empty state - is inherited
 from the shared entity_list.html, which the matches page also renders. This
 template adds only the filters, so the shared template never has to know that
 venues have a capacity or an indoor/outdoor setting.
+
+Two kinds of form on one page (P1-A3 Section 5): the filters above the list
+are GET (query parameters, nothing changes), and "Suggest a venue" below it
+is POST with {% csrf_token %} (it creates a row).
 {% endcomment %}
 
 {% block filters %}
@@ -31,4 +35,62 @@ venues have a capacity or an indoor/outdoor setting.
       <a class="clear" href="{% url 'connect:location-list' %}">Clear filter</a>
     {% endif %}
   </form>
+{% endblock %}
+
+{% block after_list %}
+  <section class="card gap-top" id="suggest" aria-labelledby="suggest-title">
+    <h2 class="card-title" id="suggest-title">Suggest a venue</h2>
+    <p class="form-note">
+      Know a public place that would suit a meetup? Suggestions are sent with
+      POST, because they create a record, and are listed only after staff
+      approve them.
+      {% if pending_count %}
+        {{ pending_count }} suggestion{{ pending_count|pluralize }}
+        {{ pending_count|pluralize:"is,are" }} waiting for review.
+      {% endif %}
+    </p>
+
+    {% if form.errors %}
+      <div class="messages">
+        <p class="message message-error" role="alert">
+          The suggestion was not sent. Fix the
+          {{ form.errors|length }} field{{ form.errors|length|pluralize }}
+          marked below and send it again.
+        </p>
+      </div>
+    {% endif %}
+
+    {# novalidate: the server's messages say how to fix each field; the #}
+    {# browser's own bubbles do not, and they vanish when focus moves.    #}
+    <form class="form" method="post" action="{% url 'connect:location-list' %}#suggest" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field{% if field.widget_type == 'checkbox' %} field-check{% endif %}">
+          {{ field.as_field_group }}
+        </div>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit">Send suggestion</button>
+      </div>
+    </form>
+
+    {% if pending %}
+      <h3 class="card-title gap-top">Waiting for review (visible to staff only)</h3>
+      <ul class="list">
+        {% for venue in pending %}
+          <li class="card">
+            <div class="row">
+              <div>
+                <div class="title"><a href="{{ venue.get_absolute_url }}">{{ venue.name }}</a></div>
+                <div class="subtitle">{{ venue.street_address }}</div>
+              </div>
+              <span class="badge badge-warn">Not approved</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="form-note">Approve a venue by ticking "Is approved" in
+        <a href="/admin/connect/campuslocation/?is_approved__exact=0">Django Admin</a>.</p>
+    {% endif %}
+  </section>
 {% endblock %}

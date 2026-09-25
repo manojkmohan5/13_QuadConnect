@@ -20,6 +20,8 @@ items          list  of dicts, each with:
 empty_title    str   headline shown when items is empty
 empty_message  str   explanatory line shown when items is empty
 filter_html    bool  set truthy by a view that renders its own filter block
+
+Blocks for child templates: filters (above the list), after_list (below it).
 {% endcomment %}
 
 {% block title %}{{ page_title|default:"QuadConnect" }}{% endblock %}
@@ -61,5 +63,7 @@ filter_html    bool  set truthy by a view that renders its own filter block
     </li>
   {% endfor %}
   </ul>
+
+  {% block after_list %}{% endblock %}
 
 {% endblock %}
