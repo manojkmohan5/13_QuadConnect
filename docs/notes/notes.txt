@@ -90,6 +90,16 @@ Verified:
   - mutation checks: removing .distinct(), the is_approved=False line, or
     the API's min_value each makes a test fail
 
+CI (added after the build):
+  - .github/workflows/deploy.yml: one check per push to feature/p1-a3,
+    "Deploy / test (push)". One job runs ruff, Django checks, the missing-
+    migration check, migrate + seed, verify_constraints, the tests,
+    check --deploy, collectstatic and a smoke test of the production build.
+    First run: all green, 1/1 check.
+  - verify_constraints now exits 1 when a check fails; before, it always
+    exited 0, so no script could ever notice a broken constraint.
+  - ruff.toml fixes the lint rules so CI and local runs agree.
+
 --------------------------------------------------------------------------------
 WEEK 3  (w/c 2026-09-07)  -  P1-A2 scaffold
 --------------------------------------------------------------------------------

@@ -34,7 +34,9 @@ what we chose not to build, and where the shortcuts are.
 list template, a home dashboard and the four graded views. `feature/p1-a3`
 adds everything in §9's P1-A3 entry: detail pages, search, static files with
 cache busting, Matplotlib charts, a POST form on a CBV, a JSON API, and a
-43-test suite.
+43-test suite. It also has CI: every push to `feature/p1-a3` runs one check,
+**Deploy / test (push)** (`.github/workflows/deploy.yml`), with every CI step
+inside that one job. It runs on no other branch.
 
 ### Status board — UPDATE YOUR ROW WHEN YOU FINISH
 
@@ -503,6 +505,7 @@ python manage.py seed_demo_data      # idempotent
 python manage.py verify_constraints  # 11/11 pass
 python manage.py check
 python manage.py test connect        # 43 tests (A3)
+ruff check .                         # rules in ruff.toml; CI runs the same
 
 DJANGO_SETTINGS_MODULE=quadconnect.settings.production \
   python manage.py check --deploy    # 0 issues with DJANGO_SECURE_SSL=1

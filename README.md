@@ -212,6 +212,26 @@ secure cookies — with that flag, `check --deploy` reports zero issues.
 
 ---
 
+## Continuous integration
+
+Every push to `feature/p1-a3` runs one GitHub Actions check, **Deploy / test
+(push)**, defined in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+Its single job runs, in order:
+
+1. `ruff check .` (rules in [`ruff.toml`](ruff.toml))
+2. `manage.py check`, and `makemigrations --check` (no model change without a migration)
+3. `migrate` and `seed_demo_data` on a fresh database, then `verify_constraints`
+4. the test suite (`manage.py test connect`)
+5. `check --deploy` and `collectstatic` with production settings
+6. a smoke test that boots the production build and checks the status and
+   Content-Type of 20 URLs, plus the hashed stylesheet's `immutable` cache header
+
+The workflow generates a throwaway `SECRET_KEY` for each run, so no repository
+secret is needed. To run it on `main` after merging, change the branch in its
+`on: push: branches:` line.
+
+---
+
 ## Environment variables
 
 Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed.
@@ -259,6 +279,8 @@ with `{% url 'connect:match-list' %}` rather than hard-coding paths.
 13_QuadConnect/
 ├── manage.py                     defaults to development settings
 ├── requirements.txt              Django, python-dotenv, WhiteNoise, Matplotlib
+├── ruff.toml                     lint rules, shared by CI and local runs
+├── .github/workflows/deploy.yml  CI: the one "Deploy / test" check
 ├── .env.example                  committed; copy to .env
 ├── static/                       site-wide static files ({% static %})
 │   ├── css/quadconnect.css       the whole design
@@ -331,7 +353,8 @@ the database.
 Read [`docs/branching_strategy/branching.md`](docs/branching_strategy/branching.md)
 first. In short: branch from `main`, keep each change in its own section of
 `views.py`, commit in small conventional steps (`feat:`, `fix:`, `docs:`), run
-`python manage.py test connect` before pushing, and merge one branch at a time.
+`ruff check .` and `python manage.py test connect` before pushing, and merge
+one branch at a time.
 
 ```bash
 git switch main && git pull
