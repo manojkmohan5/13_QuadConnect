@@ -17,7 +17,7 @@ feature branch; nobody needs to touch base.html or another owner's section.
 
 from datetime import date
 
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, Prefetch, Q
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template import loader
@@ -25,12 +25,14 @@ from django.utils.timezone import localtime
 from django.views import View
 from django.views.generic import DetailView, ListView
 
+from .forms import NetIDLookupForm, StudentSearchForm
 from .models import (
     CampusLocation,
     ExperienceFeedback,
     Interest,
     Match,
     MatchParticipant,
+    ProfileInterest,
     StudentProfile,
 )
 
@@ -507,3 +509,136 @@ class StudentProfileDetailView(DetailView):
             .order_by("-match__scheduled_for")
         )
         return context
+
+
+# ===========================================================================
+# P1-A3 Section 2 - ORM search: one page, a GET form and a POST form
+# URL name: connect:student-search
+# ===========================================================================
+
+
+def _search_students(data):
+    """Return the students matching a valid StudentSearchForm's data.
+
+    Every filter is optional; an empty form matches the whole roster.
+    """
+    matches = StudentProfile.objects.all()
+    if data.get("q"):
+        # One text box searches two places. The second lookup spans two
+        # relationships: StudentProfile -> ProfileInterest -> Interest.
+        matches = matches.filter(
+            Q(full_name__icontains=data["q"])
+            | Q(interest_links__interest__name__icontains=data["q"])
+        )
+    if data.get("college"):
+        matches = matches.filter(college__exact=data["college"])
+    if data.get("connection"):
+        matches = matches.filter(preferred_connection__exact=data["connection"])
+    if data.get("venue"):
+        # Three hops: StudentProfile -> MatchParticipant -> Match ->
+        # CampusLocation. "Students who have had a match at this venue."
+        matches = matches.filter(
+            match_participations__match__location__name__exact=data["venue"]
+        )
+    # Spanning a to-many relation yields one row per matching related row,
+    # so a student with two matching interests would appear twice.
+    return matches.distinct()
+
+
+class StudentSearchView(View):
+    """Search the verified roster two ways, on one page.
+
+    GET reads request.GET through StudentSearchForm: the filters belong in
+    the URL, so a search can be bookmarked or shared and a reload shows the
+    same results.
+
+    POST reads request.POST through NetIDLookupForm: the NetID belongs in
+    the request body, so it stays out of history, logs and Referer headers.
+    The page is rendered straight from the POST instead of redirecting,
+    because a redirect would have to put the NetID back into a URL.
+
+    Both methods render the same template, with the results and their
+    aggregate summary for the current GET filters.
+    """
+
+    template_name = "connect/student_search.html"
+
+    def get(self, request):
+        # Unbound on a bare /search/, so the page opens without errors.
+        search_form = StudentSearchForm(request.GET or None)
+        return self._render(request, search_form, NetIDLookupForm())
+
+    def post(self, request):
+        lookup_form = NetIDLookupForm(request.POST)
+        found = None
+        if lookup_form.is_valid():
+            net_id = lookup_form.cleaned_data["net_id"]
+            found = StudentProfile.objects.filter(net_id__iexact=net_id).first()
+            if found is None:
+                lookup_form.add_error("net_id", (
+                    f'No verified student has the NetID "{net_id}". Check '
+                    f"the spelling, or search the roster by name instead."
+                ))
+        return self._render(request, StudentSearchForm(), lookup_form, found)
+
+    def _render(self, request, search_form, lookup_form, found=None):
+        if not search_form.is_bound:
+            matching = StudentProfile.objects.all()
+        elif search_form.is_valid():
+            matching = _search_students(search_form.cleaned_data)
+        else:
+            matching = StudentProfile.objects.none()
+
+        # Re-select through a pk subquery so the annotation and the
+        # aggregates below are not skewed by the search's joins: counting
+        # interest_links on the filtered query would count only the
+        # interests that matched the search, not all of them.
+        results = StudentProfile.objects.filter(pk__in=matching.values("pk"))
+
+        # ponytail: unpaginated; the roster at /students/ paginates, add it
+        # here too once the roster outgrows a single page.
+        students = (
+            results.annotate(interest_count=Count("interest_links"))
+            .prefetch_related(Prefetch(
+                "interest_links",
+                queryset=ProfileInterest.objects.select_related("interest")
+                .order_by("-is_primary", "interest__name"),
+            ))
+            .order_by("full_name", "net_id")
+        )
+
+        # Total: aggregate() collapses the result set into one row.
+        summary = results.aggregate(
+            total=Count("id"),
+            avg_energy=Avg("social_energy"),
+        )
+        # Grouped: values() + annotate() is GROUP BY college.
+        by_college = (
+            results.values("college")
+            .annotate(students=Count("id"))
+            .order_by("-students", "college")
+        )
+        # Grouped across a relation: interests ranked by how many of the
+        # matching students picked them. filter() before annotate() makes
+        # the count consider only those students' selections.
+        top_interests = (
+            Interest.objects.filter(profile_links__profile__in=results)
+            .annotate(students=Count("profile_links"))
+            .order_by("-students", "name")[:6]
+        )
+
+        # cleaned_data exists only once a bound form has been validated.
+        q = getattr(search_form, "cleaned_data", {}).get("q", "")
+        context = {
+            "search_form": search_form,
+            "lookup_form": lookup_form,
+            "found": found,
+            "searching": search_form.is_bound,
+            "q": q.lower(),
+            "students": students,
+            "summary": summary,
+            "by_college": by_college,
+            "top_interests": top_interests,
+            "roster_total": StudentProfile.objects.count(),
+        }
+        return render(request, self.template_name, context)

@@ -1,0 +1,181 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Student search (P1-A3 Section 2). One page, two forms:
+
+  Search the roster   method="get"   filters live in the URL (shareable)
+  Look up a NetID     method="post"  NetID stays in the body ({% csrf_token %})
+
+Below them: the matching students, then aggregates over the same set.
+Every loop has an {% empty %} branch.
+{% endcomment %}
+
+{% block title %}Search students - QuadConnect{% endblock %}
+{% block heading %}Search students{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    Filter the verified roster by name, interest, college, connection type or
+    venue, or look one student up by NetID.
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  <div class="grid-2">
+    <section class="card" aria-labelledby="search-title">
+      <h2 class="card-title" id="search-title">Search the roster</h2>
+      <p class="form-note">
+        Sent with GET. The filters become part of the URL, so a search can be
+        bookmarked or shared, and reloading it shows the same results.
+      </p>
+      <form class="form" method="get" action="{% url 'connect:student-search' %}"
+            role="search" aria-label="Search the roster">
+        {% for field in search_form %}
+          <div class="field">{{ field.as_field_group }}</div>
+        {% endfor %}
+        <div class="actions">
+          <button type="submit">Search</button>
+          {% if searching %}
+            <a class="btn btn-secondary" href="{% url 'connect:student-search' %}">Clear search</a>
+          {% endif %}
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="lookup-title">
+      <h2 class="card-title" id="lookup-title">Look up a NetID</h2>
+      <p class="form-note">
+        Sent with POST. The NetID travels in the request body, never in the
+        URL, so it stays out of browser history, server logs and the Referer
+        header.
+      </p>
+      <form class="form" method="post" action="{% url 'connect:student-search' %}">
+        {% csrf_token %}
+        <div class="field">{{ lookup_form.net_id.as_field_group }}</div>
+        <div class="actions">
+          <button type="submit">Look up</button>
+        </div>
+      </form>
+
+      {% if found %}
+        <div class="lookup-result">
+          <h3 class="card-title">Found</h3>
+          <div class="row">
+            <div>
+              <div class="title">
+                <a href="{{ found.get_absolute_url }}">{{ found.full_name }}</a>
+              </div>
+              <div class="subtitle">{{ found.college }}</div>
+              <div class="meta"><span>{{ found.net_id }}</span></div>
+            </div>
+            <span class="badge">{{ found.get_preferred_connection_display }}</span>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <h2 class="section" id="results">
+    {% if searching %}
+      {{ summary.total }} of {{ roster_total }} student{{ roster_total|pluralize }} match{{ summary.total|pluralize:"es," }}
+    {% else %}
+      All {{ roster_total }} student{{ roster_total|pluralize }}
+    {% endif %}
+  </h2>
+
+  <ul class="list">
+  {% for student in students %}
+    <li class="card linked">
+      <div class="row">
+        <div>
+          <div class="title">
+            <a href="{{ student.get_absolute_url }}">{{ student.full_name }}</a>
+          </div>
+          <div class="subtitle">
+            {{ student.college }}{% if student.department %} &middot; {{ student.department }}{% endif %}
+          </div>
+          <div class="meta">
+            <span>{{ student.net_id }}</span>
+            <span>{{ student.get_social_energy_display }}</span>
+            <span>{{ student.interest_count }} interest{{ student.interest_count|pluralize }}</span>
+          </div>
+          <ul class="chips" aria-label="Interests">
+            {% for link in student.interest_links.all %}
+              {% if q and q in link.interest.name|lower %}
+                <li class="chip chip-match">{{ link.interest.name }}<span class="visually-hidden"> (matches your search)</span></li>
+              {% else %}
+                <li class="chip">{{ link.interest.name }}</li>
+              {% endif %}
+            {% empty %}
+              <li class="chip">No interests yet</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <span class="badge">{{ student.get_preferred_connection_display }}</span>
+      </div>
+    </li>
+  {% empty %}
+    <li class="empty">
+      {% if search_form.errors %}
+        <div class="big">Fix the highlighted filter</div>
+        <p>One of the search filters has a value that is not in its list.
+           Pick a value from the list, or clear the search.</p>
+      {% else %}
+        <div class="big">No students match these filters</div>
+        <p>Try fewer filters or a shorter search term, or
+           <a href="{% url 'connect:student-search' %}">clear the search</a>.</p>
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+
+  <h2 class="section">Summary of these results</h2>
+  <div class="grid">
+    <div class="card stat">
+      <div class="n">{{ summary.total }}</div>
+      <div class="l">Students (of {{ roster_total }} verified)</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ summary.avg_energy|floatformat:1|default:"-" }}</div>
+      <div class="l">Average social energy (1 quiet - 5 very social)</div>
+    </div>
+    <div class="card stat">
+      <div class="n">{{ by_college|length }}</div>
+      <div class="l">College{{ by_college|length|pluralize }} represented</div>
+    </div>
+  </div>
+
+  <div class="grid-2 gap-top">
+    <div class="card scroll">
+      <table>
+        <caption>Students per college</caption>
+        <thead><tr><th scope="col">College</th><th scope="col" class="num">Students</th></tr></thead>
+        <tbody>
+          {% for row in by_college %}
+            <tr><td>{{ row.college }}</td><td class="num">{{ row.students }}</td></tr>
+          {% empty %}
+            <tr><td colspan="2">No students to group.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card scroll">
+      <table>
+        <caption>Most shared interests</caption>
+        <thead><tr><th scope="col">Interest</th><th scope="col">Category</th><th scope="col" class="num">Students</th></tr></thead>
+        <tbody>
+          {% for interest in top_interests %}
+            <tr>
+              <td>{{ interest.name }}</td>
+              <td>{{ interest.get_category_display }}</td>
+              <td class="num">{{ interest.students }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">No interests among these students.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock %}

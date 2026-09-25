@@ -30,6 +30,9 @@ urlpatterns = [
     path("students/<int:pk>/", views.StudentProfileDetailView.as_view(),
          name="student-detail"),
 
+    # --- P1-A3 Section 2 - ORM search (GET and POST forms) ------------------
+    path("search/", views.StudentSearchView.as_view(), name="student-search"),
+
     # --- Manojkumar Mohankumar - render() FBV ----------------------------
     path("matches/", views.match_list, name="match-list"),
     path("matches/<int:pk>/", views.MatchDetailView.as_view(),
