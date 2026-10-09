@@ -183,7 +183,7 @@ jobs:
 
           # Sign in as the course's tester account, as a browser would.
           jar="$(mktemp)"
-          token="$(curl -fs -c "$jar" "$base/accounts/login/" | grep -o 'name="csrfmiddlewaretoken" value="[^"]*"' | sed 's/.*value="//;s/"$//')"
+          token="$(curl -fs -c "$jar" "$base/accounts/login/" | grep -o 'name="csrfmiddlewaretoken" value="[^"]*"' | head -1 | sed 's/.*value="//;s/"$//')"
           login="$(curl -s -o /dev/null -w '%{http_code}' -b "$jar" -c "$jar" -e "$base/accounts/login/" \
             --data-urlencode "csrfmiddlewaretoken=$token" --data-urlencode "login=tester" \
             --data-urlencode "password=uiuc12345" "$base/accounts/login/")"
