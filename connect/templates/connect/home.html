@@ -23,7 +23,7 @@ to each section.
         <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
         <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
       {% else %}
-        <a class="btn btn-primary" href="{% url 'account_signup' %}">Create an account</a>
+        <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign up</a>
         <a class="btn btn-secondary" href="{% url 'account_login' %}">Log in</a>
       {% endif %}
     </div>
@@ -35,7 +35,7 @@ to each section.
 {% if not user.is_authenticated %}
 
   <h2 class="section">How it works</h2>
-  <ol class="grid steps">
+  <ol class="grid steps" role="list">
     <li class="card">
       <h3 class="card-title">Sign in</h3>
       <p>With your Illinois Google account, or a username and password.</p>
@@ -64,7 +64,7 @@ to each section.
   </div>
 
   <h2 class="section">Recent matches</h2>
-  <ul class="list">
+  <ul class="list" role="list">
   {% for match in recent_matches %}
     <li class="card linked">
       <div class="row">

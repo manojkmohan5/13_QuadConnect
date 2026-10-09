@@ -6,11 +6,11 @@ Log in (P1-A5). Replaces django-allauth's account/login.html: the same form
 on success, returns the user to ?next= or to the home page.
 {% endcomment %}
 
-{% block title %}Log in - QuadConnect{% endblock %}
+{% block title %}{% if form.errors %}Error: {% endif %}Log in - QuadConnect{% endblock %}
 {% block heading %}Log in{% endblock %}
 
 {% block subtitle %}
-  <p class="sub">New to QuadConnect? <a href="{{ signup_url }}">Create an account</a>.</p>
+  <p class="sub">New to QuadConnect? <a href="{{ signup_url }}">Sign up</a>.</p>
 {% endblock %}
 
 {% block content %}

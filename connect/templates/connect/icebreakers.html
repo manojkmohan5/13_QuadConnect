@@ -43,7 +43,7 @@ says why and still shows what the group has in common.
       seconds to try again.
     </p>
   {% else %}
-    <ol class="list">
+    <ol class="list" role="list">
       {% for q in questions %}
         <li class="card">
           <p class="question">{{ forloop.counter }}. {{ q.question }}</p>

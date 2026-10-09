@@ -75,7 +75,7 @@ is POST with {% csrf_token %} (it creates a row).
 
     {% if pending %}
       <h3 class="card-title gap-top">Waiting for review (visible to staff only)</h3>
-      <ul class="list">
+      <ul class="list" role="list">
         {% for venue in pending %}
           <li class="card">
             <div class="row">

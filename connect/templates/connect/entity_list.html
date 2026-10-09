@@ -35,7 +35,7 @@ Blocks for child templates: filters (above the list), after_list (below it).
 
   {% block filters %}{% endblock %}
 
-  <ul class="list">
+  <ul class="list" role="list">
   {% for item in items %}
     <li class="card{% if item.url %} linked{% endif %}">
       <div class="row">

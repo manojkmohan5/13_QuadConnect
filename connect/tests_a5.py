@@ -90,7 +90,7 @@ class AccessTests(AuthTestCase):
 
     def test_the_landing_page_is_public_and_shows_no_student_data(self):
         response = self.client.get(reverse("connect:home"))
-        self.assertContains(response, "Create an account")
+        self.assertContains(response, f'href="{reverse("account_signup")}">Sign up</a>')
         self.assertNotContains(response, "Recent matches")
         self.assertNotContains(response, "QC-")  # no check-in codes
         self.assertContains(response, f'href="{reverse("connect:privacy")}"')  # footer
