@@ -25,22 +25,22 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | **P1-A4** — APIs, Vega-Lite charts, exports, static files, initial deployment (40 pts) — built by Manojkumar on `feature/p1-a4`, deployed at <https://manojkmohan43.pythonanywhere.com/>, due Mon 2026-10-05, 23:59 |
-| **Last completed** | P1-A3 — URLs, ORM, static files, charts, forms, API (60 pts) — merged into `main` (PR #6, wording fix PR #8) |
-| **`main` status** | Has P1-A2 and P1-A3 (`6ccd9d1`, PR #8). `feature/p1-a4` was cut from it. |
-| **What remains** | Merge `feature/p1-a4` into `main` through a PR (planned for 2026-10-05), point the PythonAnywhere copy at `main`, and submit on Canvas: the repository link, the site link and the PythonAnywhere username `manojkmohan43`. |
+| **Assignment in flight** | **P1-A5.1** — Django logins, Google sign-in, a public API with a Vega-Lite chart and three other uses, and a team video (50 pts) — built on `feature/p1-a5`, due Mon 2026-10-12 |
+| **Last completed** | P1-A4 — APIs, Vega-Lite charts, exports, static files, deployment (40 pts) — merged into `main` (PR #9, 2026-10-05), live at <https://manojkmohan43.pythonanywhere.com/> |
+| **`main` status** | Has P1-A2, P1-A3 and P1-A4 (`70d0ad4`, PR #9). `feature/p1-a5` was cut from it. |
+| **What remains** | The Google client keys in `.env` (locally and on the server), the A5 deploy to PythonAnywhere, the team video, and the Canvas submission (see §12). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
-list template, a home dashboard and the four graded views) and, since PR #6,
-everything in §9's P1-A3 entry: detail pages, search, static files with cache
-busting, Matplotlib charts, a POST form on a CBV, a JSON API, and a 45-test
-suite. `feature/p1-a4` adds everything in §9's P1-A4 entry: chart-ready
-API endpoints, two Vega-Lite charts (in the page and as PNG/JPG), Open Trivia
-DB icebreakers, CSV/JSON exports with a reports page, and the committed seed
-database. CI: every push to `feature/p1-a4` runs one check, **Deploy / test
-(push)** (`.github/workflows/deploy.yml`), with every CI step inside that one
-job. It runs on no other branch: code reaches `main` only through a PR whose
-head has passed it.
+list template, a home dashboard and the four graded views), P1-A3 (detail
+pages, search, static files with cache busting, Matplotlib charts, a POST form
+on a CBV, a JSON API) and P1-A4 (chart-ready API endpoints, two Vega-Lite
+charts, Open Trivia DB icebreakers, CSV/JSON exports with a reports page, the
+committed seed database). `feature/p1-a5` adds everything in §9's P1-A5 entry:
+accounts with django-allauth, every page private by default, Google sign-in,
+one public API, and its uses in `docs/a5/`. CI: every push to `feature/p1-a5`
+runs one check, **Deploy / test (push)** (`.github/workflows/deploy.yml`),
+with every CI step inside that one job. It runs on no other branch: code
+reaches `main` only through a PR whose head has passed it.
 
 ### Status board — UPDATE YOUR ROW WHEN YOU FINISH
 
@@ -51,7 +51,8 @@ head has passed it.
 | Prathamesh Mulay | `feature/location-views` | Base CBV | `/locations/` | ✅ DONE — `CampusLocationListView` base CBV with setting + seats filters, reuses the shared list template |
 | Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ✅ DONE — aggregate feedback summary with rating distribution, enjoyment metrics, and connection preferences |
 | Manojkumar Mohankumar (P1-A3, solo) | `feature/p1-a3` | all six A3 sections | `/search/`, `/matches/<pk>/`, `/locations/<pk>/`, `/insights/`, `/api/` | ✅ DONE — merged to `main` in PR #6 (2026-09-28); see §9 |
-| Manojkumar Mohankumar (P1-A4) | `feature/p1-a4` | all four A4 parts | `/api/summary/`, `/vega-lite/...`, `/api/icebreakers/`, `/reports/`, `/export/...` | DONE — deployed at <https://manojkmohan43.pythonanywhere.com/>; merge to `main` pending; see §9 |
+| Manojkumar Mohankumar (P1-A4) | `feature/p1-a4` | all four A4 parts | `/api/summary/`, `/vega-lite/...`, `/api/icebreakers/`, `/reports/`, `/export/...` | ✅ DONE — merged to `main` in PR #9 (2026-10-05); live at <https://manojkmohan43.pythonanywhere.com/>; see §9 |
+| Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–3 (Part 4 is the team video) | `/accounts/...`, every route behind a login, `/api/summary/` public | IN PROGRESS — built and tested; Google keys, deploy and video to come; see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -203,10 +204,11 @@ the same models as a foundation.
 ├── .gitignore                     .env on line 1
 ├── .env                           IGNORED — never committed
 ├── .env.example                   committed, placeholders only
-├── requirements.txt               pip freeze, 23 pins (A4): Django, whitenoise, matplotlib, requests, vl-convert-python, ...
+├── requirements.txt               pip freeze, 29 pins (A5): Django, django-allauth, whitenoise, matplotlib, requests, vl-convert-python, ...
 ├── manage.py                      -> quadconnect.settings.development
 ├── db.sqlite3                     COMMITTED since A4 — seed data only
 ├── static/                        (A3) css/quadconnect.css, img/logo.svg, fonts/; (A4) js/charts.js, vendor/vega/
+├── templates/                     (A5) account/ (login, sign-up, logout pages), allauth/ (layout)
 ├── staticfiles/                   IGNORED — collectstatic output (production)
 ├── docs/
 │   ├── wireframes/
@@ -216,7 +218,8 @@ the same models as a foundation.
 │   ├── branching_strategy/        diagram.png + branching.md
 │   ├── notes/notes.txt            weekly log, VIEW REGISTER, REFLECTION
 │   ├── build_tasks/               one spec per developer + shared rules
-│   ├── screenshots/               README.md manifest, A2 captures, p1-a3/ (19), p1-a4/ (17)
+│   ├── screenshots/               README.md manifest, A2 captures, p1-a3/ (19), p1-a4/ (19), p1-a5/
+│   ├── a5/                        (A5) the public API's Vega-Lite spec, its three uses, README
 │   ├── er_diagram.pdf
 │   └── data_model_notes.md        why each model and on_delete exists
 ├── quadconnect/
@@ -224,12 +227,13 @@ the same models as a foundation.
 │   │   ├── base.py                shared; reads .env; BASE_DIR 3 levels up
 │   │   ├── development.py         DEBUG=True
 │   │   └── production.py          DEBUG=False + security headers + hashed static
-│   ├── urls.py                    /admin/ and '' -> connect.urls
+│   ├── urls.py                    /admin/, /accounts/ (allauth) and '' -> connect.urls
 │   ├── wsgi.py  asgi.py           -> quadconnect.settings.production
 └── connect/
     ├── models.py                  8 models; A3 added get_absolute_url() to 3 (no migration)
     ├── views.py                   one section per owner, plus A3 sections
-    ├── forms.py                   (A3) search, NetID lookup, venue suggestion
+    ├── forms.py                   (A3) search, NetID lookup, venue suggestion; (A5) login form
+    ├── middleware.py              (A5) login required by default; 401 JSON for /api/
     ├── charts.py                  (A3) Matplotlib charts + Insights page
     ├── api.py                     (A3) JSON API + docs page; (A4) /api/summary/...
     ├── vega_charts.py             (A4) Vega-Lite spec + PNG/JPG endpoints
@@ -238,6 +242,7 @@ the same models as a foundation.
     ├── reports.py                 (A4) /reports/ and the CSV/JSON exports
     ├── tests.py                   (A3) 45 tests, one class per A3 section
     ├── tests_a4.py                (A4) 42 tests, one class per A4 part
+    ├── tests_a5.py                (A5) 17 tests: access, navigation, accounts, Google
     ├── urls.py                    every route named, namespace "connect"
     ├── admin.py                   all 8 registered, with inlines
     ├── migrations/0001_initial.py
@@ -296,6 +301,8 @@ names, `immutable` caching, gzip. **Production needs
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated. Required in production. |
 | `DJANGO_SECURE_SSL` | `1` behind real TLS. |
 | `MAPS_API_KEY` | Placeholder for the Screen 8 map. Dummy value. |
+| `GOOGLE_CLIENT_ID` | Google OAuth client (A5). Optional: without it the Google button is hidden. |
+| `GOOGLE_CLIENT_SECRET` | That client's secret. Required when the ID is set. Never in the database. |
 
 ---
 
@@ -480,7 +487,7 @@ yours.
 | `/locations/<pk>/` | `connect:location-detail` | Generic CBV | A3 | `campuslocation_detail.html` (default naming) |
 | `/insights/` + two `.png` | `connect:insights`, `connect:chart-*` | FBV, `image/png` | A3 | `insights.html` |
 | `/api/`, `/api/locations/`, `/api/matches/`, `/api/locations.txt` | `connect:api-*` | CBV + FBV, `JsonResponse` / `HttpResponse` | A3 | `api_docs.html` for `/api/` |
-| `/api/summary/`, `/api/summary/matches-per-week/` | `connect:api-summary*` | FBV, `JsonResponse`, CORS `*` | A4 | — |
+| `/api/summary/`, `/api/summary/matches-per-week/` | `connect:api-summary*` | FBV, `JsonResponse`; `/api/summary/` public with CORS `*` (A5) | A4 | — |
 | `/vega-lite/<chart>.vl.json`, `.png`, `.jpg` | `connect:vega-spec`, `connect:vega-image` | FBV, JSON / image | A4 | — |
 | `/api/icebreakers/?match=<id>`, `/matches/<pk>/icebreakers/` | `connect:api-icebreakers`, `connect:match-icebreakers` | FBV, calls Open Trivia DB | A4 | `icebreakers.html` |
 | `/reports/`, `/export/students.csv`, `/export/students.json` | `connect:reports`, `connect:export-students-*` | FBV, `render()` / attachments | A4 | `reports.html` |
@@ -488,6 +495,15 @@ yours.
 `/locations/` also gained `post()` in A3 (venue suggestions). Everything is
 namespaced: `{% url 'connect:match-list' %}`. Links to a single record always
 go through `get_absolute_url()` (`StudentProfile`, `Match`, `CampusLocation`).
+
+**Access (A5).** `connect.middleware.LoginRequiredMiddleware` makes every
+view private. A view opens to everyone only with `@login_not_required`: today
+`home` and `summary_api`, plus allauth's own sign-in views. A signed-out page
+request redirects to `/accounts/login/?next=...`, and an `/api/` request gets
+`401` JSON. A new view is private unless you mark it, so decide on purpose,
+and add a public one to `PUBLIC_ROUTES` in `tests_a5.py`. The account pages
+live under `/accounts/` (allauth's URLs), with the site's templates in the
+project-level `templates/account/`.
 
 ### Template architecture
 
@@ -519,7 +535,7 @@ python manage.py migrate
 python manage.py seed_demo_data      # idempotent
 python manage.py verify_constraints  # 11/11 pass
 python manage.py check
-python manage.py test connect        # 45 tests (A3)
+python manage.py test connect        # 104 tests (45 A3, 42 A4, 17 A5)
 ruff check .                         # rules in ruff.toml; CI runs the same
 
 DJANGO_SETTINGS_MODULE=quadconnect.settings.production \
@@ -577,6 +593,69 @@ adds a short merge entry of their own recording anything that only became
 visible when the branches came together — conflicts hit, behaviour that broke
 on integration, decisions reversed. That merge entry is the part that is
 easiest to skip and most valuable later.
+
+### BUILDING `feature/p1-a5` - Manojkumar Mohankumar - 2026-10-08
+**Shipped so far:** Parts 1–3 of P1-A5 on one branch cut from `main` at
+`70d0ad4`.
+- Part 1: django-allauth accounts with the site's own login, sign-up and
+  logout pages. Every view is private unless marked `@login_not_required`.
+  API paths answer `401` JSON instead of redirecting. The nav shows only
+  Home, Log in and Sign up until you log in.
+- Part 2: "Continue with Google" on the login and sign-up pages, with the
+  client keys read from `.env`.
+- Part 3: `/api/summary/` is the one public API. A Vega-Lite spec reads it
+  from production, and three other uses read it too: a command-line
+  report, a notebook and an Excel workbook (`docs/a5/`).
+
+**Files added:** `connect/middleware.py`, `connect/tests_a5.py`,
+`templates/account/` (`login.html`, `signup.html`, `logout.html`,
+`snippets/google_button.html`), `templates/allauth/` (layout and `h1`
+element), `docs/a5/` (the spec, three uses, README),
+`docs/screenshots/p1-a5/` (4).
+
+**Files changed:**
+- `requirements.txt` (django-allauth and its dependencies, 29 pins);
+- `settings/base.py` (apps, middleware, the accounts block) and
+  `settings/production.py` (a dummy email backend);
+- `quadconnect/urls.py` (`accounts/`);
+- `views.py` (the home page is public, and shows its dashboard only after
+  login);
+- `api.py` (only `summary_api` is public and allows any origin; the docs
+  page shows the real 401);
+- `forms.py` (the login form subclass);
+- `base.html` (nav by login state, account links, the logout button);
+- `home.html` (a signed-out landing page);
+- `api_docs.html`;
+- the CSS (account links, the Google button);
+- the A3 and A4 tests (they log in first);
+- the CI workflow (signed-out and signed-in smoke test, no stored OAuth
+  client);
+- `db.sqlite3` (rebuilt with the account tables);
+- README, notes.txt, this file.
+
+**Decisions that differ from the plan:**
+- Private by default through the middleware, not a decorator on each view.
+- The Google client lives in `.env`, not in a `SocialApp` row, because the
+  database is public.
+- The Google Cloud project belongs to adqatar22@gmail.com: Google Cloud is
+  switched off for illinois.edu accounts.
+- No mail server, so there is no email verification and no password reset
+  link.
+
+**Gotchas for the next person:** §11 traps 24–28.
+
+**Verified:** 104 tests and ruff clean. Signed out, every route but the
+public two redirects or answers `401`, and signed in, every route opens (a
+test walks the whole URLconf). The Vega-Lite spec draws in the editor with no
+warnings, from a browser that never logged in.
+
+**To do:** Google keys, deploy, video.
+
+### `main` — P1-A4 merged · 2026-10-05 · PR #9
+**Merged:** `feature/p1-a4` into `main` through PR #9. Merge commit
+`70d0ad4`. The PR's head had passed the Deploy / test check. Nothing
+surfaced at integration. The workflow then moved to `feature/p1-a5`, so
+`main` still runs no CI of its own, and there is no automatic deploy.
 
 ### BUILT `feature/p1-a4` - Manojkumar Mohankumar - 2026-10-02
 **Shipped:** all four P1-A4 parts on one branch cut from `main` at `6ccd9d1`.
@@ -975,6 +1054,24 @@ empty state renders (forced in a rolled-back transaction).
    arguments into Windows paths (set `MSYS_NO_PATHCONV=1`). And the live
    `db.sqlite3` on the server is `--skip-worktree`, so `git pull` works
    while the site writes to it.
+24. **With `LoginRequiredMiddleware`, every test client must log in.** A
+   test that gets a page now gets a redirect to the login page instead.
+   Log in once in a base class's `setUp()`, and every subclass that
+   defines its own `setUp()` must call `super().setUp()`: 20 tests failed
+   until two classes did.
+25. **Creating users with a password makes tests slow.** Each hash costs
+   real time. Create test users with `create_user("name")` (no password)
+   and `force_login()`: the suite went from 126 s to about 63 s.
+26. **allauth's login form links to password reset** in the password
+   field's help text, and that needs a mail server we do not have. It is
+   removed in `connect.forms.LoginForm`, wired in with `ACCOUNT_FORMS`.
+27. **Google Cloud is switched off for illinois.edu accounts**, and
+   Google refuses to sign in to Gmail in a browser driven by automation
+   ("This browser or app may not be secure"). Set up OAuth clients in a
+   normal browser with a personal Google account.
+28. **`ruff check .` lints notebooks too.** A committed `.ipynb` under
+   `docs/` is checked like any `.py` file, so CI fails on a notebook's
+   lint error.
 
 ---
 
@@ -999,13 +1096,24 @@ one item, the public repository URL, due Mon 2026-09-28 at 23:59. The
 notes.txt answers the assignment asks for are in its section 2; screenshots
 in `docs/screenshots/p1-a3/`.
 
-### P1-A4 — APIs, Vega-Lite charts, exports, static files, deployment (40 pts) — deployed, merge pending
+### P1-A4 — APIs, Vega-Lite charts, exports, static files, deployment (40 pts) — merged, submitted
 Built by Manojkumar on `feature/p1-a4` (§9). Due Mon 2026-10-05 at 23:59.
 Submission: the Vega-Lite specs (`connect/specs/`) and screenshots of the
 working charts (`docs/screenshots/p1-a4/`), in the repository. Deployed to
 PythonAnywhere on 2026-10-04: <https://manojkmohan43.pythonanywhere.com/>, user `manojkmohan43`, teacher
-`mohitg27`. The Canvas comment needs the repository link, the site link and
-that username.
+`mohitg27`. Merged into `main` through PR #9 on 2026-10-05.
+
+### P1-A5.1 — Authentication, Google OAuth, public API, project video (50 pts) — in progress
+Built on `feature/p1-a5` (§9). Due Mon 2026-10-12. No new repository; the
+live site must run the logged-in version. Submission:
+- the public API's production URL,
+  <https://manojkmohan43.pythonanywhere.com/api/summary/>;
+- the GitHub URL;
+- `docs/a5/group-13-vega-lite-API-demo.txt` and its editor screenshot
+  (`docs/screenshots/p1-a5/01_vega_editor_public_api.png`);
+- the team video as a downloadable file, 300 seconds at most. It opens with
+  a slide (members and emails, product name and title, course) and the
+  required spoken introduction, then demonstrates the live site.
 
 ### Next
 The matching algorithm remains the biggest open design question:
