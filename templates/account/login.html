@@ -1,0 +1,46 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Log in (P1-A5). Replaces django-allauth's account/login.html: the same form
+(username or email, password, remember me) in the site's own layout, with
+"Continue with Google" above it. allauth's LoginView handles the POST and,
+on success, returns the user to ?next= or to the home page.
+{% endcomment %}
+
+{% block title %}Log in - QuadConnect{% endblock %}
+{% block heading %}Log in{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">New to QuadConnect? <a href="{{ signup_url }}">Create an account</a>.</p>
+{% endblock %}
+
+{% block content %}
+  <section class="card auth" aria-label="Log in">
+    {% include "account/snippets/google_button.html" %}
+
+    {% if form.errors %}
+      <div class="messages">
+        <p class="message message-error" role="alert">
+          {% if form.non_field_errors %}
+            {{ form.non_field_errors|join:" " }}
+          {% else %}
+            You are not logged in yet. Fix the fields marked below and try again.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+
+    {# novalidate: the server's messages say how to fix each field. #}
+    <form class="form" method="post" action="{% url 'account_login' %}" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field{% if field.widget_type == 'checkbox' %} field-check{% endif %}">
+          {{ field.as_field_group }}
+        </div>
+      {% endfor %}
+      {{ redirect_field }}
+      <div class="actions">
+        <button type="submit">Log in</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

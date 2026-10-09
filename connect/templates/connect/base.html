@@ -19,6 +19,11 @@ Blocks available to children:
 Navigation marks the current section with class="active". The list page
 itself gets aria-current="page"; its detail pages get aria-current="true",
 because the link then points at the section, not at the page being shown.
+
+Before login the navigation shows only Home, plus Log in and Sign up on the
+right; those pages are the only ones a visitor can open (P1-A5). After login
+every section appears, with the username and a Log out button. Logging out
+is a POST form, so a link or a prefetch can never sign anyone out.
 {% endcomment %}
 <!doctype html>
 <html lang="en">
@@ -46,6 +51,7 @@ because the link then points at the section, not at the page being shown.
     <nav class="site" aria-label="Main">
       <a href="{% url 'connect:home' %}"
          {% if u == 'home' %}class="active" aria-current="page"{% endif %}>Home</a>
+      {% if user.is_authenticated %}
       <a href="{% url 'connect:student-list' %}"
          {% if u == 'student-list' %}class="active" aria-current="page"{% elif u == 'student-detail' %}class="active" aria-current="true"{% endif %}>Students</a>
       <a href="{% url 'connect:student-search' %}"
@@ -62,7 +68,22 @@ because the link then points at the section, not at the page being shown.
          {% if u == 'reports' %}class="active" aria-current="page"{% endif %}>Reports</a>
       <a href="{% url 'connect:api-docs' %}"
          {% if u == 'api-docs' %}class="active" aria-current="page"{% endif %}>API</a>
+      {% endif %}
     </nav>
+    <div class="account">
+      {% if user.is_authenticated %}
+        <span class="who">Signed in as <strong>{{ user.get_username }}</strong></span>
+        <form method="post" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          <button type="submit">Log out</button>
+        </form>
+      {% else %}
+        <a href="{% url 'account_login' %}"
+           {% if u == 'account_login' %}class="active" aria-current="page"{% endif %}>Log in</a>
+        <a class="signup" href="{% url 'account_signup' %}"
+           {% if u == 'account_signup' %}aria-current="page"{% endif %}>Sign up</a>
+      {% endif %}
+    </div>
     {% endwith %}
   </div>
 </header>

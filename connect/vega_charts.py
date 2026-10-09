@@ -5,12 +5,14 @@ The specs live in connect/specs/ as plain Vega-Lite JSON, each loading its
 data with data.url from our own API (/api/summary/...), never inline values.
 
     GET /vega-lite/<chart>.vl.json   the spec, with data.url made absolute for
-                                     the host serving it, so it also works in
-                                     the Vega-Lite editor (CORS allowed)
+                                     the host serving it
     GET /vega-lite/<chart>.png       the chart rendered to an image on the
     GET /vega-lite/<chart>.jpg       server with vl-convert
 
 The Insights page draws the same specs in the browser with vega-embed.
+Since P1-A5 these URLs need a login, like the page itself; the chart built
+on the public API for the Vega-Lite editor is docs/a5/
+group-13-vega-lite-API-demo.txt.
 
 Rendering on the server: the image views give vl-convert the rows from the
 same functions the API uses, instead of letting it fetch data.url. A server
@@ -27,7 +29,7 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
 
-from .api import allow_any_origin, interest_popularity, matches_per_week
+from .api import interest_popularity, matches_per_week
 
 SPEC_DIR = Path(__file__).resolve().parent / "specs"
 VEGA_LITE_VERSION = "6.4"  # newest version vl-convert-python 1.9 renders
@@ -68,7 +70,6 @@ def spec_for_image(name):
     return spec
 
 
-@allow_any_origin
 @require_GET
 def vega_spec(request, chart):
     """GET /vega-lite/<chart>.vl.json - the chart's Vega-Lite spec."""

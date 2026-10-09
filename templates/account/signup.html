@@ -1,0 +1,46 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Sign up (P1-A5). Replaces django-allauth's account/signup.html: username,
+email and password twice, checked by Django's password validators, in the
+site's own layout, with "Continue with Google" above. allauth's SignupView
+creates the account and logs the new user in; no confirmation email is
+sent (ACCOUNT_EMAIL_VERIFICATION = "none").
+{% endcomment %}
+
+{% block title %}Sign up - QuadConnect{% endblock %}
+{% block heading %}Create an account{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">Already have one? <a href="{{ login_url }}">Log in</a>.</p>
+{% endblock %}
+
+{% block content %}
+  <section class="card auth" aria-label="Create an account">
+    {% include "account/snippets/google_button.html" %}
+
+    {% if form.errors %}
+      <div class="messages">
+        <p class="message message-error" role="alert">
+          {% if form.non_field_errors %}
+            {{ form.non_field_errors|join:" " }}
+          {% else %}
+            The account was not created. Fix the fields marked below and try again.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+
+    <form class="form" method="post" action="{% url 'account_signup' %}" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field">
+          {{ field.as_field_group }}
+        </div>
+      {% endfor %}
+      {{ redirect_field }}
+      <div class="actions">
+        <button type="submit">Create account</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

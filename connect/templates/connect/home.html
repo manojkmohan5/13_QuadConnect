@@ -1,7 +1,9 @@
 {% extends "connect/base.html" %}
 {% comment %}
-Landing page. Proves the data model is queryable outside Django Admin and
-gives the grader a jumping-off point to each of the four graded views.
+Landing page, the one page open to everyone (P1-A5). Visitors who are not
+signed in see what QuadConnect is and how to join, and no student data.
+Signed-in users also see the counts and recent matches, a jumping-off point
+to each section.
 {% endcomment %}
 
 {% block title %}QuadConnect - Home{% endblock %}
@@ -17,13 +19,39 @@ gives the grader a jumping-off point to each of the four graded views.
       shared interests and when they are free.
     </p>
     <div class="actions">
-      <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
-      <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
+      {% if user.is_authenticated %}
+        <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
+        <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
+      {% else %}
+        <a class="btn btn-primary" href="{% url 'account_signup' %}">Create an account</a>
+        <a class="btn btn-secondary" href="{% url 'account_login' %}">Log in</a>
+      {% endif %}
     </div>
   </section>
 {% endblock %}
 
 {% block content %}
+
+{% if not user.is_authenticated %}
+
+  <h2 class="section">How it works</h2>
+  <ol class="grid steps">
+    <li class="card">
+      <h3 class="card-title">Sign in</h3>
+      <p>With your Illinois Google account, or a username and password.</p>
+    </li>
+    <li class="card">
+      <h3 class="card-title">Tell us what you like</h3>
+      <p>Your interests, the clubs you are in, and when you are free on weekends.</p>
+    </li>
+    <li class="card">
+      <h3 class="card-title">Meet up</h3>
+      <p>Each week you get one match, one-on-one or a small squad, at an approved
+         campus spot, with an activity to break the ice.</p>
+    </li>
+  </ol>
+
+{% else %}
 
   <h2 class="section">Seeded records</h2>
   <div class="grid">
@@ -67,5 +95,7 @@ gives the grader a jumping-off point to each of the four graded views.
     Average experience rating:
     <strong>{{ average_rating|floatformat:2|default:"no data yet" }}</strong> / 5
   </div>
+
+{% endif %}
 
 {% endblock %}

@@ -40,11 +40,17 @@ CHICAGO = ZoneInfo("America/Chicago")  # settings.TIME_ZONE
 
 
 class QuadConnectData(TestCase):
-    """Three students, three approved-or-not venues, two matches."""
+    """Three students, three approved-or-not venues, two matches.
+
+    Every page except the landing page needs a login (P1-A5), so each test
+    starts signed in as an ordinary member; a test that needs staff signs in
+    as staff instead.
+    """
 
     @classmethod
     def setUpTestData(cls):
         cls.staff = User.objects.create_user("staff", password="pw", is_staff=True)
+        cls.member = User.objects.create_user("member")  # no password: force_login needs none
 
         gaming = Interest.objects.create(name="Gaming", category=InterestCategory.HOBBY)
         # "Board games" also contains "gam", so a search for "gam" reaches Ada
@@ -97,6 +103,9 @@ class QuadConnectData(TestCase):
 
 
 # --- Section 1: URL linking and navigation ------------------------------------
+
+    def setUp(self):
+        self.client.force_login(self.member)
 
 
 class UrlLinkingTests(QuadConnectData):
@@ -252,6 +261,7 @@ class SearchTests(QuadConnectData):
 
     def test_post_requires_csrf_token(self):
         client = Client(enforce_csrf_checks=True)
+        client.force_login(self.member)
         self.assertEqual(client.post(self.url, {"net_id": "ada1"}).status_code, 403)
         page = client.get(self.url).content.decode()
         token = page.split('name="csrfmiddlewaretoken" value="')[1].split('"')[0]
@@ -358,6 +368,7 @@ class LocationFormTests(QuadConnectData):
 
     def test_post_requires_csrf_token(self):
         client = Client(enforce_csrf_checks=True)
+        client.force_login(self.member)
         self.assertEqual(client.post(self.url, self.valid()).status_code, 403)
         self.assertFalse(CampusLocation.objects.filter(name="Siebel Center for Design").exists())
 
@@ -440,6 +451,9 @@ class ApiTests(QuadConnectData):
 
 
 class EmptyDatabaseTests(TestCase):
+
+    def setUp(self):
+        self.client.force_login(User.objects.create_user("member"))
 
     def test_pages_show_empty_states(self):
         self.assertContains(self.client.get("/search/"), "No students match these filters")

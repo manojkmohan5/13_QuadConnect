@@ -66,6 +66,12 @@ INSTALLED_APPS = [
     "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
 
+    # Accounts (P1-A5): username/password and Google sign-in.
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+
     # QuadConnect domain app: the verified connection lifecycle.
     "connect",
 ]
@@ -80,6 +86,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Every page needs a login unless its view is marked public (P1-A5).
+    "connect.middleware.LoginRequiredMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -150,3 +159,45 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# --- Accounts (P1-A5) -----------------------------------------------------
+# django-allauth runs both ways in: a username or email with a password, and
+# Google. Every page needs a login unless its view is marked
+# @login_not_required (connect/middleware.py); those that are: the home page,
+# the public API (/api/summary/), and allauth's own sign-in pages.
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",          # username + password, admin
+    "allauth.account.auth_backends.AuthenticationBackend",  # email login, Google
+]
+LOGIN_URL = "account_login"
+LOGIN_REDIRECT_URL = "connect:home"
+LOGOUT_REDIRECT_URL = "connect:home"
+
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]
+# No mail server: addresses are not verified by email, and no email is sent.
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_FORMS = {"login": "connect.forms.LoginForm"}  # no "Forgot your password?"
+
+# Google confirms the address it sends, so signing in with Google opens the
+# account that already uses that address instead of refusing it.
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+# The Google client comes from the environment (.env), never the database:
+# db.sqlite3 is committed to a public repository. Without GOOGLE_CLIENT_ID the
+# provider has no app, and the "Continue with Google" button is not shown.
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "OAUTH_PKCE_ENABLED": True,
+    },
+}
+if env("GOOGLE_CLIENT_ID"):
+    SOCIALACCOUNT_PROVIDERS["google"]["APPS"] = [{
+        "client_id": env("GOOGLE_CLIENT_ID"),
+        "secret": env("GOOGLE_CLIENT_SECRET", required=True),
+        "key": "",
+    }]

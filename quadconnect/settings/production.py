@@ -37,6 +37,10 @@ if _ssl:
     SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# No mail server on the host: nothing is emailed (see ACCOUNT_EMAIL_VERIFICATION),
+# and this backend makes sure nothing tries to.
+EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+
 # --- Static files: cache busting ------------------------------------------
 # collectstatic writes each file a second time under a content-hashed name
 # (quadconnect.css -> quadconnect.3f2a9c1b.css) plus a manifest, and

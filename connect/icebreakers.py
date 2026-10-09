@@ -39,7 +39,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from .api import JSON_PARAMS, _bad_params, allow_any_origin
+from .api import JSON_PARAMS, _bad_params
 from .models import Match, ParticipantResponse, ProfileInterest
 
 logger = logging.getLogger(__name__)
@@ -178,7 +178,6 @@ class IcebreakerQuery(forms.Form):
     })
 
 
-@allow_any_origin
 @require_GET
 def icebreakers_api(request):
     """GET /api/icebreakers/?match=<id> - trivia for one match, as JSON."""

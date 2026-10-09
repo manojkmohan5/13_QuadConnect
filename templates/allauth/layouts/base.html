@@ -1,0 +1,12 @@
+{% extends "connect/base.html" %}
+{% comment %}
+django-allauth's own pages that we do not replace (a Google sign-in error,
+the Google sign-up step, password change) use the site's layout, so they
+keep the header, navigation and stylesheet (P1-A5). allauth's templates
+write their own <h1>, so the site header's <h1> is left out here, and
+messages come from base.html as on every other page.
+{% endcomment %}
+
+{% block title %}{% block head_title %}{% endblock head_title %} - QuadConnect{% endblock %}
+{% block page_header %}{% endblock %}
+{% block scripts %}{% block extra_body %}{% endblock extra_body %}{% endblock %}

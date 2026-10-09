@@ -13,6 +13,7 @@ aria-describedby (help text and error) and aria-invalid="true" on error.
 
 import re
 
+from allauth.account.forms import LoginForm as AllauthLoginForm
 from django import forms
 
 from .models import CampusLocation, ConnectionType, StudentProfile
@@ -166,3 +167,14 @@ class CampusLocationSuggestionForm(forms.ModelForm):
             raise forms.ValidationError(
                 self.Meta.error_messages["name"]["unique"])
         return name
+
+
+class LoginForm(AllauthLoginForm):
+    """django-allauth's login form without its "Forgot your password?" link
+    (P1-A5). The host has no mail server, so a reset email could never
+    arrive. Staff can set a new password in Django Admin. Wired in with
+    ACCOUNT_FORMS in settings."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["password"].help_text = ""

@@ -23,6 +23,7 @@ api.py.
 from datetime import date
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_not_required
 from django.db.models import Avg, Count, Prefetch, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -48,8 +49,13 @@ from .models import (
 # ===========================================================================
 
 
+@login_not_required  # the public landing page (P1-A5)
 def home(request):
-    """Landing page: a count of every seeded entity plus recent matches."""
+    """Landing page. Visitors who are not signed in see what QuadConnect is
+    and how to join, and no student data; signed-in users also get a count
+    of every seeded entity and the recent matches."""
+    if not request.user.is_authenticated:
+        return render(request, "connect/home.html")
     context = {
         "counts": [
             ("Student profiles", StudentProfile.objects.count()),

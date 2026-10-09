@@ -46,11 +46,17 @@ def seed():
 
 
 class SeededTestCase(TestCase):
-    """Every test class below starts from the seeded dataset."""
+    """Every test class below starts from the seeded dataset, signed in as an
+    ordinary member: since P1-A5 every page but the landing page needs a
+    login (tests_a5.py tests that)."""
 
     @classmethod
     def setUpTestData(cls):
         seed()
+        cls.member = User.objects.create_user("member")  # no password: force_login needs none
+
+    def setUp(self):
+        self.client.force_login(self.member)
 
 
 # --- Part 4: deployment prerequisites (the committed seed data) ---------------
@@ -150,11 +156,11 @@ class SummaryApiTests(SeededTestCase):
         records = self.client.get(reverse("connect:api-summary-matches-per-week")).json()["records"]
         self.assertIn({"date": "2026-08-10", "count": 0, "participants": 0}, records)
 
-    def test_public_json_endpoints_allow_any_origin(self):
-        for name in ["api-summary", "api-summary-matches-per-week", "api-locations",
-                     "api-matches", "api-locations-text"]:
-            response = self.client.get(reverse("connect:" + name))
-            self.assertEqual(response["Access-Control-Allow-Origin"], "*", name)
+    def test_only_the_public_api_allows_any_origin(self):
+        # Since P1-A5 /api/summary/ is the one public endpoint (see tests_a5.py).
+        self.assertEqual(self.client.get(reverse("connect:api-summary"))["Access-Control-Allow-Origin"], "*")
+        for name in ["api-summary-matches-per-week", "api-locations", "api-matches", "api-locations-text"]:
+            self.assertNotIn("Access-Control-Allow-Origin", self.client.get(reverse("connect:" + name)), name)
 
     def test_summary_endpoints_are_get_only(self):
         for name in ["api-summary", "api-summary-matches-per-week"]:
@@ -183,6 +189,7 @@ class SummaryApiTests(SeededTestCase):
 class VegaLiteTests(SeededTestCase):
 
     def setUp(self):
+        super().setUp()
         cache.clear()  # the images are cached for a minute
 
     def test_specs_load_their_data_from_the_summary_api(self):
@@ -196,9 +203,7 @@ class VegaLiteTests(SeededTestCase):
         self.assertEqual(load_spec("chart2")["mark"]["type"], "line")
 
     def test_served_spec_has_an_absolute_data_url(self):
-        # Absolute, so the spec also loads its data inside the Vega-Lite editor.
         response = self.client.get(reverse("connect:vega-spec", args=["chart2"]))
-        self.assertEqual(response["Access-Control-Allow-Origin"], "*")
         self.assertEqual(response.json()["data"]["url"],
                          "http://testserver" + reverse("connect:api-summary-matches-per-week"))
 
@@ -255,6 +260,7 @@ class IcebreakerTests(SeededTestCase):
     """requests.get is replaced in every test: none of them uses the network."""
 
     def setUp(self):
+        super().setUp()
         patcher = patch("connect.icebreakers.requests.get",
                         return_value=trivia_reply(body={"response_code": 0, "results": [QUESTION]}))
         self.get = patcher.start()
@@ -297,7 +303,6 @@ class IcebreakerTests(SeededTestCase):
     def test_api_combines_our_counts_with_the_questions(self):
         response = self.api(match=self.squad.pk)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Access-Control-Allow-Origin"], "*")
         data = response.json()
         self.assertEqual(data["topic"]["category"], "Sports")
         self.assertEqual(data["questions"], [{"question": "Which country produced Cafu and Pelé?",

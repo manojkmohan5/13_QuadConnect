@@ -1,0 +1,22 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Log out (P1-A5). Shown only when someone opens /accounts/logout/ directly:
+the header's Log out button posts straight to it. Logging out needs a POST,
+so following a link can never sign anyone out.
+{% endcomment %}
+
+{% block title %}Log out - QuadConnect{% endblock %}
+{% block heading %}Log out{% endblock %}
+
+{% block content %}
+  <section class="card auth" aria-label="Log out">
+    <p>Do you want to log out of QuadConnect?</p>
+    <form class="form" method="post" action="{% url 'account_logout' %}">
+      {% csrf_token %}
+      {{ redirect_field }}
+      <div class="actions">
+        <button type="submit">Log out</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}
