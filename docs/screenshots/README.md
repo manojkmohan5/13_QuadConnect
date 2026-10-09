@@ -78,3 +78,17 @@ first lines.
 | `17_production_insights.png` | 4 | Production settings: hashed static files, charts still drawn |
 | `18_vega_editor_deployed_bar.png` | 4 | The deployed bar chart spec in the Vega-Lite editor, data from https://manojkmohan43.pythonanywhere.com/api/summary/ |
 | `19_vega_editor_deployed_line.png` | 4 | The deployed line chart spec in the Vega-Lite editor, data from the deployed API |
+
+## P1-A5 ([`p1-a5/`](p1-a5/))
+
+Each image has the same caption strip: the API address the image reads, and
+what it shows. All four read the public API on the live site,
+<https://manojkmohan43.pythonanywhere.com/api/summary/>, with no login. They
+are explained in [`docs/a5/README.md`](../a5/README.md).
+
+| File | Part | Shows |
+|---|---|---|
+| `01_vega_editor_public_api.png` | 3.3 | `group-13-vega-lite-API-demo.txt` in the Vega-Lite editor: two bar panels drawn from the public API, no warnings |
+| `02_use1_python_report.png` | 3.4 | Use 1: `1_interest_report.py` run in a terminal |
+| `03_use2_notebook.png` | 3.4 | Use 2: the pandas notebook, executed, with its chart |
+| `04_use3_excel.png` | 3.4 | Use 3: the Excel workbook: the Power Query table, formulas by type, and a chart |

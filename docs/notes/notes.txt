@@ -22,6 +22,56 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 7  (w/c 2026-10-05)  -  P1-A5 on feature/p1-a5  [Manojkumar]
+--------------------------------------------------------------------------------
+Built on branch feature/p1-a5, cut from main after P1-A4 (PR #9, merged
+2026-10-05). P1-A5 is due Mon 2026-10-12.
+
+Done, by assignment part:
+  P1  django-allauth 65.19 for accounts. Our own login, sign-up and logout
+      pages (templates/account/). LOGIN_URL, LOGIN_REDIRECT_URL and
+      LOGOUT_REDIRECT_URL set. Every view needs a login unless it is marked
+      @login_not_required (Django's LoginRequiredMiddleware, extended in
+      connect/middleware.py so API paths answer 401 JSON instead of a
+      redirect). Open to everyone: the landing page, the sign-in pages and
+      /api/summary/. Signed out, the header shows only Home, Log in and
+      Sign up.
+  P2  "Continue with Google" on the login and sign-up pages (allauth's
+      Google provider, with PKCE). The client ID and secret come from .env
+      only; without them the button is hidden. The Google Cloud project is
+      owned by adqatar22@gmail.com, because Google Cloud is switched off
+      for Illinois accounts ("disabled by your administrator").
+  P3  /api/summary/ is the one public API: counts only, any origin. The
+      Vega-Lite spec docs/a5/group-13-vega-lite-API-demo.txt reads it from
+      production with data.url, and draws in the editor with no warnings.
+      Three other uses in docs/a5/public_api_uses/: a command-line report,
+      a pandas notebook and a refreshable Excel workbook (Power Query).
+      All written up in docs/a5/README.md.
+
+Verified:
+  - 104 tests (45 from A3, 42 from A4, 17 new), ruff clean.
+  - The API page labels each endpoint Public or Login required, and shows
+    the real 401 body.
+
+Decisions:
+  - Private by default (middleware), not a decorator on each view: a new
+    view stays private unless someone opens it on purpose.
+  - No mail server, so no email verification and no "Forgot your
+    password?" link. Staff reset passwords in Django Admin.
+  - The Google keys live in .env, not in a SocialApp row: db.sqlite3 is in
+    a public repository. CI fails if the committed database holds one.
+  - Only /api/summary/ is public. /api/summary/matches-per-week/ now needs
+    a login, so the P1-A4 line chart no longer draws in the Vega-Lite
+    editor (on the site it still does).
+
+Next:
+  - The Google client ID and secret into .env, here and on the server;
+    test Google sign-in locally and on the live site.
+  - Deploy feature/p1-a5 to PythonAnywhere: install requirements, migrate
+    (the account tables), collectstatic, reload.
+  - Team video, 5 minutes at most, on the live site.
+
+--------------------------------------------------------------------------------
 WEEK 6  (w/c 2026-09-28)  -  P1-A4 on feature/p1-a4  [Manojkumar]
 --------------------------------------------------------------------------------
 Built on branch feature/p1-a4, cut from main after P1-A3 (PR #8). Not merged
@@ -801,6 +851,11 @@ Team-level observation
   Submit the Vega-Lite specs (connect/specs/) and screenshots of the working
   charts (docs/screenshots/p1-a4/). Deployed at https://manojkmohan43.pythonanywhere.com/
   (user manojkmohan43, teacher mohitg27).
+- P1-A5 (team): built on feature/p1-a5. Due Mon 2026-10-12. Submit the
+  public API's production URL, the GitHub URL,
+  group-13-vega-lite-API-demo.txt, its editor screenshot, and the team
+  video as a downloadable file. The live site must run the logged-in
+  version.
 
 
 ================================================================================
@@ -818,10 +873,9 @@ Team-level observation
 - UniqueConstraint cannot span relations, so "one match per student per week"
   is NOT enforceable in the model layer. It has to live in the matching
   service when we build it. Carried over from P1-A1.
-- Venue suggestions (P1-A3 Section 5) are anonymous and not rate-limited.
-  They are never published before review, but nothing stops a flood of
-  unapproved rows. Require login (and throttle) before real students use
-  it.
+- Venue suggestions (P1-A3 Section 5) are not rate-limited. They are never
+  published before review, but nothing stops a flood of unapproved rows.
+  Since P1-A5 they need a login; still to do: a limit per account.
 - Open Trivia DB allows one request per 5 seconds from each IP address.
   On a host whose free plan sends all traffic through one shared proxy
   (PythonAnywhere does), other users' requests count too, so "busy" may
