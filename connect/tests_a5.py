@@ -17,6 +17,7 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import get_resolver, reverse
+from django.utils.html import escape
 
 PUBLIC_ROUTES = {"home", "api-summary"}
 # A value for each URL parameter, so every route can be requested.
@@ -78,6 +79,14 @@ class AccessTests(AuthTestCase):
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertEqual(response["Access-Control-Allow-Origin"], "*")
         self.assertEqual(response.json()[0], {"category": "Food", "count": 4, "type": "Hobby / Interest"})
+
+    def test_the_api_docs_label_access_and_show_the_real_401(self):
+        body = self.client.get(reverse("connect:api-matches")).content.decode()
+        self.client.force_login(self.member)
+        response = self.client.get(reverse("connect:api-docs"))
+        self.assertContains(response, escape(body))
+        self.assertContains(response, '<span class="badge badge-ok">Public</span>', count=1)
+        self.assertContains(response, '<span class="badge">Login required</span>', count=5)
 
     def test_the_landing_page_is_public_and_shows_no_student_data(self):
         response = self.client.get(reverse("connect:home"))

@@ -44,6 +44,7 @@ from django.utils.timezone import localtime
 from django.views import View
 from django.views.decorators.http import require_GET
 
+from .middleware import login_required_response
 from .models import CampusLocation, ConnectionType, Interest, Match, MatchStatus
 
 JSON_PARAMS = {"indent": 2}  # readable in a browser; a few bytes per line
@@ -309,17 +310,19 @@ def matches_per_week_api(request):
 def api_docs(request):
     """GET /api/ - how to call each endpoint, with live examples.
 
-    The Content-Type values and the sample body come from calling the real
+    The Content-Type values and the sample bodies come from calling the real
     views, so this page cannot drift from what the API actually returns.
     """
     json_response = LocationListAPI.as_view()(request)
     text_response = location_list_text(request)
+    login_response = login_required_response(request)
     locations = reverse("connect:api-locations")
     matches = reverse("connect:api-matches")
     text = reverse("connect:api-locations-text")
     icebreakers = reverse("connect:api-icebreakers")
     return render(request, "connect/api_docs.html", {
         "sample": json_response.content.decode(),
+        "login_sample": login_response.content.decode(),
         "json_type": json_response["Content-Type"],
         "text_type": text_response["Content-Type"],
         "html_type": HttpResponse()["Content-Type"],

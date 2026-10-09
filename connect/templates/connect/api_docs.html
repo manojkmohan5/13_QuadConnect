@@ -1,8 +1,9 @@
 {% extends "connect/base.html" %}
 {% comment %}
-API documentation (P1-A3 Section 6, extended in P1-A4). The Content-Type
-values and the sample body are read from the real views on every request
-(see connect/api.py).
+API documentation (P1-A3 Section 6, extended in P1-A4 and P1-A5). The
+Content-Type values and the sample bodies are read from the real views on
+every request (see connect/api.py). Each endpoint is labelled Public or
+Login required in words, not by colour alone.
 {% endcomment %}
 
 {% block title %}API - QuadConnect{% endblock %}
@@ -10,10 +11,11 @@ values and the sample body are read from the real views on every request
 
 {% block subtitle %}
   <p class="sub">
-    A read-only JSON API over public data: approved venues, the match
-    schedule, chart data and icebreaker trivia. No student names, NetIDs,
-    emails, check-in codes or feedback are ever returned. Every endpoint is
-    read-only and answers GET.
+    A read-only JSON API: approved venues, the match schedule, chart data and
+    icebreaker trivia. No student names, NetIDs, emails, check-in codes or
+    feedback are ever returned, and every endpoint answers GET. One endpoint,
+    /api/summary/, is public: anyone can read it, from any site, without an
+    account. The others need you to be logged in, like the rest of QuadConnect.
   </p>
 {% endblock %}
 
@@ -21,7 +23,18 @@ values and the sample body are read from the real views on every request
 
   <ul class="list">
     <li class="card">
-      <h2 class="card-title endpoint"><span class="method">GET</span>/api/locations/</h2>
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/summary/ <span class="badge badge-ok">Public</span></h2>
+      <p>How many verified students picked each interest, most picked first: a plain list of
+         <code>{"category", "count", "type"}</code> rows, the shape Vega-Lite reads as it is.
+         It needs no login, and any site may load it (<code>Access-Control-Allow-Origin: *</code>),
+         so a chart in the <a href="https://vega.github.io/editor/">Vega-Lite editor</a> can
+         read it directly. The bar chart on the <a href="{% url 'connect:insights' %}">Insights</a>
+         page loads it with <code>data.url</code>.</p>
+      <p class="form-note">Try: <a href="{{ examples.summary.0 }}">{{ examples.summary.0 }}</a></p>
+    </li>
+
+    <li class="card">
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/locations/ <span class="badge">Login required</span></h2>
       <p>Approved campus venues. Class-based view (<code>LocationListAPI</code>) returning
          <code>JsonResponse</code>.</p>
       <div class="scroll" tabindex="0" role="region" aria-labelledby="api-docs-table-1">
@@ -40,7 +53,7 @@ values and the sample body are read from the real views on every request
     </li>
 
     <li class="card">
-      <h2 class="card-title endpoint"><span class="method">GET</span>/api/matches/</h2>
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/matches/ <span class="badge">Login required</span></h2>
       <p>The weekly match schedule, newest first. Function-based view (<code>match_list_api</code>)
          returning <code>JsonResponse</code>. Participants appear only as a count.</p>
       <div class="scroll" tabindex="0" role="region" aria-labelledby="api-docs-table-2">
@@ -60,7 +73,7 @@ values and the sample body are read from the real views on every request
     </li>
 
     <li class="card">
-      <h2 class="card-title endpoint"><span class="method">GET</span>/api/locations.txt</h2>
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/locations.txt <span class="badge">Login required</span></h2>
       <p>The same venues, one per line, through plain <code>HttpResponse</code>. Takes the same
          parameters as <code>/api/locations/</code>.</p>
       <p class="form-note">Try:
@@ -69,16 +82,7 @@ values and the sample body are read from the real views on every request
     </li>
 
     <li class="card">
-      <h2 class="card-title endpoint"><span class="method">GET</span>/api/summary/</h2>
-      <p>How many verified students picked each interest, most picked first: a plain list of
-         <code>{"category", "count", "type"}</code> rows, the shape Vega-Lite reads as it is.
-         The bar chart on the <a href="{% url 'connect:insights' %}">Insights</a> page loads it
-         with <code>data.url</code>.</p>
-      <p class="form-note">Try: <a href="{{ examples.summary.0 }}">{{ examples.summary.0 }}</a></p>
-    </li>
-
-    <li class="card">
-      <h2 class="card-title endpoint"><span class="method">GET</span>/api/summary/matches-per-week/</h2>
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/summary/matches-per-week/ <span class="badge">Login required</span></h2>
       <p>Matches scheduled in each weekly cycle, oldest first, as
          <code>{"records": [{"date", "count", "participants"}, ...]}</code>. A week with no
          matches is listed with a count of 0, so a line chart shows the gap. The line chart
@@ -87,7 +91,7 @@ values and the sample body are read from the real views on every request
     </li>
 
     <li class="card">
-      <h2 class="card-title endpoint"><span class="method">GET</span>/api/icebreakers/</h2>
+      <h2 class="card-title endpoint"><span class="method">GET</span>/api/icebreakers/ <span class="badge">Login required</span></h2>
       <p>Five trivia questions for one match from the
          <a href="https://opentdb.com/">Open Trivia Database</a>, on the topic most of its
          members share, with the interest counts that chose it. The questions are never
@@ -110,9 +114,11 @@ values and the sample body are read from the real views on every request
 
   <h2 class="section">Charts</h2>
   <div class="card">
-    <p>The two Vega-Lite charts on the Insights page. Each spec loads its data from the API
-       above and opens as it is in the <a href="https://vega.github.io/editor/">Vega-Lite
-       editor</a>. The images are the same charts drawn on the server.</p>
+    <p>The two Vega-Lite charts on the Insights page, as specs and as images drawn on the
+       server. Each spec loads its data from the API above. The bar chart reads the public
+       /api/summary/, so its spec also works in the
+       <a href="https://vega.github.io/editor/">Vega-Lite editor</a>; the line chart's data
+       needs a login, so that chart draws only here.</p>
     <ul>
       <li>Students per interest (bar chart):
         <a href="{% url 'connect:vega-spec' 'chart1' %}">{% url 'connect:vega-spec' 'chart1' %}</a> &middot;
@@ -130,9 +136,13 @@ values and the sample body are read from the real views on every request
       <p>The venue and match lists share one shape: <code>count</code>, the
          <code>filters</code> that were applied, and <code>results</code>. Each result carries a
          <code>url</code> to its page on the site, built from the model's
-         <code>get_absolute_url()</code>. Every endpoint can be read from any other site
-         (<code>Access-Control-Allow-Origin: *</code>), so a chart in the Vega-Lite editor can
-         load it.</p>
+         <code>get_absolute_url()</code>.</p>
+    </div>
+    <div class="card">
+      <h3 class="card-title">Not logged in: 401</h3>
+      <p>Every endpoint except <code>/api/summary/</code> answers this when no one is logged in,
+         with a link to the login page:</p>
+      <pre class="code"><code>{{ login_sample }}</code></pre>
     </div>
     <div class="card">
       <h3 class="card-title">Bad parameter: 400</h3>

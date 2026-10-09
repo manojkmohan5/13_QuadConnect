@@ -18,12 +18,18 @@ from django.http import JsonResponse
 from django.urls import reverse
 
 
+def login_required_response(request):
+    """The 401 a private API endpoint sends to a visitor who is not logged in
+    (the API documentation page shows this exact body)."""
+    return JsonResponse({
+        "error": "Log in to use this endpoint. Only /api/summary/ is public.",
+        "login": request.build_absolute_uri(reverse("account_login")),
+    }, status=401, json_dumps_params={"indent": 2})
+
+
 class LoginRequiredMiddleware(DjangoLoginRequired):
 
     def handle_no_permission(self, request, view_func):
         if request.path.startswith("/api/") and request.path != reverse("connect:api-docs"):
-            return JsonResponse({
-                "error": "Log in to use this endpoint. Only /api/summary/ is public.",
-                "login": request.build_absolute_uri(reverse("account_login")),
-            }, status=401, json_dumps_params={"indent": 2})
+            return login_required_response(request)
         return super().handle_no_permission(request, view_func)
