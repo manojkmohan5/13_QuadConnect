@@ -172,6 +172,14 @@ console:
    picture asked for, Google needs no review.
 6. Put the client ID and secret in `.env`, and restart the server.
 
+Screenshots, all taken on the live site:
+[05](docs/screenshots/p1-a5/05_login_page_google.png) the login page,
+[06](docs/screenshots/p1-a5/06_signup_page_google.png) the sign-up page,
+[07](docs/screenshots/p1-a5/07_nav_signed_out.png) the menu signed out,
+[08](docs/screenshots/p1-a5/08_google_signed_in_nav.png) signed in with Google,
+[09](docs/screenshots/p1-a5/09_private_api_401.png) a private API's 401, and
+[10](docs/screenshots/p1-a5/10_privacy_page.png) the privacy page.
+
 ### Part 3: the public API
 
 `GET /api/summary/` is the one endpoint anyone can use: no login, any origin
@@ -185,6 +193,27 @@ covers the rest:
 - three other uses: a command-line report, a Jupyter notebook and a
   refreshable Excel workbook, each with its code, a screenshot and what it
   found.
+
+### Deployed (2026-10-09)
+
+The live site, <https://manojkmohan43.pythonanywhere.com/>, runs
+`feature/p1-a5`, with its database outside the repository (`DJANGO_DB_PATH`).
+What was checked there after the deploy:
+
+- **Signed out:** the home, privacy, login, sign-up, Google sign-in and
+  password pages open. Private pages redirect to the login page, and private
+  APIs answer `401`. Only `/api/summary/` allows other sites to read it.
+  HTTPS is forced, with HSTS.
+- **Signed in as `tester`:** every page and API answers as it should.
+  Pages are sent with `no-store`, and logging out works.
+- **Sign-up:** a new account can sign up with a username and password, and
+  open private pages. It cannot open the admin. The account was then deleted.
+- **Google:** "Continue with Google" with a real Google account goes to
+  Google with the production callback, PKCE and an account chooser, then
+  comes back signed in ([08](docs/screenshots/p1-a5/08_google_signed_in_nav.png)).
+- **Vega-Lite:** `group-13-vega-lite-API-demo.txt`, pasted into the editor
+  in a browser that never logged in, draws from the live API with no errors
+  or warnings.
 
 ---
 

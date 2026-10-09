@@ -28,7 +28,7 @@ what we chose not to build, and where the shortcuts are.
 | **Assignment in flight** | **P1-A5.1** — Django logins, Google sign-in, a public API with a Vega-Lite chart and three other uses, and a team video (50 pts) — built on `feature/p1-a5`, due Mon 2026-10-12 |
 | **Last completed** | P1-A4 — APIs, Vega-Lite charts, exports, static files, deployment (40 pts) — merged into `main` (PR #9, 2026-10-05), live at <https://manojkmohan43.pythonanywhere.com/> |
 | **`main` status** | Has P1-A2, P1-A3 and P1-A4 (`70d0ad4`, PR #9). `feature/p1-a5` was cut from it. |
-| **What remains** | The Google client keys in `.env` (locally and on the server), the A5 deploy to PythonAnywhere, the team video, and the Canvas submission (see §12). |
+| **What remains** | The team video, then the Canvas submission (see §12). A5 is deployed and checked on the live site. |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -52,7 +52,7 @@ reaches `main` only through a PR whose head has passed it.
 | Dhruv Thaker | `feature/feedback-views` | FBV `HttpResponse` | `/feedback/summary/` | ✅ DONE — aggregate feedback summary with rating distribution, enjoyment metrics, and connection preferences |
 | Manojkumar Mohankumar (P1-A3, solo) | `feature/p1-a3` | all six A3 sections | `/search/`, `/matches/<pk>/`, `/locations/<pk>/`, `/insights/`, `/api/` | ✅ DONE — merged to `main` in PR #6 (2026-09-28); see §9 |
 | Manojkumar Mohankumar (P1-A4) | `feature/p1-a4` | all four A4 parts | `/api/summary/`, `/vega-lite/...`, `/api/icebreakers/`, `/reports/`, `/export/...` | ✅ DONE — merged to `main` in PR #9 (2026-10-05); live at <https://manojkmohan43.pythonanywhere.com/>; see §9 |
-| Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–3 (Part 4 is the team video) | `/accounts/...`, every route behind a login, `/api/summary/` public | IN PROGRESS — built and tested; Google keys, deploy and video to come; see §9 |
+| Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–3 (Part 4 is the team video) | `/accounts/...`, every route behind a login, `/api/summary/` public | DONE except the video — deployed 2026-10-09 and checked on the live site; see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -651,7 +651,9 @@ public two redirects or answers `401`, and signed in, every route opens (a
 test walks the whole URLconf). The Vega-Lite spec draws in the editor with no
 warnings, from a browser that never logged in.
 
-**To do:** Google keys, deploy, video.
+**Deployed:** 2026-10-09, checked on the live site signed out, signed in,
+through sign-up, and through Continue with Google with a real Google account.
+**To do:** the team video.
 
 ### `main` — P1-A4 merged · 2026-10-05 · PR #9
 **Merged:** `feature/p1-a4` into `main` through PR #9. Merge commit
@@ -1106,7 +1108,7 @@ working charts (`docs/screenshots/p1-a4/`), in the repository. Deployed to
 PythonAnywhere on 2026-10-04: <https://manojkmohan43.pythonanywhere.com/>, user `manojkmohan43`, teacher
 `mohitg27`. Merged into `main` through PR #9 on 2026-10-05.
 
-### P1-A5.1 — Authentication, Google OAuth, public API, project video (50 pts) — in progress
+### P1-A5.1 — Authentication, Google OAuth, public API, project video (50 pts) — deployed, video to come
 Built on `feature/p1-a5` (§9). Due Mon 2026-10-12. No new repository; the
 live site must run the logged-in version. Submission:
 - the public API's production URL,

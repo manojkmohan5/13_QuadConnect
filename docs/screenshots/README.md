@@ -81,10 +81,13 @@ first lines.
 
 ## P1-A5 ([`p1-a5/`](p1-a5/))
 
-Each image has the same caption strip: the API address the image reads, and
-what it shows. All four read the public API on the live site,
-<https://manojkmohan43.pythonanywhere.com/api/summary/>, with no login. They
-are explained in [`docs/a5/README.md`](../a5/README.md).
+Each image has the same caption strip: the address it shows, and what it
+proves. Images 01-04 read the public API on the live site,
+<https://manojkmohan43.pythonanywhere.com/api/summary/>, with no login; they
+are explained in [`docs/a5/README.md`](../a5/README.md). Images 05-10 were taken
+on the live site after the P1-A5 deploy (2026-10-09). 05-07, 09 and 10 come from
+a fresh headless browser with no cookies; 08 was taken in a real browser right
+after "Continue with Google".
 
 | File | Part | Shows |
 |---|---|---|
@@ -92,3 +95,9 @@ are explained in [`docs/a5/README.md`](../a5/README.md).
 | `02_use1_python_report.png` | 3.4 | Use 1: `1_interest_report.py` run in a terminal |
 | `03_use2_notebook.png` | 3.4 | Use 2: the pandas notebook, executed, with its chart |
 | `04_use3_excel.png` | 3.4 | Use 3: the Excel workbook: the Power Query table, formulas by type, and a chart |
+| `05_login_page_google.png` | 1.1, 2.4 | The site's own login page, with Continue with Google |
+| `06_signup_page_google.png` | 1.1, 2.4 | The site's own sign-up page, with Continue with Google |
+| `07_nav_signed_out.png` | 1.5 | Signed out: the menu shows only Home, Log in and Sign up; no student data |
+| `08_google_signed_in_nav.png` | 2, 1.5 | After Continue with Google on the live site: signed in, with the full menu |
+| `09_private_api_401.png` | 1.4 | A private API signed out: 401 JSON with a link to the login page |
+| `10_privacy_page.png` | 2 | The public privacy page that Google's sign-in screen links to |

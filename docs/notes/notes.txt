@@ -75,11 +75,20 @@ Decisions:
     a login, so the P1-A4 line chart no longer draws in the Vega-Lite
     editor (on the site it still does).
 
+Deployed (2026-10-09): https://manojkmohan43.pythonanywhere.com/ runs
+feature/p1-a5. The old live database is backed up on the server
+(~/db_backup_before_a5_*.sqlite3); the live database now lives outside the
+repository (~/quadconnect-data/db.sqlite3, DJANGO_DB_PATH). Checked on the
+live site: signed out (public pages, redirects, 401s, CORS on the public API
+only, HTTPS and HSTS), signed in as tester (every route), sign-up (the test
+account was deleted after), and Continue with Google end to end with a real
+Google account. The Vega-Lite spec draws from the live API in the editor with
+no warnings.
+
 Next:
-  - Deploy feature/p1-a5 to PythonAnywhere: install requirements, restore
-    the committed database (the account tables), collectstatic, the Google
-    keys in the server's .env, reload. Then test Google sign-in there.
-  - Team video, 5 minutes at most, on the live site.
+  - Team video, 5 minutes at most, on the live site (slide and script are
+    outside the repository, in the team's SUBMIT folder).
+  - After grading: change the tester and mohitg2 passwords on the live site.
 
 --------------------------------------------------------------------------------
 WEEK 6  (w/c 2026-09-28)  -  P1-A4 on feature/p1-a4  [Manojkumar]
