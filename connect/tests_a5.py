@@ -13,9 +13,10 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 import requests
+from allauth.account.adapter import get_adapter
 from django.contrib.auth.models import User
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import get_resolver, reverse
 from django.utils.html import escape
 
@@ -24,6 +25,7 @@ PUBLIC_ROUTES = {"home", "privacy", "api-summary"}
 SAMPLE_KWARGS = {"pk": 1, "chart": "chart1", "fmt": "png"}
 
 GOOGLE = {"google": {"SCOPE": ["profile", "email"], "OAUTH_PKCE_ENABLED": True,
+                     "AUTH_PARAMS": {"access_type": "online", "prompt": "select_account"},
                      "APPS": [{"client_id": "test-client.apps.googleusercontent.com",
                                "secret": "test-secret", "key": ""}]}}
 NO_GOOGLE = {"google": {"SCOPE": ["profile", "email"]}}
@@ -95,10 +97,27 @@ class AccessTests(AuthTestCase):
         self.assertNotContains(response, "QC-")  # no check-in codes
         self.assertContains(response, f'href="{reverse("connect:privacy")}"')  # footer
 
-    def test_admin_still_works_for_staff(self):
-        self.assertEqual(self.client.get(reverse("admin:login")).status_code, 200)
+    def test_admin_signs_in_through_the_rate_limited_login_page(self):
+        response = self.client.get(reverse("admin:login") + "?next=/admin/")
+        self.assertRedirects(response, reverse("account_login") + "?next=/admin/",
+                             fetch_redirect_response=False)
         self.client.force_login(User.objects.get(username="tester"))
         self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+
+    def test_pages_seen_logged_in_are_never_cached(self):
+        self.assertNotIn("no-store", self.client.get(reverse("connect:home")).get("Cache-Control", ""))
+        self.client.force_login(self.member)
+        self.assertIn("no-store", self.client.get(reverse("connect:student-list"))["Cache-Control"])
+
+    def test_log_out_with_an_expired_session_goes_home(self):
+        response = self.client.post(reverse("account_logout"))
+        self.assertRedirects(response, reverse("connect:home"), fetch_redirect_response=False)
+
+    def test_rate_limits_use_the_visitor_ip_behind_the_proxy(self):
+        request = RequestFactory().get("/", HTTP_X_REAL_IP="203.0.113.7", REMOTE_ADDR="10.0.0.1")
+        self.assertEqual(get_adapter(request).get_client_ip(request), "203.0.113.7")
+        request = RequestFactory().get("/", REMOTE_ADDR="10.0.0.1")
+        self.assertEqual(get_adapter(request).get_client_ip(request), "10.0.0.1")
 
 
 # --- Part 1.5: navigation --------------------------------------------------------
@@ -121,6 +140,14 @@ class NavigationTests(AuthTestCase):
         self.assertContains(response, "Signed in as <strong>member</strong>")
         self.assertContains(response, f'<form method="post" action="{reverse("account_logout")}">')
         self.assertNotContains(response, f'href="{reverse("account_signup")}"')
+
+    def test_the_admin_link_is_for_staff_only(self):
+        admin = f'href="{reverse("admin:index")}"'
+        self.assertNotContains(self.client.get(reverse("connect:home")), admin)
+        self.client.force_login(self.member)
+        self.assertNotContains(self.client.get(reverse("connect:home")), admin)
+        self.client.force_login(User.objects.get(username="tester"))
+        self.assertContains(self.client.get(reverse("connect:home")), admin)
 
 
 # --- Part 1.1-1.2: username/password sign-up, login and logout --------------------
@@ -154,6 +181,14 @@ class AccountTests(AuthTestCase):
                 self.assertRedirects(response, "/reports/", fetch_redirect_response=False)
                 self.client.post(reverse("account_logout"))
 
+    def test_next_rides_in_the_login_form(self):
+        User.objects.create_user("ada", "ada@illinois.edu", self.PASSWORD)
+        self.assertContains(self.client.get(reverse("account_login") + "?next=/reports/"),
+                            'name="next" value="/reports/"')
+        response = self.client.post(reverse("account_login"),  # next only in the form
+                                    {"login": "ada", "password": self.PASSWORD, "next": "/reports/"})
+        self.assertRedirects(response, "/reports/", fetch_redirect_response=False)
+
     def test_a_wrong_password_is_reported(self):
         response = self.client.post(reverse("account_login"), {"login": "tester", "password": "wrong"})
         self.assertContains(response, 'role="alert"')
@@ -170,6 +205,9 @@ class AccountTests(AuthTestCase):
     def test_login_page_offers_no_password_reset(self):
         # No mail server: a reset email could never arrive.
         self.assertNotContains(self.client.get(reverse("account_login")), reverse("account_reset_password"))
+        response = self.client.get(reverse("account_reset_password"))
+        self.assertContains(response, "can't send email yet")
+        self.assertNotContains(response, "<form")
 
 
 # --- Part 2: Google ----------------------------------------------------------------
@@ -188,6 +226,47 @@ class GoogleTests(AuthTestCase):
             self.assertContains(response, "Continue with Google")
             self.assertContains(response, '<form method="post" action="/accounts/google/login/')
 
+    @override_settings(SOCIALACCOUNT_PROVIDERS=GOOGLE,
+                       SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"))
+    def test_behind_the_https_proxy_google_calls_back_over_https(self):
+        # As PythonAnywhere's proxy sends it: the browser's Host, and the scheme it used.
+        response = self.client.post(reverse("google_login"), HTTP_HOST="testserver",
+                                    HTTP_X_FORWARDED_PROTO="https")
+        query = parse_qs(urlsplit(response["Location"]).query)
+        self.assertEqual(query["redirect_uri"], ["https://testserver/accounts/google/login/callback/"])
+
+    def google_callback(self, profile):
+        """Go through the Google flow with Google itself mocked: the button,
+        then Google's redirect back with a code, which the site exchanges
+        for the user's profile."""
+        location = self.client.post(reverse("google_login"))["Location"]
+        state = parse_qs(urlsplit(location).query)["state"][0]
+        token = {"access_token": "test-token", "token_type": "Bearer", "expires_in": 3600}
+        with (patch("allauth.socialaccount.providers.oauth2.client.OAuth2Client.get_access_token",
+                    return_value=token),
+              patch("allauth.socialaccount.providers.google.views.GoogleOAuth2Adapter._fetch_user_info",
+                    return_value=profile)):
+            return self.client.get(reverse("google_callback"), {"code": "test-code", "state": state})
+
+    @override_settings(SOCIALACCOUNT_PROVIDERS=GOOGLE)
+    def test_google_sign_in_creates_the_account_and_logs_in(self):
+        response = self.google_callback({"sub": "1234567890", "email": "ada@example.com",
+                                         "email_verified": True, "name": "Ada Lovelace",
+                                         "given_name": "Ada", "family_name": "Lovelace"})
+        self.assertRedirects(response, reverse("connect:home"), fetch_redirect_response=False)
+        user = User.objects.get(pk=self.client.session["_auth_user_id"])
+        self.assertEqual((user.email, user.first_name), ("ada@example.com", "Ada"))
+        self.assertTrue(user.socialaccount_set.filter(provider="google", uid="1234567890").exists())
+
+    @override_settings(SOCIALACCOUNT_PROVIDERS=GOOGLE)
+    def test_google_sign_in_never_takes_over_an_account_by_email(self):
+        # jordan4 is a seeded student; a Google account with the same
+        # address must not be logged in as them.
+        response = self.google_callback({"sub": "999", "email": "jordan4@illinois.edu",
+                                         "email_verified": True, "name": "Someone Else"})
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertRedirects(response, reverse("socialaccount_signup"), fetch_redirect_response=False)
+
     @override_settings(SOCIALACCOUNT_PROVIDERS=GOOGLE)
     def test_the_button_sends_the_browser_to_google(self):
         response = self.client.post(reverse("google_login"))
@@ -197,3 +276,4 @@ class GoogleTests(AuthTestCase):
         self.assertEqual(query["client_id"], ["test-client.apps.googleusercontent.com"])
         self.assertEqual(query["redirect_uri"], ["http://testserver/accounts/google/login/callback/"])
         self.assertIn("code_challenge", query)  # PKCE
+        self.assertEqual(query["prompt"], ["select_account"])

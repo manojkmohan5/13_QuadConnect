@@ -36,6 +36,12 @@ if _ssl:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"  # allauth's own links, e.g. Google's callback
+
+# Google sign-in is part of the live site (P1-A5), so refuse to start without
+# its client, as with DJANGO_ALLOWED_HOSTS; /accounts/google/login/ would
+# otherwise fail with a 500.
+env("GOOGLE_CLIENT_ID", required=True)
 
 # No mail server on the host: nothing is emailed (see ACCOUNT_EMAIL_VERIFICATION),
 # and this backend makes sure nothing tries to.

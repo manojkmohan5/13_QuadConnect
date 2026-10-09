@@ -111,8 +111,8 @@ is a POST form, so a link or a prefetch can never sign anyone out.
 <footer class="site">
   QuadConnect &middot; The Connectors &middot; Team 13 &middot;
   University of Illinois Urbana-Champaign &middot;
-  <a href="{% url 'connect:privacy' %}">Privacy</a> &middot;
-  <a href="{% url 'admin:index' %}">Admin</a>
+  <a href="{% url 'connect:privacy' %}">Privacy</a>
+  {% if user.is_staff %}&middot; <a href="{% url 'admin:index' %}">Admin</a>{% endif %}
 </footer>
 
 {% block scripts %}{% endblock %}

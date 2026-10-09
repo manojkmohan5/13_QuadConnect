@@ -115,10 +115,13 @@ ASGI_APPLICATION = "quadconnect.asgi.application"
 
 
 # --- Database -------------------------------------------------------------
+# The committed db.sqlite3 holds seed data only. The live site points
+# DJANGO_DB_PATH at a copy outside the repository, so git never touches the
+# accounts people create there.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": env("DJANGO_DB_PATH", default=BASE_DIR / "db.sqlite3"),
     }
 }
 
@@ -179,11 +182,13 @@ ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]
 # No mail server: addresses are not verified by email, and no email is sent.
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_FORMS = {"login": "connect.forms.LoginForm"}  # no "Forgot your password?"
+ACCOUNT_ADAPTER = "connect.adapters.AccountAdapter"  # visitor IP behind the proxy
 
-# Google confirms the address it sends, so signing in with Google opens the
-# account that already uses that address instead of refusing it.
-SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
-SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+# A Google sign-in never opens an existing account just because the email
+# addresses match (SOCIALACCOUNT_EMAIL_AUTHENTICATION stays off): addresses
+# here are never verified, so whoever registered an address first would get
+# its owner's Google sign-in, and the seeded students' addresses are made
+# up. allauth asks such a user to log in first and connect Google instead.
 
 # The Google client comes from the environment (.env), never the database:
 # db.sqlite3 is committed to a public repository. Without GOOGLE_CLIENT_ID the
@@ -191,7 +196,9 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},
+        # select_account: Google always asks which account, so a shared
+        # computer never signs the next person in as the last one.
+        "AUTH_PARAMS": {"access_type": "online", "prompt": "select_account"},
         "OAUTH_PKCE_ENABLED": True,
     },
 }

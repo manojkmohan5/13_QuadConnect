@@ -9,6 +9,9 @@ API (/api/summary/), and allauth's own sign-in pages.
 A program calling the JSON API cannot fill in a login form, so API paths
 get a 401 JSON answer instead of the redirect. The API documentation page
 (/api/ itself) is a page, and redirects like the others.
+
+Anything served to a logged-in user is marked never-cache, so Back after
+logging out cannot show a private page from the browser's cache.
 """
 
 from django.contrib.auth.middleware import (
@@ -16,6 +19,7 @@ from django.contrib.auth.middleware import (
 )
 from django.http import JsonResponse
 from django.urls import reverse
+from django.utils.cache import add_never_cache_headers
 
 
 def login_required_response(request):
@@ -33,3 +37,8 @@ class LoginRequiredMiddleware(DjangoLoginRequired):
         if request.path.startswith("/api/") and request.path != reverse("connect:api-docs"):
             return login_required_response(request)
         return super().handle_no_permission(request, view_func)
+
+    def process_response(self, request, response):
+        if getattr(request, "user", None) is not None and request.user.is_authenticated:
+            add_never_cache_headers(response)
+        return response

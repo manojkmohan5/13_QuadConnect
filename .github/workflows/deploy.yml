@@ -61,6 +61,10 @@ jobs:
           key="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
           echo "::add-mask::$key"
           echo "DJANGO_SECRET_KEY=$key" >> "$GITHUB_ENV"
+          # Production settings refuse to start without a Google client; CI
+          # never talks to Google, so a placeholder one is enough.
+          echo "GOOGLE_CLIENT_ID=ci-placeholder.apps.googleusercontent.com" >> "$GITHUB_ENV"
+          echo "GOOGLE_CLIENT_SECRET=ci-placeholder" >> "$GITHUB_ENV"
 
       - name: Lint (ruff, rules in ruff.toml)
         run: |
@@ -88,8 +92,11 @@ jobs:
           if Session.objects.exists(): problems.append('login sessions')
           if LogEntry.objects.exists(): problems.append('admin history')
           if CampusLocation.objects.filter(is_approved=False).exists(): problems.append('unapproved venues')
-          from allauth.socialaccount.models import SocialApp
+          from allauth.account.models import EmailAddress
+          from allauth.socialaccount.models import SocialAccount, SocialApp
           if SocialApp.objects.exists(): problems.append('a stored OAuth client (its secret belongs in .env)')
+          if SocialAccount.objects.exists(): problems.append('Google accounts of people who signed in')
+          if EmailAddress.objects.exists(): problems.append('email addresses of people who signed up')
           tester = User.objects.filter(username='tester', is_superuser=True).first()
           if not (tester and tester.check_password('uiuc12345')): problems.append('no working tester account')
           if any(u.has_usable_password() for u in User.objects.exclude(username__in=['tester', 'mohitg2'])): problems.append('password hashes of other accounts')
@@ -160,7 +167,10 @@ jobs:
           expect 200 text/html        /accounts/login/
           expect 200 text/html        /accounts/signup/
           expect 200 text/html        /privacy/
+          expect 200 text/html        /accounts/google/login/
+          expect 200 text/html        /accounts/password/reset/
           expect 200 application/json /api/summary/
+          expect 302 text/html        /admin/
           expect 302 text/html        /students/
           expect 302 text/html        /insights/
           expect 302 text/html        /reports/
