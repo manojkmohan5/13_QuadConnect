@@ -172,9 +172,12 @@ class CampusLocationSuggestionForm(forms.ModelForm):
 class LoginForm(AllauthLoginForm):
     """django-allauth's login form without its "Forgot your password?" link
     (P1-A5). The host has no mail server, so a reset email could never
-    arrive. Staff can set a new password in Django Admin. Wired in with
-    ACCOUNT_FORMS in settings."""
+    arrive. Staff can set a new password in Django Admin. The labels say
+    what to type ("Username or email", not allauth's bare "Login"). Wired
+    in with ACCOUNT_FORMS in settings."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["password"].help_text = ""
+        self.fields["login"].label = "Username or email"
+        self.fields["remember"].label = "Remember me"
