@@ -50,7 +50,7 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>, and log in as `tester` (see [Admin](#admin))
-or sign up. Run the test suite with `python manage.py test connect` (104
+or sign up. Run the test suite with `python manage.py test connect` (112
 tests).
 
 The first command after installing pauses for a while (up to a minute on
@@ -132,17 +132,20 @@ own `auth` app.
 allauth's Google provider puts **Continue with Google** on the login and
 sign-up pages.
 
-- The button submits a POST form with a CSRF token, and the sign-in uses
-  PKCE.
-- A Google account whose email address already belongs to an account signs
-  in to that account. Any other Google account gets a new one.
-- Settings: `SOCIALACCOUNT_PROVIDERS` and the two `SOCIALACCOUNT_EMAIL_*`
-  lines in `base.py`.
+- The button submits a POST form with a CSRF token. The sign-in uses PKCE,
+  and Google always asks which account to use, so a shared computer never
+  signs the next person in as the last one.
+- The first Google sign-in creates a QuadConnect account. A Google account
+  is never merged into an existing account just because the email addresses
+  match. Addresses here are not verified, so that would hand someone's Google
+  sign-in to whoever registered their address first. allauth asks that
+  person to log in first and connect Google instead.
+- Settings: `SOCIALACCOUNT_PROVIDERS` in `base.py`.
 
 The OAuth client's keys come only from the environment: `GOOGLE_CLIENT_ID`
 and `GOOGLE_CLIENT_SECRET` in `.env`. They are never stored in the database or
-the repository. Without them the button is hidden, and password login works as
-before.
+the repository. In development, without them the button is hidden and password
+login works as before. Production settings refuse to start without them.
 
 QuadConnect's client lives in the Google Cloud project **QuadConnect**. It
 was created on 2026-10-09 and is published (**In production**), so any Google
@@ -559,9 +562,10 @@ followed, and what any other host would need:
 5. The WSGI application `quadconnect.wsgi:application`, which defaults to the
    production settings. If the host serves static files itself, map `/static/`
    to `staticfiles/`; if not, WhiteNoise serves them.
-6. Nothing for the database: the committed `db.sqlite3` is ready, `migrate`
-   finds nothing to do, and the course accounts `tester` and `mohitg2`
-   (password `uiuc12345`) are in it.
+6. The database: copy the committed `db.sqlite3` outside the repository,
+   then point `DJANGO_DB_PATH` at the copy in `.env`. `migrate` finds
+   nothing to do, and the course accounts `tester` and `mohitg2` (password
+   `uiuc12345`) are in it. The live site's accounts then never touch git.
 
 Two things to check on the host:
 
@@ -589,11 +593,12 @@ python manage.py migrate                         # when a migration was added
 python manage.py collectstatic --noinput
 ```
 
-Then press **Reload** on the Web tab. The live `db.sqlite3` changes as people
-use the site (admin logins, venue suggestions). Git on the server ignores
-those changes (`git update-index --skip-worktree db.sqlite3`), so `git pull`
-still works. Never copy the live file back into the repository. A free web
-app also has to be extended on the Web tab once a month.
+Then press **Reload** on the Web tab. The live database is
+`/home/manojkmohan43/quadconnect-data/db.sqlite3` (`DJANGO_DB_PATH` in the
+server's `.env`), outside the repository. So `git pull` never touches the
+accounts people create, and the repository's `db.sqlite3` stays the seed copy.
+Never copy the live file back into the repository. A free web app also has to
+be extended on the Web tab once a month.
 
 ---
 
@@ -615,7 +620,7 @@ runs, in order:
 5. `verify_constraints`, then the test suite (`manage.py test connect`)
 6. `check --deploy` and `collectstatic` with production settings
 7. a smoke test that boots the production build:
-   - signed out, 14 URLs: the public ones open, pages redirect to the login
+   - signed out, 17 URLs: the public ones open, pages redirect to the login
      page, and APIs answer `401`;
    - it then logs in as `tester` through the login form, as a browser
      would;
@@ -646,8 +651,9 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | `DJANGO_SETTINGS_MODULE` | Which settings module to load. |
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated. Required in production. |
 | `DJANGO_SECURE_SSL` | `1` behind TLS: HSTS, SSL redirect, secure cookies. |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID. Optional: without it, the "Continue with Google" button is hidden. |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID. Required in production. In development, leave it empty to hide "Continue with Google". |
 | `GOOGLE_CLIENT_SECRET` | That client's secret. Required when `GOOGLE_CLIENT_ID` is set. |
+| `DJANGO_DB_PATH` | Optional: the SQLite file to use. Unset, the committed `db.sqlite3`; the live site keeps its own outside the repository. |
 | `MAPS_API_KEY` | Placeholder for the Screen 8 campus map. Dummy value. |
 
 ---
@@ -747,7 +753,7 @@ own login, for staff.
     ├── reports.py                reports page, CSV and JSON exports
     ├── tests.py                  45 tests, one class per P1-A3 section
     ├── tests_a4.py               42 tests, one class per P1-A4 part
-    ├── tests_a5.py               17 tests: access, navigation, accounts, Google
+    ├── tests_a5.py               25 tests: access, navigation, accounts, Google
     ├── urls.py                   all routes named
     ├── admin.py                  all 8 models registered, with inlines
     ├── templates/connect/        base.html, shared entity_list.html, pages

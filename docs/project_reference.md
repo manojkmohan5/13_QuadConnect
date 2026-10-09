@@ -242,7 +242,7 @@ the same models as a foundation.
     ├── reports.py                 (A4) /reports/ and the CSV/JSON exports
     ├── tests.py                   (A3) 45 tests, one class per A3 section
     ├── tests_a4.py                (A4) 42 tests, one class per A4 part
-    ├── tests_a5.py                (A5) 17 tests: access, navigation, accounts, Google
+    ├── tests_a5.py                (A5) 25 tests: access, navigation, accounts, Google
     ├── urls.py                    every route named, namespace "connect"
     ├── admin.py                   all 8 registered, with inlines
     ├── migrations/0001_initial.py
@@ -301,8 +301,9 @@ names, `immutable` caching, gzip. **Production needs
 | `DJANGO_ALLOWED_HOSTS` | Comma-separated. Required in production. |
 | `DJANGO_SECURE_SSL` | `1` behind real TLS. |
 | `MAPS_API_KEY` | Placeholder for the Screen 8 map. Dummy value. |
-| `GOOGLE_CLIENT_ID` | Google OAuth client (A5). Optional: without it the Google button is hidden. |
+| `GOOGLE_CLIENT_ID` | Google OAuth client (A5). Required in production; in development, empty hides the Google button. |
 | `GOOGLE_CLIENT_SECRET` | That client's secret. Required when the ID is set. Never in the database. |
+| `DJANGO_DB_PATH` | Optional SQLite path. The live site's database lives outside the repository. |
 
 ---
 
@@ -536,7 +537,7 @@ python manage.py migrate
 python manage.py seed_demo_data      # idempotent
 python manage.py verify_constraints  # 11/11 pass
 python manage.py check
-python manage.py test connect        # 104 tests (45 A3, 42 A4, 17 A5)
+python manage.py test connect        # 112 tests (45 A3, 42 A4, 25 A5)
 ruff check .                         # rules in ruff.toml; CI runs the same
 
 DJANGO_SETTINGS_MODULE=quadconnect.settings.production \
@@ -645,7 +646,7 @@ element), `docs/a5/` (the spec, three uses, README),
 
 **Gotchas for the next person:** §11 traps 24–28.
 
-**Verified:** 104 tests and ruff clean. Signed out, every route but the
+**Verified:** 112 tests and ruff clean. Signed out, every route but the
 public two redirects or answers `401`, and signed in, every route opens (a
 test walks the whole URLconf). The Vega-Lite spec draws in the editor with no
 warnings, from a browser that never logged in.
@@ -1053,8 +1054,9 @@ empty state renders (forced in a rolled-back transaction).
 23. **PythonAnywhere from Windows:** a console created through the API only
    starts once it is opened in a browser. Git Bash rewrites `/home/...`
    arguments into Windows paths (set `MSYS_NO_PATHCONV=1`). And the live
-   `db.sqlite3` on the server is `--skip-worktree`, so `git pull` works
-   while the site writes to it.
+   `db.sqlite3` on the server lived in the repository (`--skip-worktree`)
+   until A5. Since A5 it is `~/quadconnect-data/db.sqlite3` (`DJANGO_DB_PATH`),
+   so `git pull` never touches live accounts.
 24. **With `LoginRequiredMiddleware`, every test client must log in.** A
    test that gets a page now gets a redirect to the login page instead.
    Log in once in a base class's `setUp()`, and every subclass that

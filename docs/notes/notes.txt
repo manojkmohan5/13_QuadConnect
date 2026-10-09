@@ -52,7 +52,15 @@ Done, by assignment part:
       All written up in docs/a5/README.md.
 
 Verified:
-  - 104 tests (45 from A3, 42 from A4, 17 new), ruff clean.
+  - 112 tests (45 from A3, 42 from A4, 25 new), ruff clean.
+  - Three independent reviews (security, WCAG 2.1 AA, Django). Fixed:
+    Google no longer merges into an account by matching email (with
+    verification off, that let whoever registered an address first
+    receive its owner's sign-in); rate limits use the visitor's IP behind
+    PythonAnywhere's balancer; the admin signs in through the rate-limited
+    login and its link shows for staff only; private pages are never
+    cached; the header no longer sticks over the focused element; and
+    placeholder, border, skip-link and list fixes for AA.
   - The API page labels each endpoint Public or Login required, and shows
     the real 401 body.
 
