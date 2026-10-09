@@ -29,6 +29,8 @@ app_name = "connect"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    # P1-A5: public, linked from Google's sign-in screen and the footer.
+    path("privacy/", views.privacy, name="privacy"),
 
     # --- Kritika Agrawal - Generic CBV -----------------------------------
     path("students/", views.StudentProfileListView.as_view(),

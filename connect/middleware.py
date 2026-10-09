@@ -3,8 +3,8 @@ Login required on every page, unless its view is marked public (P1-A5).
 
 Django's LoginRequiredMiddleware sends a visitor who is not signed in to the
 login page, then back to where they were going. The views decorated with
-@login_not_required stay open: the home page, the public API
-(/api/summary/), and allauth's own sign-in pages.
+@login_not_required stay open: the home page, the privacy page, the public
+API (/api/summary/), and allauth's own sign-in pages.
 
 A program calling the JSON API cannot fill in a login form, so API paths
 get a 401 JSON answer instead of the redirect. The API documentation page

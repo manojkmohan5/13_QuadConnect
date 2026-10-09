@@ -79,6 +79,13 @@ def home(request):
     return render(request, "connect/home.html", context)
 
 
+@login_not_required  # public: Google's sign-in screen links here (P1-A5)
+def privacy(request):
+    """What QuadConnect keeps about a user, and why. Public, because people
+    read it before they have an account."""
+    return render(request, "connect/privacy.html")
+
+
 # ===========================================================================
 # Section A1 - Function-Based View returning HttpResponse manually
 # OWNER: Dhruv Thaker (dthaker3)   URL name: connect:feedback-summary

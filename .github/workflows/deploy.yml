@@ -153,12 +153,13 @@ jobs:
             esac
           }
 
-          # P1-A5, signed out: only the landing page, the sign-in pages and
-          # the public API open. Pages redirect to the login page; the other
+          # P1-A5, signed out: only the landing page, the sign-in pages, the
+          # privacy page and the public API open. Pages redirect to the login page; the other
           # APIs answer 401.
           expect 200 text/html        /
           expect 200 text/html        /accounts/login/
           expect 200 text/html        /accounts/signup/
+          expect 200 text/html        /privacy/
           expect 200 application/json /api/summary/
           expect 302 text/html        /students/
           expect 302 text/html        /insights/

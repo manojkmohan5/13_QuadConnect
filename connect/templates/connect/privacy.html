@@ -1,0 +1,61 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Privacy notice (P1-A5). Public: Google's sign-in screen links here, and
+people read it before they have an account. Keep it true to the code: what
+a Google sign-in stores is set by SOCIALACCOUNT_PROVIDERS in settings/base.py
+(scopes "profile" and "email") and allauth's Google provider.
+{% endcomment %}
+
+{% block title %}Privacy - QuadConnect{% endblock %}
+{% block heading %}Privacy{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">What QuadConnect keeps about you, and why. Last updated 9 October 2026.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stack">
+
+  <div class="card">
+    <h2 class="card-title">What we keep</h2>
+    <ul>
+      <li><strong>Your account:</strong> your username, your email address, and your
+          password, which is stored only as a salted hash.</li>
+      <li><strong>If you continue with Google:</strong> Google sends us your name, your
+          email address, a link to your profile picture and your Google account number.
+          We ask Google for nothing else: not your contacts, files or calendar. We never
+          see your Google password.</li>
+      <li><strong>Cookies:</strong> one keeps you logged in, and one protects forms from
+          being sent by other sites. There are no tracking, analytics or advertising
+          cookies.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">How we use it</h2>
+    <p>To log you in, and to show who is logged in. Matching uses the interests and free
+       times on student profiles; in this first prototype those profiles are sample
+       data.</p>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">What we share</h2>
+    <p>Nothing about you is sold or shared. Our one public API,
+       <a href="{% url 'connect:api-summary' %}">/api/summary/</a>, publishes only how
+       many students picked each interest, never names, NetIDs or email addresses. The
+       site is hosted on PythonAnywhere, and Google handles "Continue with Google".</p>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Your choices</h2>
+    <p>To delete your account and everything stored with it, email
+       <a href="mailto:mm240@illinois.edu">mm240@illinois.edu</a>. To stop QuadConnect
+       using your Google account, remove it from
+       <a href="https://myaccount.google.com/connections">your Google account's
+       third-party connections</a>.</p>
+    <p>QuadConnect is a student project for INFO 490 MG at the University of Illinois
+       Urbana-Champaign, built by Team 13, The Connectors.</p>
+  </div>
+
+</div>
+{% endblock %}

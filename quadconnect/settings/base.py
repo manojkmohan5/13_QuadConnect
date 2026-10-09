@@ -165,7 +165,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # django-allauth runs both ways in: a username or email with a password, and
 # Google. Every page needs a login unless its view is marked
 # @login_not_required (connect/middleware.py); those that are: the home page,
-# the public API (/api/summary/), and allauth's own sign-in pages.
+# the privacy page, the public API (/api/summary/), and allauth's sign-in pages.
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",          # username + password, admin
     "allauth.account.auth_backends.AuthenticationBackend",  # email login, Google

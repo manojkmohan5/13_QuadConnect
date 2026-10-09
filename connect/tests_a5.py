@@ -19,7 +19,7 @@ from django.test import TestCase, override_settings
 from django.urls import get_resolver, reverse
 from django.utils.html import escape
 
-PUBLIC_ROUTES = {"home", "api-summary"}
+PUBLIC_ROUTES = {"home", "privacy", "api-summary"}
 # A value for each URL parameter, so every route can be requested.
 SAMPLE_KWARGS = {"pk": 1, "chart": "chart1", "fmt": "png"}
 
@@ -46,19 +46,19 @@ class AuthTestCase(TestCase):
         cls.member = User.objects.create_user("member")
 
 
-# --- Part 1.4: everything private except the landing page and the public API --
+# --- Part 1.4: everything private except the landing page, privacy and the public API
 
 
 class AccessTests(AuthTestCase):
 
-    def test_every_route_but_two_needs_a_login(self):
+    def test_only_the_public_routes_open_without_a_login(self):
         login = reverse("account_login")
         for name, path in connect_routes():
-            if name in PUBLIC_ROUTES:
-                continue
             with self.subTest(path=path):
                 response = self.client.get(path)
-                if path.startswith("/api/") and name != "api-docs":
+                if name in PUBLIC_ROUTES:
+                    self.assertEqual(response.status_code, 200)
+                elif path.startswith("/api/") and name != "api-docs":
                     self.assertEqual(response.status_code, 401)
                     self.assertIn("error", response.json())
                     self.assertNotIn("Access-Control-Allow-Origin", response)
@@ -93,6 +93,7 @@ class AccessTests(AuthTestCase):
         self.assertContains(response, "Create an account")
         self.assertNotContains(response, "Recent matches")
         self.assertNotContains(response, "QC-")  # no check-in codes
+        self.assertContains(response, f'href="{reverse("connect:privacy")}"')  # footer
 
     def test_admin_still_works_for_staff(self):
         self.assertEqual(self.client.get(reverse("admin:login")).status_code, 200)
