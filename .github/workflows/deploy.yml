@@ -1,7 +1,7 @@
 # CI for QuadConnect.
 #
-# One workflow with one job, triggered only by a push to feature/p1-a4 (the
-# branch P1-A4 is built on), so every commit gets exactly one check:
+# One workflow with one job, triggered only by a push to feature/p1-a5 (the
+# branch P1-A5 is built on), so every commit gets exactly one check:
 # "Deploy / test (push)". Every CI step lives inside that job: install
 # size, lint, Django checks, migrations, the committed database,
 # constraints, the test suite, the production deploy checks, the
@@ -14,7 +14,7 @@ name: Deploy
 
 on:
   push:
-    branches: [feature/p1-a4]
+    branches: [feature/p1-a5]
 
 permissions:
   contents: read
@@ -88,6 +88,8 @@ jobs:
           if Session.objects.exists(): problems.append('login sessions')
           if LogEntry.objects.exists(): problems.append('admin history')
           if CampusLocation.objects.filter(is_approved=False).exists(): problems.append('unapproved venues')
+          from allauth.socialaccount.models import SocialApp
+          if SocialApp.objects.exists(): problems.append('a stored OAuth client (its secret belongs in .env)')
           tester = User.objects.filter(username='tester', is_superuser=True).first()
           if not (tester and tester.check_password('uiuc12345')): problems.append('no working tester account')
           if any(u.has_usable_password() for u in User.objects.exclude(username__in=['tester', 'mohitg2'])): problems.append('password hashes of other accounts')
@@ -135,9 +137,11 @@ jobs:
             exit 1
           fi
 
-          # expect <status> <content type> <path>
+          jar=""  # no session yet: the first checks are signed out
+
+          # expect <status> <content type> <path>, with the session in $jar if any
           expect() {
-            got="$(curl -s -o /dev/null -w '%{http_code} %{content_type}' "$base$3" || true)"
+            got="$(curl -s ${jar:+-b "$jar"} -o /dev/null -w '%{http_code} %{content_type}' "$base$3" || true)"
             printf '%-36s %s\n' "$3" "$got"
             case "$got" in
               "$1 $2"*) ;;
@@ -149,6 +153,36 @@ jobs:
             esac
           }
 
+          # P1-A5, signed out: only the landing page, the sign-in pages and
+          # the public API open. Pages redirect to the login page; the other
+          # APIs answer 401.
+          expect 200 text/html        /
+          expect 200 text/html        /accounts/login/
+          expect 200 text/html        /accounts/signup/
+          expect 200 application/json /api/summary/
+          expect 302 text/html        /students/
+          expect 302 text/html        /insights/
+          expect 302 text/html        /reports/
+          expect 302 text/html        /export/students.csv
+          expect 302 text/html        /vega-lite/chart1.png
+          expect 302 text/html        /api/
+          expect 401 application/json /api/locations/
+          expect 401 application/json /api/summary/matches-per-week/
+          expect 401 application/json /api/icebreakers/
+
+          # Sign in as the course's tester account, as a browser would.
+          jar="$(mktemp)"
+          token="$(curl -fs -c "$jar" "$base/accounts/login/" | grep -o 'name="csrfmiddlewaretoken" value="[^"]*"' | sed 's/.*value="//;s/"$//')"
+          login="$(curl -s -o /dev/null -w '%{http_code}' -b "$jar" -c "$jar" -e "$base/accounts/login/" \
+            --data-urlencode "csrfmiddlewaretoken=$token" --data-urlencode "login=tester" \
+            --data-urlencode "password=uiuc12345" "$base/accounts/login/")"
+          if [ "$login" != "302" ]; then
+            echo "::error::Signing in as tester returned $login, expected a redirect."
+            cat server.log
+            exit 1
+          fi
+
+          # Signed in: every page of P1-A3 and P1-A4 opens.
           expect 200 text/html        /
           expect 200 text/html        /students/
           expect 200 text/html        /students/1/
@@ -168,7 +202,7 @@ jobs:
           expect 400 application/json "/api/locations/?min_seats=many"
           expect 200 text/plain       /api/locations.txt
           expect 404 text/html        /no-such-page/
-          expect 302 text/html        /admin/
+          expect 200 text/html        /admin/
 
           # P1-A4. The icebreakers API is only called on its error paths:
           # its success path depends on Open Trivia DB. The page answers 200
@@ -188,7 +222,7 @@ jobs:
 
           # The four scripts the Insights page loads (Vega, Vega-Lite,
           # vega-embed and the chart code) must be hashed static files.
-          scripts="$(curl -fs "$base/insights/" | grep -o '/static/[^"]*\.[0-9a-f]\{12\}\.js' || true)"
+          scripts="$(curl -fs -b "$jar" "$base/insights/" | grep -o '/static/[^"]*\.[0-9a-f]\{12\}\.js' || true)"
           if [ "$(printf '%s\n' "$scripts" | grep -c .)" -ne 4 ]; then
             echo "::error::The Insights page does not load its four hashed scripts: $scripts"
             exit 1
