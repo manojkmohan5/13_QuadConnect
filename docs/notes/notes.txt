@@ -40,7 +40,10 @@ Done, by assignment part:
       Google provider, with PKCE). The client ID and secret come from .env
       only; without them the button is hidden. The Google Cloud project is
       owned by adqatar22@gmail.com, because Google Cloud is switched off
-      for Illinois accounts ("disabled by your administrator").
+      for Illinois accounts ("disabled by your administrator"). Client
+      created and published (In production) on 2026-10-09: Google would
+      not publish without a privacy policy link, so the site gained a
+      public /privacy/ page. Google sign-in tested end to end locally.
   P3  /api/summary/ is the one public API: counts only, any origin. The
       Vega-Lite spec docs/a5/group-13-vega-lite-API-demo.txt reads it from
       production with data.url, and draws in the editor with no warnings.
@@ -65,10 +68,9 @@ Decisions:
     editor (on the site it still does).
 
 Next:
-  - The Google client ID and secret into .env, here and on the server;
-    test Google sign-in locally and on the live site.
-  - Deploy feature/p1-a5 to PythonAnywhere: install requirements, migrate
-    (the account tables), collectstatic, reload.
+  - Deploy feature/p1-a5 to PythonAnywhere: install requirements, restore
+    the committed database (the account tables), collectstatic, the Google
+    keys in the server's .env, reload. Then test Google sign-in there.
   - Team video, 5 minutes at most, on the live site.
 
 --------------------------------------------------------------------------------

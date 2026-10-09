@@ -109,9 +109,9 @@ own `auth` app.
   Django Admin.
 - **Private by default.** Django's `LoginRequiredMiddleware`, extended in
   [`connect/middleware.py`](connect/middleware.py), protects every view that
-  is not marked `@login_not_required`. Only the landing page, the sign-in
-  pages and `/api/summary/` are marked. A new view is private unless someone
-  opens it on purpose.
+  is not marked `@login_not_required`. Only the landing page, the privacy
+  page, the sign-in pages and `/api/summary/` are marked. A new view is
+  private unless someone opens it on purpose.
   - A page sends the visitor to the login page, then back to that page
     (`?next=`).
   - An API endpoint answers `401` with JSON instead, because a program cannot
@@ -122,7 +122,7 @@ own `auth` app.
 
 | Signed out, a request for | gets |
 |---|---|
-| `/`, `/accounts/login/`, `/accounts/signup/` | `200` |
+| `/`, `/privacy/`, `/accounts/login/`, `/accounts/signup/` | `200` |
 | `/api/summary/` | `200`, JSON |
 | any other page | `302` to `/accounts/login/?next=<that page>` |
 | any other `/api/` endpoint | `401`, JSON with a link to the login page |
@@ -144,7 +144,10 @@ and `GOOGLE_CLIENT_SECRET` in `.env`. They are never stored in the database or
 the repository. Without them the button is hidden, and password login works as
 before.
 
-To set up a client (once), in the Google Cloud console:
+QuadConnect's client lives in the Google Cloud project **QuadConnect**. It
+was created on 2026-10-09 and is published (**In production**), so any Google
+account can sign in. To set up a client from scratch, in the Google Cloud
+console:
 
 1. Create a project.
 2. On **Google Auth Platform**, set up the consent screen as **External**.
@@ -156,9 +159,15 @@ To set up a client (once), in the Google Cloud console:
 
    For a local run on another port, add the same two local addresses with
    that port.
-4. On **Audience**, click **Publish app**. Until it is published, only the
-   test users listed there can sign in.
-5. Put the client ID and secret in `.env`, and restart the server.
+4. On **Branding**, add the application home page,
+   `https://manojkmohan43.pythonanywhere.com/`, and the privacy policy link,
+   `https://manojkmohan43.pythonanywhere.com/privacy/`. Google will not
+   publish an app without a privacy policy, and its sign-in screen links to
+   it.
+5. On **Audience**, click **Publish app**. Until it is published, only the
+   test users listed there can sign in. With only the name, email and
+   picture asked for, Google needs no review.
+6. Put the client ID and secret in `.env`, and restart the server.
 
 ### Part 3: the public API
 
@@ -606,7 +615,7 @@ runs, in order:
 5. `verify_constraints`, then the test suite (`manage.py test connect`)
 6. `check --deploy` and `collectstatic` with production settings
 7. a smoke test that boots the production build:
-   - signed out, 13 URLs: the public ones open, pages redirect to the login
+   - signed out, 14 URLs: the public ones open, pages redirect to the login
      page, and APIs answer `401`;
    - it then logs in as `tester` through the login form, as a browser
      would;
@@ -648,6 +657,7 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | Path | Name | View | Added |
 |---|---|---|---|
 | `/` | `connect:home` | FBV, `render()` | A2 |
+| `/privacy/` | `connect:privacy` | FBV, `render()`; public | A5 |
 | `/students/` | `connect:student-list` | Generic CBV (`ListView`) | A2 |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV (`DetailView`) | A2 |
 | `/search/` | `connect:student-search` | Base CBV (`View`), GET + POST | A3 |
@@ -684,7 +694,7 @@ reverse them with `{% url 'connect:match-list' %}` rather than hard-coding
 paths. `/accounts/` holds the rest of allauth's pages too (password change,
 connected accounts); the table lists the ones the site links to.
 
-**Access (since P1-A5).** Every route needs a login except `/`,
+**Access (since P1-A5).** Every route needs a login except `/`, `/privacy/`,
 `/api/summary/` and the sign-in pages under `/accounts/`. `/admin/` has its
 own login, for staff.
 

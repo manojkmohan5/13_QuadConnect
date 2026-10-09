@@ -477,6 +477,7 @@ yours.
 | Path | Name | Kind | Owner | Template |
 |---|---|---|---|---|
 | `/` | `connect:home` | dashboard | shared/`main` | `home.html` |
+| `/privacy/` | `connect:privacy` | FBV `render()`, public | A5 | `privacy.html` |
 | `/students/` | `connect:student-list` | Generic CBV | Kritika | `studentprofile_list.html` (default naming) |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV | Kritika | `studentprofile_detail.html` |
 | `/matches/` | `connect:match-list` | FBV `render()` | Manojkumar | `entity_list.html` (shared) |
@@ -498,7 +499,7 @@ go through `get_absolute_url()` (`StudentProfile`, `Match`, `CampusLocation`).
 
 **Access (A5).** `connect.middleware.LoginRequiredMiddleware` makes every
 view private. A view opens to everyone only with `@login_not_required`: today
-`home` and `summary_api`, plus allauth's own sign-in views. A signed-out page
+`home`, `privacy` and `summary_api`, plus allauth's own sign-in views. A signed-out page
 request redirects to `/accounts/login/?next=...`, and an `/api/` request gets
 `401` JSON. A new view is private unless you mark it, so decide on purpose,
 and add a public one to `PUBLIC_ROUTES` in `tests_a5.py`. The account pages

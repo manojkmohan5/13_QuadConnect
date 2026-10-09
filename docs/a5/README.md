@@ -46,70 +46,77 @@ any browser, logged in or not.
 
 ## Three other uses of the public API (Part 3.4)
 
-All three read the same production URL and need no account.
+All three read the same production URL and need no account. For each use, the
+explanation is 1 to 5 sentences, as the assignment asks, followed by the API it
+accesses, the data it uses and its result.
 
 ### Use 1: a command-line report for club organizers
 
+A club organizer or the student-life office runs this script to see what
+QuadConnect students care about, without access to any private page. It reads
+the public API with `requests`, adds up the picks by type, ranks the interests
+and lists the ones only one student chose. It ends by checking the API's
+contract (three fields per row, no repeated interest) and stops with an error
+if that ever changes.
+
+- **API accessed:** `GET https://manojkmohan43.pythonanywhere.com/api/summary/`, with no login.
+- **Data used:** all 22 rows, each with `category`, `count` and `type`.
+- **Result:**
+  - hobbies get 29 of the 41 picks (71%), and student organizations 12 (29%);
+  - the five most picked interests are Food and Movies (4 students each), then
+    Fitness, Gaming and Music (3 each);
+  - 11 interests have only one student, which makes them candidates to promote
+    or merge.
 - **Code:** [`public_api_uses/1_interest_report.py`](public_api_uses/1_interest_report.py)
 - **Screenshot:** [`02_use1_python_report.png`](../screenshots/p1-a5/02_use1_python_report.png)
 - **Run:** `python docs/a5/public_api_uses/1_interest_report.py`. It needs only
   `requests`, which is already in `requirements.txt`.
 
-A club organizer or the student-life office runs this script to see what
-QuadConnect students care about, without access to any private page. It
-fetches `/api/summary/` with `requests` and prints three things:
-
-- the share of picks that go to hobbies versus student organizations: 29 of 41,
-  or 71%, are hobbies;
-- the five most picked interests: Food and Movies, then Fitness, Gaming and
-  Music;
-- the 11 interests that only one student picked, which are candidates to
-  promote or merge.
-
-It finishes by checking the API's contract (three fields per row, no repeated
-interest) and stops with an error if that ever changes.
-
 ### Use 2: statistics in a Jupyter notebook
 
+A data-minded student or the course staff loads the API into a pandas
+DataFrame with one request, then studies it like any dataset. The notebook
+describes how many students pick each interest, compares hobbies with student
+organizations, and measures how concentrated the picks are. A Matplotlib chart
+shows how the picks spread out, by type.
+
+- **API accessed:** `GET https://manojkmohan43.pythonanywhere.com/api/summary/`, with no login.
+- **Data used:** the same 22 rows, as a DataFrame.
+- **Result:**
+  - an interest is picked by 1.86 students on average, with a median of 1.5;
+  - hobbies average 2.42 picks each, against 1.20 for student organizations;
+  - the five most picked interests hold 41% of all picks;
+  - 11 of the 22 interests are picked more often than average;
+  - most interests are picked by one or two students.
 - **Notebook:**
   [`public_api_uses/2_public_api_notebook.ipynb`](public_api_uses/2_public_api_notebook.ipynb),
-  saved with its outputs
+  saved with its outputs.
 - **Screenshot:** [`03_use2_notebook.png`](../screenshots/p1-a5/03_use2_notebook.png)
 - **Run:** on top of the site's requirements, `pip install pandas matplotlib
   notebook`. These are kept out of `requirements.txt` so production stays
   small.
 
-A data-minded student or the course staff loads the API into a pandas
-DataFrame with one `requests.get`, then studies it like any dataset. The
-notebook finds:
-
-- an interest is picked by 1.86 students on average, with a median of 1.5;
-- hobbies average 2.42 picks each, against 1.20 for student organizations;
-- the five most picked interests hold 41% of all picks;
-- 11 of the 22 interests are picked more often than average.
-
-A Matplotlib chart shows that most interests are picked by one or two
-students.
-
 ### Use 3: a refreshable Excel workbook
 
+Staff who work in spreadsheets can use the API with no code to run. A Power
+Query (`Json.Document(Web.Contents(url))`, then `Table.FromRecords`) loads the
+API into an Excel table. **Data > Refresh All** reloads it, so nothing is
+copied by hand. Formulas over that table summarise it, and a bar chart shows
+picks by type.
+
+- **API accessed:** `GET https://manojkmohan43.pythonanywhere.com/api/summary/`,
+  from Excel's Power Query, with no login.
+- **Data used:** the same 22 rows, as a refreshable table.
+- **Result:**
+  - hobbies: 12 interests with 29 picks (71%, 2.42 each);
+  - student organizations: 10 interests with 12 picks (29%, 1.20 each);
+  - the most picked interest is Food;
+  - 11 interests have one student.
+
+  The formulas are `COUNTIFS`, `SUMIFS`, `AVERAGEIFS` and `INDEX`/`MATCH`.
 - **Query:** [`public_api_uses/3_excel_power_query.pq`](public_api_uses/3_excel_power_query.pq)
 - **Workbook:** [`public_api_uses/3_excel_power_query.xlsx`](public_api_uses/3_excel_power_query.xlsx)
 - **Screenshot:** [`04_use3_excel.png`](../screenshots/p1-a5/04_use3_excel.png)
-
-Staff who live in spreadsheets can use the API with no code to run. In Excel,
-a Power Query reads `/api/summary/` straight into a table
-(`Json.Document(Web.Contents(url))`, then `Table.FromRecords`). **Data >
-Refresh All** reloads it, so nothing is copied by hand.
-
-Ordinary formulas over that table give:
-
-- picks by type: `COUNTIFS`, `SUMIFS` and `AVERAGEIFS`;
-- the most picked interest: `INDEX`/`MATCH`, which finds Food;
-- how many interests only one student picked: 11.
-
-A bar chart shows picks by type.
-
-To rebuild it, use **Data > Get Data > From Other Sources > Blank Query >
-Advanced Editor**, then paste the `.pq` file. Or open the workbook, choose
-**Enable Content**, and refresh.
+- **Run:** open the workbook, choose **Enable Content**, then **Data > Refresh
+  All**. To build it from scratch instead, go to **Data > Get Data > From
+  Other Sources > Blank Query > Advanced Editor**, and paste the `.pq` file.
