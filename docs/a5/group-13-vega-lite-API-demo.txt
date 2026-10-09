@@ -1,0 +1,204 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "title": {
+    "text": "QuadConnect: students per interest, by type",
+    "subtitle": "Live data from the public API https://manojkmohan43.pythonanywhere.com/api/summary/",
+    "anchor": "start",
+    "offset": 14
+  },
+  "description": "Two horizontal bar charts from the QuadConnect public API: how many verified students picked each hobby, and each registered student organization, most picked first.",
+  "data": {
+    "url": "https://manojkmohan43.pythonanywhere.com/api/summary/"
+  },
+  "vconcat": [
+    {
+      "title": {
+        "text": "Hobbies and interests",
+        "anchor": "start",
+        "fontSize": 13,
+        "fontWeight": "bold",
+        "offset": 8,
+        "frame": "group"
+      },
+      "transform": [
+        {
+          "filter": {
+            "field": "type",
+            "equal": "Hobby / Interest"
+          }
+        }
+      ],
+      "width": 360,
+      "height": {
+        "step": 20
+      },
+      "encoding": {
+        "y": {
+          "field": "category",
+          "type": "nominal",
+          "sort": null,
+          "title": null,
+          "axis": {
+            "labelLimit": 220
+          }
+        },
+        "x": {
+          "field": "count",
+          "type": "quantitative",
+          "title": "Verified students",
+          "axis": {
+            "tickMinStep": 1,
+            "format": "d"
+          }
+        },
+        "tooltip": [
+          {
+            "field": "category",
+            "type": "nominal",
+            "title": "Interest"
+          },
+          {
+            "field": "type",
+            "type": "nominal",
+            "title": "Type"
+          },
+          {
+            "field": "count",
+            "type": "quantitative",
+            "title": "Students"
+          }
+        ]
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "color": "#c0421c",
+            "cornerRadiusEnd": 3
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 4,
+            "fontWeight": "bold",
+            "color": "#1f2933"
+          },
+          "encoding": {
+            "text": {
+              "field": "count",
+              "type": "quantitative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": {
+        "text": "Registered student organizations",
+        "anchor": "start",
+        "fontSize": 13,
+        "fontWeight": "bold",
+        "offset": 8,
+        "frame": "group"
+      },
+      "transform": [
+        {
+          "filter": {
+            "field": "type",
+            "equal": "Registered Student Organization"
+          }
+        }
+      ],
+      "width": 360,
+      "height": {
+        "step": 20
+      },
+      "encoding": {
+        "y": {
+          "field": "category",
+          "type": "nominal",
+          "sort": null,
+          "title": null,
+          "axis": {
+            "labelLimit": 220
+          }
+        },
+        "x": {
+          "field": "count",
+          "type": "quantitative",
+          "title": "Verified students",
+          "axis": {
+            "tickMinStep": 1,
+            "format": "d"
+          }
+        },
+        "tooltip": [
+          {
+            "field": "category",
+            "type": "nominal",
+            "title": "Interest"
+          },
+          {
+            "field": "type",
+            "type": "nominal",
+            "title": "Type"
+          },
+          {
+            "field": "count",
+            "type": "quantitative",
+            "title": "Students"
+          }
+        ]
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "color": "#323f4b",
+            "cornerRadiusEnd": 3
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 4,
+            "fontWeight": "bold",
+            "color": "#1f2933"
+          },
+          "encoding": {
+            "text": {
+              "field": "count",
+              "type": "quantitative"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "spacing": 24,
+  "resolve": {
+    "scale": {
+      "x": "shared"
+    }
+  },
+  "config": {
+    "font": "Inter, Segoe UI, Arial, sans-serif",
+    "view": {
+      "stroke": null
+    },
+    "title": {
+      "fontSize": 16,
+      "color": "#1f2933",
+      "subtitleColor": "#666e7b"
+    },
+    "axis": {
+      "labelColor": "#1f2933",
+      "titleColor": "#1f2933",
+      "gridColor": "#e3e3e0",
+      "domainColor": "#8a929e"
+    }
+  }
+}
