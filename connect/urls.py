@@ -15,7 +15,8 @@ P1-A3 added detail pages (/matches/<pk>/, /locations/<pk>/), search
 (/search/), charts (/insights/...) and the JSON API (/api/...). P1-A4 added
 chart data (/api/summary/...), Vega-Lite specs and images (/vega-lite/...),
 icebreakers (/api/icebreakers/, /matches/<pk>/icebreakers/), and reports
-with exports (/reports/, /export/...). Each group sits under a comment
+with exports (/reports/, /export/...). P1-A6 added the two AI pages
+(/ai/profile-assistant/, /matches/<pk>/ai-welcome/). Each group sits under a comment
 naming its assignment section; every /api/ route is in one block. Paths and
 names must not change without updating base.html and the models'
 get_absolute_url(), which reverse them.
@@ -23,7 +24,7 @@ get_absolute_url(), which reverse them.
 
 from django.urls import path
 
-from . import api, charts, icebreakers, reports, vega_charts, views
+from . import ai_views, api, charts, icebreakers, reports, vega_charts, views
 
 app_name = "connect"
 
@@ -48,6 +49,11 @@ urlpatterns = [
     # P1-A4 Part 2 - the same result as /api/icebreakers/, as a page.
     path("matches/<int:pk>/icebreakers/", icebreakers.icebreakers_page,
          name="match-icebreakers"),
+    # P1-A6 - hybrid AI: local model + external API write a welcome message.
+    path("matches/<int:pk>/ai-welcome/", ai_views.match_welcome, name="match-ai-welcome"),
+
+    # --- P1-A6 - local Hugging Face model: free text -> onboarding preferences ---
+    path("ai/profile-assistant/", ai_views.profile_assistant, name="ai-profile-assistant"),
 
     # --- Prathamesh Mulay - Base CBV (POST added in P1-A3 Section 5) --------
     path(

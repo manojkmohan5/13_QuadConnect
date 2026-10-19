@@ -9,6 +9,8 @@ aria-describedby (help text and error) and aria-invalid="true" on error.
     StudentSearchForm             GET   /search/     roster filters, shareable URL
     NetIDLookupForm               POST  /search/     NetID lookup, kept out of the URL
     CampusLocationSuggestionForm  POST  /locations/  suggest a venue (creates a row)
+    ProfileIntroForm              POST  /ai/profile-assistant/   free-text intro for the local model
+    MatchNoteForm                 POST  /matches/<id>/ai-welcome/  optional note for the hybrid pipeline
 """
 
 import re
@@ -181,3 +183,36 @@ class LoginForm(AllauthLoginForm):
         self.fields["password"].help_text = ""
         self.fields["login"].label = "Username or email"
         self.fields["remember"].label = "Remember me"
+
+
+class ProfileIntroForm(QuadForm):
+    """P1-A6: the free-text intro the local model reads. Submitted with POST."""
+
+    text = forms.CharField(
+        label="Tell us about yourself",
+        min_length=10,
+        max_length=600,
+        widget=forms.Textarea(attrs={"rows": 5, "maxlength": 600}),
+        help_text="Two or three sentences: what you enjoy, how you like to talk, "
+                  "and whether you prefer one person or a small group (10-600 characters).",
+        error_messages={
+            "required": "Write a few words about yourself first.",
+            "min_length": "Write a little more: at least 10 characters.",
+            "max_length": "Keep it to 600 characters or fewer.",
+        },
+    )
+
+
+class MatchNoteForm(QuadForm):
+    """P1-A6: an optional note to personalise a match's welcome message."""
+
+    note = forms.CharField(
+        label="Anything you would like your match to know? (optional)",
+        required=False,
+        max_length=300,
+        widget=forms.Textarea(attrs={"rows": 3, "maxlength": 300}),
+        help_text="For example: \"I'm a bit nervous but love basketball.\" "
+                  "Your note is read by our own model on this server. It is never sent to the "
+                  "message-writing service; only the interests it finds are.",
+        error_messages={"max_length": "Keep it to 300 characters or fewer."},
+    )

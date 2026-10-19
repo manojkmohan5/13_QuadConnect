@@ -1,0 +1,12 @@
+# Extra packages for llm-test/ai_prototype.ipynb (on top of ../requirements.txt).
+#   pip install -r ../requirements.txt -r requirements.txt
+# bitsandbytes loads 3B-15B models in 4-bit so they fit in normal RAM / a small GPU
+# (Linux and Windows; on Apple Silicon the notebook skips models that do not fit in bf16).
+accelerate==1.15.0
+bitsandbytes==0.50.2
+ipykernel==7.4.0
+jupyter==1.1.1
+nbconvert==7.17.2
+pandas==3.0.6
+psutil==7.2.2
+matplotlib==3.11.2

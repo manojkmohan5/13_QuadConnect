@@ -1,0 +1,78 @@
+{% extends "connect/base.html" %}
+{% comment %}
+P1-A6: the hybrid feature. The student's optional note is read by the local
+model; only the allow-listed result, plus our own facts about the match, goes to
+the external API, which writes the welcome message (connect/ai_api.py). If the
+API is not configured or fails, a template message built from the same facts is
+shown, and the page says so.
+{% endcomment %}
+
+{% block title %}AI welcome message for match {{ match.check_in_code }} - QuadConnect{% endblock %}
+
+{% block page_header %}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'connect:match-list' %}">Matches</a> /
+    <a href="{{ match.get_absolute_url }}">Match {{ match.check_in_code }}</a> /
+    <span aria-current="page">AI welcome message</span>
+  </nav>
+  <h1 class="page">AI welcome message</h1>
+  <p class="sub">
+    A friendly first message for this {{ match.get_connection_type_display }}, written from
+    the meeting details and what the group has in common.
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  {% if error %}
+    <p class="message message-error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <section class="card" aria-labelledby="note-title">
+    <h2 class="card-title" id="note-title">Personalise it</h2>
+    <form class="form" method="post" action="{% url 'connect:match-ai-welcome' match.pk %}">
+      {% csrf_token %}
+      <div class="field">{{ form.note.as_field_group }}</div>
+      <div class="actions">
+        <button type="submit">Write my welcome message</button>
+      </div>
+    </form>
+  </section>
+
+  {% if welcome %}
+    <h2 class="section">Your message</h2>
+
+    {% if welcome.source == "template" %}
+      <p class="message message-info" role="status">
+        The AI writing service is not available right now, so this is a standard message built
+        from the meeting details.
+      </p>
+    {% endif %}
+    {% if preferences.suspicious %}
+      <p class="message message-info" role="status">
+        Your note contained instructions aimed at the AI. They were ignored.
+      </p>
+    {% endif %}
+
+    <div class="card">
+      <p class="question" id="welcome-text">{{ welcome.message }}</p>
+      <h3 class="card-title">Conversation starters</h3>
+      <ol class="list" role="list">
+        {% for line in welcome.starters %}<li>{{ line }}</li>{% endfor %}
+      </ol>
+    </div>
+
+    <details class="data">
+      <summary>How this was made</summary>
+      <ul>
+        <li>Meeting facts used: {{ welcome.facts.format }}, {{ welcome.facts.when }}, {{ welcome.facts.where }}{% if welcome.facts.activity %}, {{ welcome.facts.activity }}{% endif %}{% if welcome.facts.shared_interests %}; shared interests: {{ welcome.facts.shared_interests|join:", " }}{% endif %}.</li>
+        {% if preferences %}
+          <li>Your note was read by the local model ({{ preferences.source }}) and reduced to: {{ preferences.interests|join:", "|default:"no catalogue interests" }}; {{ preferences.conversation_style }}, {{ preferences.group_preference }}, energy {{ preferences.social_energy }}. Only that, never your note itself, is passed on to the writing service.</li>
+        {% endif %}
+        <li>Written by: {{ welcome.source }}.</li>
+        <li>No names, NetIDs or check-in codes are sent to the AI service. Nothing is saved.</li>
+      </ul>
+    </details>
+  {% endif %}
+
+{% endblock %}

@@ -208,3 +208,21 @@ if env("GOOGLE_CLIENT_ID"):
         "secret": env("GOOGLE_CLIENT_SECRET", required=True),
         "key": "",
     }]
+
+
+# --- AI features (P1-A6) -----------------------------------------------------
+# Local model: a Hugging Face model run by `transformers` inside Django. The
+# first request downloads the weights into the Hugging Face cache (outside the
+# repository). LOCAL_LLM_ENABLED=0 turns the model off; the keyword matcher
+# in connect/ai_local.py then answers instead. See README_AI.md.
+LOCAL_LLM_ENABLED = env("LOCAL_LLM_ENABLED", default="1") == "1"
+LOCAL_LLM_MODEL = env("LOCAL_LLM_MODEL", default="Qwen/Qwen2.5-1.5B-Instruct")
+LOCAL_LLM_DTYPE = env("LOCAL_LLM_DTYPE", default="bfloat16")   # float32 is faster on CPUs without bf16 support
+LOCAL_LLM_MAX_SECONDS = int(env("LOCAL_LLM_MAX_SECONDS", default="90"))
+
+# External API: any OpenAI-compatible chat endpoint. groq | gemini | openrouter.
+# The key is read from .env only. Without one the welcome-message page falls
+# back to a template and says so.
+AI_API_PROVIDER = env("AI_API_PROVIDER", default="groq")
+AI_API_MODEL = env("AI_API_MODEL", default="")
+AI_API_KEY = (env("AI_API_KEY") or env(f"{AI_API_PROVIDER.upper()}_API_KEY") or "")

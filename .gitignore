@@ -40,3 +40,20 @@ ENV/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# --- AI / model weights (P1-A6): never commit weights -----------------------
+# Hugging Face downloads live in ~/.cache/huggingface, outside this repository.
+# These patterns catch any copy that lands inside it.
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.gguf
+*.onnx
+*.h5
+*.npz
+models/
+hf_cache/
+llm-test/.cache/
+.ipynb_checkpoints/

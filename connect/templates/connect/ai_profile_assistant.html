@@ -1,0 +1,94 @@
+{% extends "connect/base.html" %}
+{% comment %}
+P1-A6: the local-model feature. A student writes a few sentences; a Hugging Face
+model running inside this Django process (connect/ai_local.py) turns them into
+the preferences onboarding stores: interests from our catalogue, conversation
+style, group size and social energy. Read-only: nothing is saved or changed.
+{% endcomment %}
+
+{% block title %}AI profile assistant - QuadConnect{% endblock %}
+{% block heading %}AI profile assistant{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    Describe yourself in a few sentences and a language model that runs on this
+    server will suggest the interests and social preferences to pick during
+    onboarding. Nothing you write is saved.
+  </p>
+{% endblock %}
+
+{% block content %}
+
+  {% if error %}
+    <p class="message message-error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <section class="card" aria-labelledby="intro-title">
+    <h2 class="card-title" id="intro-title">Your introduction</h2>
+    <form class="form" method="post" action="{% url 'connect:ai-profile-assistant' %}">
+      {% csrf_token %}
+      <div class="field">{{ form.text.as_field_group }}</div>
+      <div class="actions">
+        <button type="submit">Suggest my preferences</button>
+      </div>
+      <p class="form-note">
+        Model: <code>{{ model }}</code>, running locally. The first request after the server
+        starts can take a minute while the model loads (and downloads, the very first time).
+      </p>
+    </form>
+  </section>
+
+  {% if result %}
+    <h2 class="section">Suggested preferences</h2>
+
+    {% if result.suspicious %}
+      <p class="message message-info" role="status">
+        Your text contained instructions aimed at the AI. They were ignored: the
+        model only fills in the fields below.
+      </p>
+    {% endif %}
+    {% if result.source != "local-llm" %}
+      <p class="message message-info" role="status">
+        {% if result.source == "keyword-only" %}The language model is not available right now.{% else %}The language model did not give a usable answer.{% endif %}
+        These suggestions come from a simple keyword matcher instead, so they may be less accurate.
+        {% if result.note %}<span class="visually-hidden">Reason: {{ result.note }}</span>{% endif %}
+      </p>
+    {% endif %}
+
+    <div class="grid">
+      <div class="card stat">
+        <div class="n">{{ result.style_label }}</div>
+        <div class="l">Conversation style</div>
+      </div>
+      <div class="card stat">
+        <div class="n">{{ result.group_label }}</div>
+        <div class="l">Group preference</div>
+      </div>
+      <div class="card stat">
+        <div class="n">{{ result.social_energy }} / 5</div>
+        <div class="l">Social energy</div>
+      </div>
+    </div>
+
+    <h3 class="section">Interests</h3>
+    {% if result.interest_rows %}
+      <ul class="chips" role="list">
+        {% for row in result.interest_rows %}
+          <li class="chip chip-match">{{ row.name }}<span class="visually-hidden">, picked by {{ row.students }} student{{ row.students|pluralize }}</span></li>
+        {% endfor %}
+      </ul>
+      <p class="note">
+        {% for row in result.interest_rows %}{{ row.name }}: {{ row.students }} student{{ row.students|pluralize }}{% if not forloop.last %} &middot; {% endif %}{% endfor %}
+        already picked {% if result.interest_rows|length == 1 %}this interest{% else %}these interests{% endif %}.
+      </p>
+    {% else %}
+      <p class="empty">No interest from our catalogue was found in your text. Try naming a hobby, a club or a way you like to meet (coffee, a walk, board games).</p>
+    {% endif %}
+
+    <p class="note">
+      Answered by <strong>{% if result.source == "local-llm" %}{{ result.model }}{% else %}the keyword matcher{% endif %}</strong>
+      in {{ result.seconds }} s. Suggestions only: choose your real answers in onboarding.
+    </p>
+  {% endif %}
+
+{% endblock %}

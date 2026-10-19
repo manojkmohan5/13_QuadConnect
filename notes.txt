@@ -1,0 +1,272 @@
+================================================================================
+P1-A6 Text Intelligence - Part 3: Production Reflection
+QuadConnect | The Connectors | Team 13
+================================================================================
+
+Where the numbers come from
+---------------------------
+* Quality, speed, memory and guardrail figures are MEASURED in llm-test/ai_prototype.ipynb:
+  8 fixed self-introductions, one of them a prompt-injection attempt, greedy decoding, run on a
+  4-core CPU with 16 GB RAM and no GPU. Models of 3B+ that did not fit in bf16 were loaded in
+  4-bit NF4 (bitsandbytes). Qwen2.5-14B fit in 4-bit (9.7 GB).
+* NOT run: the three XL models (Qwen2.5-32B, Mixtral-8x7B, Qwen2.5-72B). They need 16-36 GB
+  even in 4-bit and a GPU to be usable. Their rows below are size/cost ESTIMATES only; the
+  notebook reports them as "not run" instead of inventing scores.
+* Dollar figures are ESTIMATES from rounded, indicative on-demand cloud prices and 2025-era API
+  list prices. Prices change often: re-check before budgeting. Anything marked "assumed" is an
+  assumption, not a measurement.
+* Quality score = 0.4 x interest F1 + 0.2 x conversation style + 0.2 x group preference +
+  0.2 x social energy (within +/-1), averaged over 8 inputs (0 = unusable, 1 = perfect).
+  "Guarded" = the same score after our clean-up/fallback code (what the app actually shows).
+  With only 8 inputs, differences under ~0.05 between two models are noise.
+
+Our task: read a student's 1-3 sentence introduction and return strict JSON with interests
+(from our catalogue), conversation style, group preference and social energy.
+
+
+================================================================================
+1. THE SIZE VS. QUALITY TRADE-OFF
+================================================================================
+
+1a. Results of the 15-model test (3-shot prompt, same inputs for every model)
+
+ Category          Model                     Params  Quality  Guarded  Schema   Inj.   s/resp  RAM
+                                                      (raw)             valid    safe   (CPU)   (GB)
+ ----------------  ------------------------  ------  -------  -------  ------  -----  ------  -----
+ Ultra-Light <1B   SmolLM2-135M-Instruct      0.14B    0.25     0.37     38%     no      1.2    0.3
+                   SmolLM2-360M-Instruct      0.36B    0.35     0.49     38%     no      2.2    0.7
+                   Qwen2.5-0.5B-Instruct      0.49B    0.50     0.58     25%     yes     2.1    1.0
+ Small 1B-3B       TinyLlama-1.1B-Chat        1.10B    0.50     0.68      0%     no      4.3    2.2
+                   Qwen2.5-1.5B-Instruct      1.54B    0.72     0.87     25%     yes     6.0    3.1
+                   SmolLM2-1.7B-Instruct      1.71B    0.66     0.69     38%     yes     5.8    3.4
+ Medium 3B-7B      Qwen2.5-3B-Instruct        3.09B    0.72     0.80     75%     yes     7.5    6.2 (bf16)
+                   Phi-3.5-mini-instruct      3.82B    0.72     0.92     62%     no     20.7    2.2 (4-bit)
+                   Qwen3-4B-Instruct-2507     4.02B    0.92     0.92    100%     yes    18.1    2.6 (4-bit)
+ Large 7B-15B      Mistral-7B-Instruct-v0.3   7.25B    0.95     0.96     75%     no     36.5    4.0 (4-bit)
+                   Qwen2.5-7B-Instruct        7.62B    0.94     0.95     88%     yes    33.7    5.4 (4-bit)
+                   Qwen2.5-14B-Instruct      14.77B    0.97     0.97    100%     yes    61.9    9.7 (4-bit)
+ XL >15B           Qwen2.5-32B-Instruct      32.76B    not run (needs 16+ GB even in 4-bit, GPU server)
+                   Mixtral-8x7B-Instruct     46.70B    not run
+                   Qwen2.5-72B-Instruct      72.71B    not run
+
+ ("RAM" = bytes of weights held in memory. Speeds compare different precisions - 4-bit NF4 is
+  slower per parameter on CPU than bf16 - so read s/resp as a CPU-only indication, not a ranking.)
+
+1b. Which size category is the sweet spot?
+
+ Best quality per category:  <1B 0.50  ->  1-3B 0.72  ->  3-7B 0.92  ->  7-15B 0.97
+ The curve is steep up to ~4B parameters and then almost flat:
+
+   Qwen3-4B  (Medium)  quality 0.92, 2.6 GB (4-bit), 18 s per response on this CPU
+   Qwen2.5-14B (Large) quality 0.97, 9.7 GB (4-bit), 62 s per response on this CPU
+   => +0.04 quality (0.923 vs 0.965) for 3.7x the memory and 3.4x the latency.
+
+ SWEET SPOT = the Medium category (3B-7B), represented by Qwen3-4B-Instruct-2507: 100% schema-
+ valid, safe on the injection input, and it fits one 24 GB GPU with room to spare.
+
+ For a CPU-only Django server the practical sweet spot is one step lower: Qwen2.5-1.5B-Instruct
+ (Small). Raw it is weak (0.72, only 25% schema-valid), but with many-shot prompting plus our
+ guardrails it reaches 0.86-0.87, i.e. about 0.09 below the 14B model at one tenth of the size.
+ That is why the Django app defaults to Qwen2.5-1.5B and documents Qwen3-4B as the upgrade.
+
+1c. Was a massive model significantly better than a small one for our task?
+
+ No. Task = structured extraction from 2-3 sentences. The 4B model is within 0.04 of the 14B
+ model and the guarded 1.5B model is within ~0.09. What the large models bought us:
+   * fewer invented interest names (they obey "only from this list" without help),
+   * no need for many-shot prompts (zero-shot already scores 0.95 for 7B and 14B), and
+   * more robust reading of subtle cues ("I'd rather do something than sit and talk" -> ACTIVITY).
+ What they cost, relative to the 4B model: 1.5-3.7x the memory and 1.9-3.4x the latency. Size does NOT guarantee safety either:
+ Mistral-7B (3-shot) leaked a "system_prompt" key on the injection input, Phi-3.5-mini (3.8B)
+ wrote the pirate poem, while the 1.5B Qwen model resisted. Training recipe mattered about as
+ much as size: Qwen2.5-1.5B (0.72) beat SmolLM2-1.7B (0.66) and TinyLlama-1.1B (0.50), and
+ Qwen3-4B (0.92) beat Phi-3.5-mini (0.72) at the same size.
+
+ Prompting (Route A, 3 models x 4 methods): many-shot (8 examples) was the most reliable
+ structure - JSON valid 100%, schema valid 87.5% (zero-shot 58%), injection-safe 100%.
+ For Qwen2.5-1.5B: zero-shot 0.31 (62% JSON, 0% schema-valid) -> many-shot 0.84 (100% / 75%).
+
+1d. Expected cost of running each pre-trained model on our own server
+
+ Assumptions: always-on server, 730 h/month. Smallest server that holds the bf16 weights x 1.25
+ (KV cache, activations) + 1 GB. CPU models: measured s/call on 4 cores (conservative for an 8-
+ vCPU box). GPU models: ASSUMED 70 generated tokens at (memory bandwidth / weight bytes) tokens/s
+ plus 0.3 s prefill, no batching. "$/1k calls" = server $/hour x seconds per call, at 100% and
+ at 25% utilisation (a realistic daily average for a student app).
+
+ Model             bf16   4-bit  Smallest server            $/hour  $/month  s/call  $/1k calls   $/1k calls
+                   GB     GB                                                         @100% util   @25% util
+ ----------------  -----  -----  -------------------------  ------  -------  ------  -----------  ----------
+ SmolLM2-135M       0.3    0.1   CPU 8 vCPU / 16 GB          0.35     255      1.2     0.12         0.48
+ SmolLM2-360M       0.7    0.2   CPU 8 vCPU / 16 GB          0.35     255      2.2     0.21         0.84
+ Qwen2.5-0.5B       1.0    0.3   CPU 8 vCPU / 16 GB          0.35     255      2.1     0.20         0.81
+ TinyLlama-1.1B     2.2    0.6   CPU 8 vCPU / 16 GB          0.35     255      4.3     0.42         1.67
+ Qwen2.5-1.5B       3.1    0.8   CPU 8 vCPU / 16 GB          0.35     255      6.0     0.58         2.33
+ SmolLM2-1.7B       3.4    0.9   CPU 8 vCPU / 16 GB          0.35     255      5.8     0.57         2.27
+ Qwen2.5-3B         6.2    1.7   CPU 8 vCPU / 16 GB          0.35     255      7.5     0.73         2.90
+ Phi-3.5-mini       7.6    2.1   1x GPU 24 GB (A10G/L4)     1.00     730      1.2     0.33         1.32
+ Qwen3-4B           8.0    2.2   1x GPU 24 GB               1.00     730      1.2     0.34         1.37
+ Mistral-7B        14.5    4.0   1x GPU 24 GB               1.00     730      2.0     0.56         2.23
+ Qwen2.5-7B        15.2    4.2   1x GPU 24 GB               1.00     730      2.1     0.58         2.33
+ Qwen2.5-14B       29.5    8.1   1x GPU 48 GB (L40S)        1.90    1387      2.7     1.43         5.73
+ Qwen2.5-32B       65.5   18.0   2x GPU 80 GB                7.00    5110      1.4     2.82        11.26
+ Mixtral-8x7B      93.4   25.7   2x GPU 80 GB                7.00    5110      1.9     3.75        15.00
+ Qwen2.5-72B      145.4   40.0   4x GPU 80 GB               14.00   10220      1.6     6.12        24.47
+
+ For comparison, a hosted API call of the same size (970 prompt + 70 output tokens):
+   Groq llama-3.1-8b-instant  $0.054 per 1,000 calls   Gemini 2.0 Flash  $0.125
+   GPT-4o-mini                $0.188                    Groq llama-3.3-70b $0.628
+ => per call, a hosted 8B model is cheaper than almost every un-batched self-hosted row.
+
+ Other cost drivers not in the table: storage (weights 0.3-145 GB, trivial on a 1 TB disk),
+ egress, engineering time to patch and monitor, and cold-start (a 1.5B model loads in ~15 s,
+ a 14B model in minutes).
+
+
+================================================================================
+2. COST & SCALING: 10,000 DAILY USERS
+================================================================================
+
+Workload (from the notebook): each user triggers 2 AI calls per day; one call = ~970 prompt tokens
+(8-example prompt) + ~70 generated tokens. 10,000 users -> 20,000 calls/day = 13.9 calls/min on
+average, ~56 calls/min at peak (ASSUMED peak = 4 x average).
+
+ A. Paid API cost per month (list prices, $ per 1M tokens in/out)
+
+ Daily users   Groq 8B ($0.05/$0.08)   Gemini 2.0 Flash ($0.10/$0.40)   GPT-4o-mini ($0.15/$0.60)   Groq 70B ($0.59/$0.79)
+ -----------   ---------------------   ------------------------------   -------------------------   ----------------------
+        100                 $0.32                         $0.75                        $1.12                    $3.77
+      1,000                 $3.25                         $7.50                       $11.25                   $37.66
+     10,000                $32.46                        $75.00                      $112.50                  $376.56
+    100,000               $324.60                       $750.00                    $1,125.00                $3,765.60
+
+ B. Local server cost at 10,000 users (always-on, sized for the 56 calls/min peak)
+
+ Option                                              s/call   Servers   $/month
+ --------------------------------------------------  ------   -------   -------
+ Qwen2.5-1.5B on CPU 8 vCPU ($0.35/h)                 4.8 *      5       $1,278   (* measured, 4 cores)
+ Qwen2.5-1.5B on 1x 24 GB GPU ($1.00/h)               1.5 **     2       $1,460   (** assumed, no batching)
+ Qwen3-4B on 1x 24 GB GPU                             3.0 **     3       $2,190
+ Mistral-7B 4-bit on 1x 24 GB GPU                     5.0 **     5       $3,650
+
+ C. Break-even
+
+ One always-on 24 GB GPU ($730/month) costs the same as the Groq 8B API at 13.5 million calls per
+ month = ~450,000 calls/day = ~225,000 daily users at 2 calls each (22x our 10,000). One un-batched GPU running a
+ 1.5B model at 1.5 s/call can only serve ~1.7 M calls/month, so the GPU only wins with batching
+ (vLLM/TGI, typically 5-20x) AND high utilisation.
+
+DECISION: at 10,000 daily users we would MOVE THE GENERATIVE WORK TO THE API (about $32-$112 a
+month versus $1,300-$3,700 a month for servers sized for peak) and keep the local model only for
+the cheap, small, privacy-sensitive job (below). Going fully local only starts to pay off beyond
+roughly 20-50x our scale (hundreds of thousands of daily calls), or when privacy/contracts forbid
+sending text to a third party. Two caveats: the API has rate limits (we handle HTTP 429 with a
+template fallback and a per-user rate limit), and a vendor can change prices or models, so the
+provider is a single environment variable (AI_API_PROVIDER) and we use the OpenAI-compatible
+format that Groq, Gemini and OpenRouter all accept.
+
+
+================================================================================
+3. HYBRID POTENTIAL
+================================================================================
+
+This is what the app already does for the match welcome message (connect/ai_api.py), and why:
+
+ Step                                   Who does it             Cost     Why this split
+ -------------------------------------  ----------------------  -------  ----------------------------------
+ 1. Read the student's free-text note   LOCAL Qwen2.5-1.5B      $0       Extraction from a short text is a
+    -> allow-listed interests/style                                      job a small model + guardrails does
+                                                                         at 0.84-0.87 quality.
+ 2. Strip the note to catalogue words   LOCAL (code)            $0       Raw text, names and NetIDs never
+    and add our own match facts                                          leave the server (privacy, and an
+                                                                         injection in the note cannot reach
+                                                                         the paid model).
+ 3. Write a warm welcome + 3 starters   EXTERNAL API (8B-70B)   ~$0.00005 Creative writing is where bigger
+                                                                per call  models are visibly better.
+ 4. Validate and escape the reply;      LOCAL (code)            $0       Schema check, length caps, HTML
+    template fallback on any failure                                     escaping; the page always works.
+
+ Ways the two can cut cost further while keeping quality:
+ * Routing / escalation: run the local model first; call the API only when the local result is
+   weak (no JSON after one retry, empty interests, or the cleaner had to drop several values).
+   On our 8 inputs the 1.5B model needed the fallback path on 12% of calls (JSON valid 88% with
+   the 3-shot prompt, 100% with many-shot).
+ * Filtering: the local model rejects junk, injections and empty input BEFORE any paid call, so
+   the API bill only counts useful requests.
+ * Caching: identical or near-identical inputs (same interests + same venue) get the cached
+   message; welcome messages for a match can be generated once per match, not once per view.
+ * Batching / budgets: queue non-urgent generation (e.g. next week's matches) and send it in one
+   off-peak batch; cap per-user calls (we use 6/minute) and set a monthly API budget alarm.
+ * Small output from the API: ask for JSON with a word limit (we use <=60 words, 3 starters),
+   because output tokens cost 2-8x input tokens.
+ * Graceful degradation: when the API is down, over quota or unconfigured, the template message
+   keeps the feature alive at zero cost.
+
+ Cost of the hybrid at 10,000 daily users: ~$30-$110 a month in API fees plus one small CPU
+ server (or the app's existing host) for the 1.5B model, versus $1,300-$3,700 fully local.
+
+
+================================================================================
+4. COST COMPARISON: PRE-TRAINED MODEL ON OUR OWN SERVER vs A PAID API
+================================================================================
+
+Server in the question: 16-core CPU, 16-core GPU, 64 GB RAM, 1 TB disk. The GPU's memory is not
+stated, so we consider both readings:
+  (a) a discrete GPU with 16-24 GB of VRAM (weights must fit in VRAM), and
+  (b) unified memory (e.g. an Apple-silicon style machine) where the 16-core GPU can use most of
+      the 64 GB.
+Rough monthly cost of such a machine: ~$600-$1,500 rented (CPU-64GB $0.80/h = $584; with a GPU
+$1.00-$2.00/h = $730-$1,460), or ~$3,000-$4,000 to buy, ~$100/month amortised over 3 years plus
+power and admin time. (ESTIMATES.)
+
+What fits (weights x 1.25 + 1 GB must be <= memory):
+
+ Reading            bf16 (16-bit) up to      4-bit up to           Models from our test that fit
+ -----------------  -----------------------  --------------------  ----------------------------------------
+ (a) 16 GB VRAM     ~6B params               ~20B params           everything <= Qwen3-4B in bf16; 7B and
+                                                                    14B only in 4-bit
+ (a) 24 GB VRAM     ~9B params               ~30B params           up to Qwen2.5-7B bf16 / 14B 4-bit
+ (b) 64 GB unified  ~25B params              ~80B params           up to Qwen2.5-14B bf16; Qwen2.5-32B and
+                                                                    even 72B in 4-bit (slow, ~1-5 tok/s)
+
+Throughput reality check (single stream, memory-bandwidth bound): 1.5B ~100+ tok/s, 4B ~75,
+7B ~40, 14B ~25 tok/s on a 24 GB-class GPU; on CPU only 1.5B is comfortable (we measured 7.6
+tok/s on 4 cores).
+
+WHEN IT IS ACCEPTABLE (even preferable) TO RUN THE PRE-TRAINED MODEL OURSELVES
+
+ 1. The task is narrow and a small model + guardrails is good enough. Ours is: extraction into a
+    fixed schema; 1.5B-4B models score 0.86-0.92 against 0.97 for 14B.
+ 2. Privacy or policy: student text must not go to a third party (FERPA-style concerns, a
+    university contract, or the "never send names/NetIDs" rule we already follow).
+ 3. Steady, high, predictable volume that keeps the box busy: above roughly 450,000 calls/day
+    (our break-even against an 8B API for one 24 GB GPU) - or much lower if the alternative is a
+    70B-class API ($0.63 per 1,000 calls) and we batch.
+ 4. Latency and availability under our control: no rate limits, no vendor outage, works offline
+    or on a campus network with restricted egress.
+ 5. We already own or are given the hardware (lab machine, existing server): the marginal cost is
+    close to zero, so even low volume is fine.
+ 6. Stable behaviour matters: a pinned open-weights model never changes under us, whereas a
+    hosted model can be updated or retired.
+ 7. We need customisation (fine-tuning, constrained decoding) that APIs restrict.
+
+WHEN A PAID API OF COMPARABLE SIZE IS BETTER
+
+ 1. Low or spiky traffic (our case at <= ~20,000 daily users): paying per token beats paying for
+    idle hardware. Utilisation of a student app is low at night and spikes after class; a server
+    at 25% average utilisation costs 4x its per-call price (table 1d).
+ 2. We need a bigger model than fits: 32B/72B-class quality needs 65-145 GB of memory; a 70B API
+    call costs $0.63 per 1,000 calls, a 2-4 GPU server $5,000-$10,000 a month.
+ 3. Creative or open-ended generation (welcome messages, summaries): this is where larger hosted
+    models are visibly better than a 1.5B-4B local one.
+ 4. Small team, no on-call: no driver updates, no GPU out-of-memory pages, no capacity planning.
+ 5. Fast start: a key and one HTTP call versus a multi-GB download, a GPU and a deployment.
+ 6. Free tiers: Groq, Gemini and OpenRouter free tiers cover development and a pilot at $0.
+
+ Rule of thumb we would use:  API cost per month  <  server cost per month / utilisation
+ => use the API.  Compute both before deciding: for us, 20,000 calls/day costs ~$32 (8B API)
+ against ~$730-$1,460 for the GPU; the API wins by ~20-40x until volume (or privacy) changes.
+
+ Our configuration, summarised: local Qwen2.5-1.5B for the cheap private extraction step (it runs
+ on the same CPU host as Django), external API for generation, template fallback for everything
+ else.
