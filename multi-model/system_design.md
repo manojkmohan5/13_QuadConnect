@@ -10,7 +10,7 @@ number are in [`multi_model_system.ipynb`](multi_model_system.ipynb), and every 
 |---|---|---|
 | 1. Model size selection and benchmarking | [1. Which models, for which jobs](#1-which-models-for-which-jobs) | Done |
 | 2. Cost comparison and infrastructure | [2. Cost at six traffic levels](#2-cost-at-six-traffic-levels) | Done |
-| 3. Multi-model routing | 3. Routing strategies | Next |
+| 3. Multi-model routing | [3. Routing strategies](#3-routing-strategies) | Done |
 
 ---
 
@@ -86,6 +86,10 @@ Local latency is our CPU; hosted latency is Groq's hardware plus the network, so
    | Fast local | Qwen2.5-1.5B | Answers in about 12 s on a laptop CPU; on a GPU, A6 estimated 0.4 s (an NVIDIA L4). Perfect on icebreakers, 9.2 on summaries. It is the model QuadConnect's search already runs (A6). |
    | Quality local | Qwen2.5-3B | The best local balance: 9.32, within 0.25 of the best local model at a quarter of its latency. It needs a GPU to be interactive. |
    | API | Qwen3.8-27B on Groq (gpt-oss-20b as a second provider) | 9.96 in under half a second. It costs per token, which Part 2 prices. |
+
+   Parts 2 and 3 revise this. On an L4 the fast local tier is no faster than the quality one, so Part 3 keeps only
+   Qwen2.5-3B locally. Its API tier is gpt-oss-20b (and gpt-oss-120b for feedback ratings): Qwen3.8-27B's scores at
+   about a sixth of the price (section 3).
 
 4. **Checks stay outside the models.** Larger models still broke rules:
    - 10 of the 12 local models, up to 10B, put a participant's name in a staff summary.
@@ -318,7 +322,7 @@ Part 3 turns this into routing rules: which request goes to which model, in whic
    prompts.
 3. **At scale, split the jobs.** Do not migrate everything. Search and icebreakers carry 92% of the tokens and run well on
    small models, so they are the jobs worth hosting. The large models stay on the API, where their tokens are cheaper.
-   This split is what Part 3's routing will decide request by request.
+   Part 3's routing makes this split, request by request (section 3).
 4. **Prices move.** API prices and cloud prices both change, so the notebook keeps every price in one cell with its
    date, and the whole comparison re-runs in seconds.
 
@@ -522,3 +526,262 @@ All costs are per day. The same rows are in [`results/local_hosting_costs.csv`](
 | gpt-oss-120b (116.8B, Very Large) | openai/gpt-oss-120b (deepinfra) | $0.0500 | Global Platform | 69,700,000,000 | $3,483.30 | 165 | $3,882.60 |
 
 </details>
+
+---
+
+## 3. Routing strategies
+
+Part 3 decides which model answers each request, and how that changes with the situation. The notebook's Part 3 runs
+every strategy on QuadConnect's own numbers (Part 1's scores and token counts, Part 2's machines and prices, and the
+providers' measured speeds), so every figure below comes from it.
+
+**The router's menu** holds only models whose quality Part 1 measured on QuadConnect's own jobs:
+
+| Where | Model | What Parts 1 and 2 found |
+|---|---|---|
+| Our machines | Qwen2.5-3B (FP8 on a `g6.4xlarge`, as in Part 2) | 10 on icebreakers, feedback ratings and venue checks, 9.9 on staff summaries, but 6.7 on search |
+| Hugging Face API | gpt-oss-20b (3 providers) | 9.8 on search, 10 on three of the other jobs, 9.46 on feedback ratings |
+| Hugging Face API | gpt-oss-120b (6 providers) | 9.8 on search and 10 on the other four |
+| Hugging Face API | Qwen3.8-27B (5 providers) | Part 1's API tier: the same scores as gpt-oss-120b, at several times the price (table below) |
+
+**Speed targets.** Two jobs keep a student waiting. A search needs the whole reply before it can run, so it has 1
+second. Icebreakers appear word by word, so the full reply has 2 seconds. Nobody waits for a feedback rating, a staff
+summary or a venue check: they run in the background.
+
+**How a request's latency is estimated.** Through the API: the provider's time to first token, plus the reply's
+length at the provider's speed. Hugging Face's router measures both for every provider; these are its figures of
+3 November 2026. On our machines: one token per server step, from Part 2's roofline, with the requests in flight
+capped so that the slowest waiting job meets its target (the cap costs some of Part 2's throughput).
+
+**Quality** is Part 1's score (1–10) for that model on that job, weighted by how often each job runs (Step 2.1).
+**Cost** is Part 2's: our machines by the day, API tokens at each provider's price, and the `m7i.large` servers that
+call the API.
+
+**Design level: the Mass Consumer App, 10 million daily users.** Below about 2.3 million users the router keeps every
+job on the API (Scenario 4), so the rules that involve our machines would never fire. At 10 million every rule below is
+in use, so that is where the strategies are evaluated; Scenario 4 covers all six traffic levels.
+
+**What a request costs on each**, as the mean over the job mix (at the cheapest provider for an API model; for ours,
+a busy machine as in Part 2), next to Part 1's scores:
+
+| Model | Where | search | icebreakers | feedback rating | staff summary | venue check | USD per 1,000 requests |
+|---|---|---|---|---|---|---|---|
+| Qwen2.5-3B | our machines | 6.70 | 10.00 | 10.00 | 9.90 | 10.00 | $0.0177 |
+| gpt-oss-20b | Hugging Face, 3 providers | 9.80 | 10.00 | 9.46 | 10.00 | 10.00 | $0.0208 |
+| gpt-oss-120b | Hugging Face, 6 providers | 9.80 | 10.00 | 10.00 | 10.00 | 10.00 | $0.0246 |
+| Qwen3.8-27B | Hugging Face, 5 providers | 9.80 | 10.00 | 10.00 | 10.00 | 10.00 | $0.1405 |
+
+### Step 3.1: Define five system scenarios
+
+| # | Scenario | What happens at QuadConnect | Routing condition | How the router knows |
+|---|---|---|---|---|
+| 1 | Normal operation | An ordinary hour: steady traffic, every machine and provider working. | Query complexity (which job it is) and the speed target | The page that sends the request names the job |
+| 2 | Peak usage hours | From 5 to 11 pm students make plans for the evening, and traffic runs at twice the average (Part 2's peak). | System load | Requests in flight on our machines |
+| 3 | High-complexity queries | Searches typed in students' own words, which have to be mapped onto QuadConnect's lists: "Grainger students in the robotics club", "someone shy to talk about books and movies with, one on one". | Query complexity and confidence score | The job, and Part 1's output checks on every reply |
+| 4 | Cost optimization | Traffic grows, or a month's budget is tight, and the AI bill has to come down. | Daily request volume | Each job's request count over the past day |
+| 5 | System overload or outage | An API provider fails, one of our machines fails, or no API can be reached at all. | System load and provider health | Failed or timed-out calls, and our machines' health checks |
+
+**A condition we tested and did not use: prompt length.** Our model's five search prompts are all about the same
+length (456 to 461 tokens), and it failed on the ones with implicit wording: a campus building, a personality, a campus
+event. Length does not tell a hard request from an easy one, so the router uses the job and the output checks.
+
+### Step 3.2: Design routing strategies
+
+| Scenario | Routing strategy | Local models used | Hugging Face model used | Expected benefit |
+|---|---|---|---|---|
+| 1. Normal operation | Each job goes to the cheapest place that is good enough for it (within 0.1 of the best score any model got on it in Part 1) and fast enough for its target. Search goes to the API. The other four jobs go to our machines once their volume pays for the machines. | Qwen2.5-3B: icebreakers, feedback ratings, staff summaries and venue checks | gpt-oss-20b via deepinfra: every search | The best API model's quality at about half its cost |
+| 2. Peak usage hours | Our machines are sized for the average hour, not the busiest. When they are full, a new request for one of their jobs goes to that job's API option instead of waiting. | Qwen2.5-3B, on 2 machines instead of 3 | gpt-oss-20b via deepinfra (gpt-oss-120b for feedback ratings): the overflow | One machine less and no queue, at the same quality |
+| 3. High-complexity queries | Searches skip our machines and go straight to the API. On the other jobs, a reply that breaks one of Part 1's rules is re-asked of the API. | Qwen2.5-3B, never for search | gpt-oss-20b via deepinfra: searches and re-asked replies | Searches at 9.8 instead of 6.7, and no student's name in a staff summary |
+| 4. Cost optimization | The daily volume decides. Below about 2.3 million users every job stays on the API, each on its cheapest good-enough model and provider; above that, the easy jobs move to our machines. On a tight budget, the jobs nobody waits for move out of the busiest hours. | Qwen2.5-3B, from about 2.3 million users | gpt-oss-20b and gpt-oss-120b, at their cheapest providers | The lowest bill at every traffic level |
+| 5. System overload or outage | A provider whose calls fail or time out is skipped, and the next cheapest option that meets the target takes over. A failed machine's share goes to the API. With no API at all, our machines keep their jobs and search uses QuadConnect's keyword search. | Qwen2.5-3B | gpt-oss-120b via novita and gpt-oss-20b via ovhcloud: the fallbacks | Every request answered while a provider or a machine is down |
+
+**The router's rules, in the order it applies them:**
+
+1. **Health:** a provider whose calls fail or time out is skipped (Scenario 5).
+2. **Job:** a search goes to the API (Scenario 3). The other jobs go to our machines when the volume rule has put them
+   there (Scenario 4), and to the API otherwise.
+3. **Load:** when our machines are full, the request goes to its job's API option instead of waiting (Scenarios 2
+   and 5).
+4. **Model and provider:** on the API, the cheapest option that is good enough for the job and fast enough for its
+   target (Scenario 1).
+5. **Confidence:** every reply is checked. One that breaks a rule is re-asked of the job's API option, or held back
+   when no API answers (Scenarios 3 and 5).
+6. **Budget:** when money is tight, the background jobs wait for the quiet hours (Scenario 4).
+
+### Step 3.3: Evaluate the strategies
+
+Each strategy runs against the same situation without it, at 10 million daily users unless a table says otherwise.
+**Waiting time** is the mean latency of the two jobs a student waits for, search and icebreakers, weighted by how often
+each runs. **Score** is Part 1's score (1–10) of the model that answers, weighted by the job mix.
+
+#### Scenario 1: normal operation
+
+The cheapest API option for each job, if it runs on the API:
+
+| Job | Cheapest good-enough API option | Latency | Target | USD per 1,000 requests | Score |
+|---|---|---|---|---|---|
+| search | gpt-oss-20b via deepinfra | 0.94 s | 1 s | $0.0242 | 9.80 |
+| icebreakers | gpt-oss-20b via deepinfra | 1.03 s | 2 s | $0.0181 | 10.00 |
+| feedback rating | gpt-oss-120b via deepinfra | 0.93 s | none (background) | $0.0141 | 10.00 |
+| staff summary | gpt-oss-20b via deepinfra | 0.80 s | none (background) | $0.0144 | 10.00 |
+| venue check | gpt-oss-20b via deepinfra | 0.83 s | none (background) | $0.0187 | 10.00 |
+
+The router's plan. Our 3 machines run at most 99 requests at a time, so icebreakers
+finish within their 2 seconds:
+
+| Job | Runs on | Requests per day | Latency | Score | API USD/day |
+|---|---|---|---|---|---|
+| search | gpt-oss-20b via deepinfra | 10,000,000 | 0.94 s | 9.80 | $242.16 |
+| icebreakers | Qwen2.5-3B-Instruct (ours) | 5,000,000 | 1.99 s | 10.00 | $0.00 |
+| feedback rating | Qwen2.5-3B-Instruct (ours) | 2,000,000 | 0.55 s | 10.00 | $0.00 |
+| staff summary | Qwen2.5-3B-Instruct (ours), 20% re-asked of gpt-oss-20b via deepinfra | 666,667 | 0.94 s | 10.00 | $1.92 |
+| venue check | Qwen2.5-3B-Instruct (ours) | 100,000 | 1.06 s | 10.00 | $0.00 |
+
+Against the same day with no routing:
+
+| System | Our machines | API servers | USD per day | Waiting time | Score (1–10) | Replies breaking a rule |
+|---|---|---|---|---|---|---|
+| No routing: Part 1's API tier (Qwen3.8-27B) for every job | 0 | 17 | $2,537.66 | 0.69 s | 9.89 | 0.0% |
+| No routing: the best single API model (gpt-oss-120b) for every job | 0 | 17 | $654.22 | 0.79 s | 9.89 | 0.0% |
+| No routing: our Qwen2.5-3B machines for every job | 11 | 0 | $349.36 | 1.11 s | 8.14 | 23.3% |
+| Routing (Scenario 1) | 3 | 10 | $363.56 | 1.29 s | 9.89 | 0.0% |
+
+#### Scenario 2: peak usage hours
+
+In the busiest hours our machines would need 38,673 tokens a second. The rule sizes them for the
+average hour (2 machines) and sends the excess, 25% of their requests in those
+hours, to the API. Without the rule those 2 machines would leave 956,738 requests
+waiting after the six busiest hours.
+
+| Our machines are | Our machines | API servers | USD per day | Waiting time | Score (1–10) | Replies breaking a rule |
+|---|---|---|---|---|---|---|
+| Machines sized for the busiest hour (Scenario 1's plan) | 3 | 10 | $363.56 | 1.29 s | 9.89 | 0.0% |
+| Machines sized for the average, the busiest hours' excess to the API | 2 | 12 | $352.43 | 1.25 s | 9.89 | 0.0% |
+
+#### Scenario 3: high-complexity queries
+
+Three ways to answer the 10,000,000 searches a day:
+
+| Searches | Runs on | Our machines | USD per day | Latency | Score | Replies breaking a rule |
+|---|---|---|---|---|---|---|
+| Our Qwen2.5-3B only | Qwen2.5-3B-Instruct (ours) | 9 | $285.84 | 0.97 s | 6.70 | 40% |
+| Our Qwen2.5-3B, rule-breaking replies re-asked of the API | Qwen2.5-3B-Instruct (ours), 40% re-asked of gpt-oss-20b via deepinfra | 9 | $382.70 | 1.35 s | 8.80 | 0% |
+| Straight to the API (the routing rule) | gpt-oss-20b via deepinfra | 0 | $242.16 | 0.94 s | 9.80 | 0% |
+
+The same confidence rule on the jobs our machines keep. Here it is staff summaries, where 20% of our model's
+replies in Part 1 named a student:
+
+| Staff summaries | Runs on | Latency | Score | Replies breaking a rule | API USD/day |
+|---|---|---|---|---|---|
+| Staff summaries, no checks | Qwen2.5-3B-Instruct (ours) | 0.78 s | 9.90 | 20% | $0.00 |
+| Staff summaries, re-asked on a broken rule | Qwen2.5-3B-Instruct (ours), 20% re-asked of gpt-oss-20b via deepinfra | 0.94 s | 10.00 | 0% | $1.92 |
+
+#### Scenario 4: cost optimization
+
+The router at all six traffic levels, in US dollars a day, against the three systems without routing. It first moves
+jobs to our machines at about 2,290,868 daily users.
+
+| Traffic level | Jobs on our machines | Our machines | Routing | Best single API model | Part 1's API tier | All on our machines | Routing score | Saving against the best single API model |
+|---|---|---|---|---|---|---|---|---|
+| Prototype | none | 0 | $2.46 | $2.48 | $2.67 | $31.76 | 9.89 | 1% |
+| Early Startup | none | 0 | $2.79 | $3.03 | $4.92 | $31.76 | 9.89 | 8% |
+| Growing Product | none | 0 | $6.14 | $8.55 | $27.39 | $31.76 | 9.89 | 28% |
+| Large Platform | none | 0 | $42.07 | $66.15 | $254.49 | $63.52 | 9.89 | 36% |
+| Mass Consumer App | icebreakers, feedback rating, staff summary, venue check | 3 | $363.56 | $654.22 | $2,537.66 | $349.36 | 9.89 | 44% |
+| Global Platform | icebreakers, feedback rating, staff summary | 26 | $3,515.21 | $6,530.07 | $25,364.49 | $3,461.84 | 9.89 | 46% |
+
+With a tight budget, the background jobs move out of the busiest hours. The busiest hours then need only
+26,296 tokens a second and the quiet hours 17,017, so our machines go from
+3 to 2:
+
+| Plan | Our machines | API servers | USD per day | Waiting time | Score (1–10) | Replies breaking a rule |
+|---|---|---|---|---|---|---|
+| Scenario 1's plan | 3 | 10 | $363.56 | 1.29 s | 9.89 | 0.0% |
+| Background jobs moved out of the busiest hours | 2 | 10 | $331.80 | 1.29 s | 9.89 | 0.0% |
+
+#### Scenario 5: system overload or outage
+
+Each failure lasts the busiest hour of the day. Waiting time and score count the replies a model gives; in the last
+row, searches get keyword results.
+
+| Event (one busiest hour) | Without routing rules | With the routing rules | Answered by a model | USD in that hour | Waiting time | Score |
+|---|---|---|---|---|---|---|
+| normal | all answered | all answered | 100% | $25.32 | 1.29 s | 9.89 |
+| the main provider (deepinfra) is down | 56% of requests fail: every search | all answered: search to gpt-oss-120b via novita; re-asked summaries to gpt-oss-20b via ovhcloud | 100% | $38.01 | 1.17 s | 9.89 |
+| one of our machines fails | a queue builds: the other 2 serve 75% of the load | all answered: 25% of our machines' requests go to the API | 100% | $26.83 | 1.21 s | 9.89 |
+| every API provider is down | 56% of requests fail: every search | our machines keep their jobs (0.8% of replies, those breaking a rule, held back); every search uses QuadConnect's keyword search | 43% | $4.98 | 1.99 s | 10.00 |
+
+#### The five scenarios side by side
+
+| Scenario | Without the strategy | With it | Cost without | Cost with | Waiting without | Waiting with | Score without | Score with |
+|---|---|---|---|---|---|---|---|---|
+| 1. Normal operation | gpt-oss-120b for every job | each job to its cheapest good-enough place | $654.22 a day | $363.56 a day | 0.79 s | 1.29 s | 9.89 | 9.89 |
+| 2. Peak usage hours | machines sized for the busiest hour | sized for the average, overflow to the API | $363.56 a day | $352.43 a day | 1.29 s | 1.25 s | 9.89 | 9.89 |
+| 3. High-complexity queries (searches) | our model first, re-asked on a broken rule | every search straight to the API | $382.70 a day | $242.16 a day | 1.35 s | 0.94 s | 8.80 | 9.80 |
+| 4. Cost optimization (tight budget) | Scenario 1's plan | background jobs out of the busiest hours | $363.56 a day | $331.80 a day | 1.29 s | 1.29 s | 9.89 | 9.89 |
+| 5. Outage: the main provider is down | 56% of requests fail | the next provider takes over | $25.32 in that hour | $38.01 in that hour | fails | 1.17 s | fails | 9.89 |
+
+#### What the evaluation shows
+
+**How the strategies improve latency**
+
+* **Searches always meet their 1-second target.** gpt-oss-20b at deepinfra answers a search in 0.94 seconds. Trying
+  our model first, and re-asking the API when the reply breaks a rule, would average 1.35 seconds, because 40% of
+  searches would wait for two models (Scenario 3).
+* **Peak hours never build a queue.** Two machines sized for the average hour, with no overflow rule, would leave
+  956,738 requests waiting after the six busiest hours. With the rule, the excess goes to the API, and the waiting time
+  even drops slightly, from 1.29 to 1.25 seconds (Scenario 2).
+* **Failures do not stop the app.** When deepinfra is down, searches move to gpt-oss-120b at novita and take 0.75
+  seconds. When one of our machines fails, a quarter of its jobs' requests go to the API and nothing waits
+  (Scenario 5).
+* **Icebreakers pay for the routing.** On our machines they take 1.99 seconds instead of 1.03 through the API. That
+  is inside their 2-second target, and they appear word by word. It is also why the best single API model is faster on
+  average: 0.79 seconds against the router's 1.29.
+
+**How they reduce cost**
+
+* **Each job pays only for the model it needs.** At 10 million daily users, Part 1's API tier (Qwen3.8-27B for every
+  job) costs $2,537.66 a day and the best single API model (gpt-oss-120b) $654.22. The router costs $363.56: 86% and
+  44% less (Scenario 1). Qwen3.8-27B is 5.7 times the price of gpt-oss-120b per request for the same scores, so leaving
+  it off the menu is the biggest single saving.
+* **The saving grows with traffic.** Against the best single API model it is 1% at 1,000 users, 28% at 100,000 and 46%
+  at 100 million (Scenario 4). Below about 2.3 million users it comes only from choosing the model and provider for
+  each job; above that, the easy jobs also move to our machines.
+* **No machine is bought for the peak alone.** Our machines sized for the average hour, with the overflow rule, are 2
+  instead of 3: $352.43 a day instead of $363.56 (Scenario 2). Moving the background jobs out of the busiest hours also
+  needs 2 instead of 3: $331.80 a day (Scenario 4).
+* **The hard job is not tried twice.** Sending searches straight to the API costs $242.16 a day, against $382.70 for
+  our model plus re-asks (Scenario 3).
+* **The router turns down a cheaper option that is worse.** Running every job on our machines is 4% cheaper than the
+  router at 10 million users ($349.36 a day) and 2% cheaper at 100 million. But its score falls to 8.14, and 23% of
+  its replies break a rule.
+
+**How they maintain output quality**
+
+* **Every job is answered by a model good enough for it:** one that scored within 0.1 of the best any model got on that
+  job in Part 1. The router's score, 9.89, is the same as the best single API model's at every traffic level
+  (Scenario 4).
+* **The output checks catch what a cheaper model gets wrong in form.** Without them, 20% of our model's staff
+  summaries name a student; with them none do, for $1.92 a day (Scenario 3).
+* **The checks cannot catch a wrong answer that breaks no rule.** That is why searches never run on our machines: our
+  model scored 6.7 on them, and re-asking only lifts that to 8.8 (Scenario 3).
+* **The fallbacks give a smaller, honest answer instead of a bad one.** With no API at all, 43% of requests are still
+  answered by a model at full quality (10.0). Searches get QuadConnect's keyword results. The 0.8% of replies that
+  break a rule are held back for staff instead of being shown (Scenario 5).
+
+**What could change these results.** The prices and speeds are a snapshot from 3 November 2026, and our machines'
+capacity is Part 2's estimate. The router re-plans whenever its inputs change. If a benchmark shows our machines
+serving twice as much, the easy jobs move to them sooner; if a provider slows down past a target, the router stops
+using it.
+
+### What this means for the architecture
+
+1. **The API tier changes.** Part 1 named Qwen3.8-27B the API tier. Part 3 replaces it with gpt-oss-20b, and
+   gpt-oss-120b for feedback ratings: the same scores at a sixth of the price.
+2. **Our machines arrive with volume.** Below about 2.3 million daily users every job stays on
+   the API. Above that, a pool of Qwen2.5-3B machines takes icebreakers, feedback ratings, staff summaries and venue
+   checks. Searches never move there.
+3. **Every reply is checked, by code, before anyone sees it.** The checks decide when to re-ask the API, and they keep
+   a student's name out of staff summaries whichever model wrote them.
+4. **Every path has a fallback.** There is a second provider for each API job, the API for our machines' overflow,
+   and keyword search when no model can answer.

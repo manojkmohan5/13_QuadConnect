@@ -23,10 +23,26 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
-WEEK 11 (w/c 2026-11-02)  -  P1-A7 Part 2 on feature/p1-a7-part-2  [Manojkumar]
+WEEK 11 (w/c 2026-11-02)  -  P1-A7 Parts 2 and 3; P1-A7 complete  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A7 Part 1 reached main through PR #12 (2026-10-26, merge commit 17cfa98).
-Part 2 is built on feature/p1-a7-part-2, cut from that main.
+Part 2 was built on feature/p1-a7-part-2 and reached main through PR #13
+(2026-11-03, merge commit 38e5248). Part 3 was built on feature/p1-a7-part-3,
+cut from that main, and reached main through PR #14.
+
+Done: Part 3 (multi-model routing strategy).
+  - Five scenarios: normal operation, peak hours, high-complexity searches,
+    cost optimization, and overload or outage. Each has a routing strategy:
+    our Qwen2.5-3B for the easy jobs, gpt-oss-20b/120b on Hugging Face for
+    search and as the fallback, and every reply checked and re-asked on a
+    broken rule.
+  - Each strategy run on QuadConnect's own numbers (Part 1's scores, Part
+    2's machines and prices, the providers' measured speeds) against the
+    same situation without it.
+  - Result at 10 million daily users: routing costs $363.56 a day, against
+    $654.22 for the best single API model and $2,537.66 for Part 1's API
+    tier, at the same score (9.89). Below about 2.3 million users the
+    router keeps every job on the API.
 
 Done: Part 2 (cost comparison and infrastructure planning).
   - 392 tokens per request (354 prompt + 38 generated), from Part 1's 375
@@ -38,9 +54,9 @@ Done: Part 2 (cost comparison and infrastructure planning).
   - Result: the API is cheaper for all 15 models up to 100,000 users, by 3.3
     to 45 times. Hosting wins only for five models of 3.8B or less, and
     only from about 1 million users up; for the 7B+ and gpt-oss models the
-    API is cheaper at every scale. Switch trigger: about 1 million users, after benchmarking
-    one real L4 machine.
-Next: Part 3 (routing).
+    API is cheaper at every scale. Switch trigger: about 1 million users,
+    after benchmarking one real L4 machine.
+P1-A7 is complete: Parts 1, 2 and 3 are on main.
 
 --------------------------------------------------------------------------------
 WEEK 9  (w/c 2026-10-19)  -  P1-A6 merged; P1-A7 Part 1 on feature/p1-a7-part-1  [Manojkumar]

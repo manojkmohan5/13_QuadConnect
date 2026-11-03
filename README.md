@@ -89,9 +89,10 @@ exist.)
 
 This assignment is not part of the Django app: everything lives in
 [`multi-model/`](multi-model/) and only reuses QuadConnect's data (interests,
-colleges, venues, feedback notes) as inputs. Part 1 was built on
-`feature/p1-a7-part-1` and merged into `main` (PR #12). Part 2 is built on
-`feature/p1-a7-part-2`, cut from that `main`.
+colleges, venues, feedback notes) as inputs. Each part was built on its own
+branch and merged into `main`: Part 1 on `feature/p1-a7-part-1` (PR #12),
+Part 2 on `feature/p1-a7-part-2` (PR #13) and Part 3 on `feature/p1-a7-part-3`
+(PR #14).
 
 - [`multi-model/multi_model_system.ipynb`](multi-model/multi_model_system.ipynb):
   - Part 1: the 15 models from P1-A6 benchmarked on 25 prompts (5 prompt
@@ -101,8 +102,14 @@ colleges, venues, feedback notes) as inputs. Part 1 was built on
     100 million daily users. It compares hosting on AWS GPU machines
     (`g6.4xlarge`, one NVIDIA L4) with Hugging Face's Inference Providers, and
     finds the break-even points. It needs no models and runs in seconds.
+  - Part 3: five routing scenarios (normal operation, peak hours,
+    high-complexity searches, cost optimization, outages), each with a
+    strategy that sends every request to a local or a Hugging Face model. Each
+    strategy is evaluated for latency, cost and quality against the same
+    situation without it.
 - [`multi-model/system_design.md`](multi-model/system_design.md): the design
-  write-up, with model selection (Part 1) and the cost analysis (Part 2).
+  write-up, with model selection (Part 1), the cost analysis (Part 2) and the
+  routing design (Part 3).
 - `multi-model/results/`: every reply (`runs.jsonl`, so a re-run only
   generates what is missing), the full benchmark table (`benchmark_table.csv`),
   our hand-scored spot check (`manual_check.json`), and Part 2's two 90-row
