@@ -1,0 +1,91 @@
+Local LLM Model Size,Comparable Paid Model Hosted on Hugging Face,"Cost of Paid API per Token, USD per 1M tokens",Daily Traffic Category,Total Token Load,"Estimated API Cost, USD/day",Machines Required (API infrastructure),"Total Cost, USD/day"
+"SmolLM2-135M-Instruct (0.135B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"SmolLM2-135M-Instruct (0.135B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"SmolLM2-135M-Instruct (0.135B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"SmolLM2-135M-Instruct (0.135B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"SmolLM2-135M-Instruct (0.135B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"SmolLM2-135M-Instruct (0.135B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"SmolLM2-360M-Instruct (0.362B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"SmolLM2-360M-Instruct (0.362B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"SmolLM2-360M-Instruct (0.362B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"SmolLM2-360M-Instruct (0.362B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"SmolLM2-360M-Instruct (0.362B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"SmolLM2-360M-Instruct (0.362B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"Qwen2.5-0.5B-Instruct (0.494B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"Qwen2.5-0.5B-Instruct (0.494B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"Qwen2.5-0.5B-Instruct (0.494B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"Qwen2.5-0.5B-Instruct (0.494B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"Qwen2.5-0.5B-Instruct (0.494B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"Qwen2.5-0.5B-Instruct (0.494B, Ultra-Light)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"Qwen2.5-1.5B-Instruct (1.544B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"Qwen2.5-1.5B-Instruct (1.544B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"Qwen2.5-1.5B-Instruct (1.544B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"Qwen2.5-1.5B-Instruct (1.544B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"Qwen2.5-1.5B-Instruct (1.544B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"Qwen2.5-1.5B-Instruct (1.544B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"Falcon3-1B-Instruct (1.669B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"Falcon3-1B-Instruct (1.669B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"Falcon3-1B-Instruct (1.669B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"Falcon3-1B-Instruct (1.669B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"Falcon3-1B-Instruct (1.669B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"Falcon3-1B-Instruct (1.669B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"granite-3.1-2b-instruct (2.534B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"granite-3.1-2b-instruct (2.534B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"granite-3.1-2b-instruct (2.534B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"granite-3.1-2b-instruct (2.534B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"granite-3.1-2b-instruct (2.534B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"granite-3.1-2b-instruct (2.534B, Small)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"Qwen2.5-3B-Instruct (3.086B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"Qwen2.5-3B-Instruct (3.086B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"Qwen2.5-3B-Instruct (3.086B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"Qwen2.5-3B-Instruct (3.086B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"Qwen2.5-3B-Instruct (3.086B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"Qwen2.5-3B-Instruct (3.086B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"Falcon3-3B-Instruct (3.228B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Prototype,697000,0.03,1,2.45
+"Falcon3-3B-Instruct (3.228B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Early Startup,6970000,0.27,1,2.69
+"Falcon3-3B-Instruct (3.228B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Growing Product,69700000,2.7,1,5.12
+"Falcon3-3B-Instruct (3.228B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Large Platform,697000000,27.03,2,31.87
+"Falcon3-3B-Instruct (3.228B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Mass Consumer App,6970000000,270.3,17,311.44
+"Falcon3-3B-Instruct (3.228B, Medium)",ibm-granite/granite-4.2-3b (deepinfra),0.03878048780487805,Global Platform,69700000000,2703.0,165,3102.3
+"Phi-4-mini-instruct (3.836B, Medium)",google/gemma-3-4b-it (deepinfra),0.054878048780487805,Prototype,697000,0.04,1,2.46
+"Phi-4-mini-instruct (3.836B, Medium)",google/gemma-3-4b-it (deepinfra),0.054878048780487805,Early Startup,6970000,0.38,1,2.8
+"Phi-4-mini-instruct (3.836B, Medium)",google/gemma-3-4b-it (deepinfra),0.054878048780487805,Growing Product,69700000,3.83,1,6.25
+"Phi-4-mini-instruct (3.836B, Medium)",google/gemma-3-4b-it (deepinfra),0.054878048780487805,Large Platform,697000000,38.25,2,43.09
+"Phi-4-mini-instruct (3.836B, Medium)",google/gemma-3-4b-it (deepinfra),0.054878048780487805,Mass Consumer App,6970000000,382.5,17,423.64
+"Phi-4-mini-instruct (3.836B, Medium)",google/gemma-3-4b-it (deepinfra),0.054878048780487805,Global Platform,69700000000,3825.0,165,4224.3
+"Qwen2.5-7B-Instruct (7.616B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Prototype,697000,0.02,1,2.44
+"Qwen2.5-7B-Instruct (7.616B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Early Startup,6970000,0.16,1,2.58
+"Qwen2.5-7B-Instruct (7.616B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Growing Product,69700000,1.6,1,4.02
+"Qwen2.5-7B-Instruct (7.616B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Large Platform,697000000,15.98,2,20.82
+"Qwen2.5-7B-Instruct (7.616B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Mass Consumer App,6970000000,159.8,17,200.94
+"Qwen2.5-7B-Instruct (7.616B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Global Platform,69700000000,1598.0,165,1997.3
+"Llama-3.1-Tulu-3-8B (8.03B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Prototype,697000,0.02,1,2.44
+"Llama-3.1-Tulu-3-8B (8.03B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Early Startup,6970000,0.16,1,2.58
+"Llama-3.1-Tulu-3-8B (8.03B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Growing Product,69700000,1.6,1,4.02
+"Llama-3.1-Tulu-3-8B (8.03B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Large Platform,697000000,15.98,2,20.82
+"Llama-3.1-Tulu-3-8B (8.03B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Mass Consumer App,6970000000,159.8,17,200.94
+"Llama-3.1-Tulu-3-8B (8.03B, Large)",meta-llama/Llama-3.1-8B-Instruct (deepinfra),0.022926829268292682,Global Platform,69700000000,1598.0,165,1997.3
+"Falcon3-10B-Instruct (10.306B, Large)",Qwen/Qwen3.5-9B (deepinfra),0.10487804878048781,Prototype,697000,0.07,1,2.49
+"Falcon3-10B-Instruct (10.306B, Large)",Qwen/Qwen3.5-9B (deepinfra),0.10487804878048781,Early Startup,6970000,0.73,1,3.15
+"Falcon3-10B-Instruct (10.306B, Large)",Qwen/Qwen3.5-9B (deepinfra),0.10487804878048781,Growing Product,69700000,7.31,1,9.73
+"Falcon3-10B-Instruct (10.306B, Large)",Qwen/Qwen3.5-9B (deepinfra),0.10487804878048781,Large Platform,697000000,73.1,2,77.94
+"Falcon3-10B-Instruct (10.306B, Large)",Qwen/Qwen3.5-9B (deepinfra),0.10487804878048781,Mass Consumer App,6970000000,731.0,17,772.14
+"Falcon3-10B-Instruct (10.306B, Large)",Qwen/Qwen3.5-9B (deepinfra),0.10487804878048781,Global Platform,69700000000,7310.0,165,7709.3
+"gpt-oss-20b (20.9B, Very Large)",openai/gpt-oss-20b (deepinfra),0.04073170731707317,Prototype,697000,0.03,1,2.45
+"gpt-oss-20b (20.9B, Very Large)",openai/gpt-oss-20b (deepinfra),0.04073170731707317,Early Startup,6970000,0.28,1,2.7
+"gpt-oss-20b (20.9B, Very Large)",openai/gpt-oss-20b (deepinfra),0.04073170731707317,Growing Product,69700000,2.84,1,5.26
+"gpt-oss-20b (20.9B, Very Large)",openai/gpt-oss-20b (deepinfra),0.04073170731707317,Large Platform,697000000,28.39,2,33.23
+"gpt-oss-20b (20.9B, Very Large)",openai/gpt-oss-20b (deepinfra),0.04073170731707317,Mass Consumer App,6970000000,283.9,17,325.04
+"gpt-oss-20b (20.9B, Very Large)",openai/gpt-oss-20b (deepinfra),0.04073170731707317,Global Platform,69700000000,2839.0,165,3238.3
+"Qwen3.8-27B (27.8B, Very Large)",Qwen/Qwen3.8-27B (deepinfra),0.42439024390243907,Prototype,697000,0.3,1,2.72
+"Qwen3.8-27B (27.8B, Very Large)",Qwen/Qwen3.8-27B (deepinfra),0.42439024390243907,Early Startup,6970000,2.96,1,5.38
+"Qwen3.8-27B (27.8B, Very Large)",Qwen/Qwen3.8-27B (deepinfra),0.42439024390243907,Growing Product,69700000,29.58,1,32.0
+"Qwen3.8-27B (27.8B, Very Large)",Qwen/Qwen3.8-27B (deepinfra),0.42439024390243907,Large Platform,697000000,295.8,2,300.64
+"Qwen3.8-27B (27.8B, Very Large)",Qwen/Qwen3.8-27B (deepinfra),0.42439024390243907,Mass Consumer App,6970000000,2958.0,17,2999.14
+"Qwen3.8-27B (27.8B, Very Large)",Qwen/Qwen3.8-27B (deepinfra),0.42439024390243907,Global Platform,69700000000,29580.0,165,29979.3
+"gpt-oss-120b (116.8B, Very Large)",openai/gpt-oss-120b (deepinfra),0.04997560975609756,Prototype,697000,0.03,1,2.45
+"gpt-oss-120b (116.8B, Very Large)",openai/gpt-oss-120b (deepinfra),0.04997560975609756,Early Startup,6970000,0.35,1,2.77
+"gpt-oss-120b (116.8B, Very Large)",openai/gpt-oss-120b (deepinfra),0.04997560975609756,Growing Product,69700000,3.48,1,5.9
+"gpt-oss-120b (116.8B, Very Large)",openai/gpt-oss-120b (deepinfra),0.04997560975609756,Large Platform,697000000,34.83,2,39.67
+"gpt-oss-120b (116.8B, Very Large)",openai/gpt-oss-120b (deepinfra),0.04997560975609756,Mass Consumer App,6970000000,348.33,17,389.47
+"gpt-oss-120b (116.8B, Very Large)",openai/gpt-oss-120b (deepinfra),0.04997560975609756,Global Platform,69700000000,3483.3,165,3882.6

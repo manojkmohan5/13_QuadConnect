@@ -23,6 +23,26 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 11 (w/c 2026-11-02)  -  P1-A7 Part 2 on feature/p1-a7-part-2  [Manojkumar]
+--------------------------------------------------------------------------------
+P1-A7 Part 1 reached main through PR #12 (2026-10-26, merge commit 17cfa98).
+Part 2 is built on feature/p1-a7-part-2, cut from that main.
+
+Done: Part 2 (cost comparison and infrastructure planning).
+  - 392 tokens per request (354 prompt + 38 generated), from Part 1's 375
+    replies; about 1.78 requests per user a day, so 697 tokens per user.
+  - Every model at six traffic levels (1,000 to 100 million daily users),
+    two ways: AWS g6.4xlarge machines (one NVIDIA L4; capacity estimated
+    from its datasheet) or Hugging Face Inference Providers (live prices,
+    the cheapest provider for our mix). 90 rows each.
+  - Result: the API is cheaper for all 15 models up to 100,000 users, by 3.3
+    to 45 times. Hosting wins only for five models of 3.8B or less, and
+    only from about 1 million users up; for the 7B+ and gpt-oss models the
+    API is cheaper at every scale. Switch trigger: about 1 million users, after benchmarking
+    one real L4 machine.
+Next: Part 3 (routing).
+
+--------------------------------------------------------------------------------
 WEEK 9  (w/c 2026-10-19)  -  P1-A6 merged; P1-A7 Part 1 on feature/p1-a7-part-1  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A6 reached main through PR #11 (2026-10-19, merge commit fd89f6b).
