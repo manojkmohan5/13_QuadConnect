@@ -25,10 +25,10 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | **P1-A7** — Multi-Model AI Systems (250 pts, group): Part 1 benchmarking (merged, PR #12), Part 2 cost at six traffic levels (done on `feature/p1-a7-part-2`), Part 3 routing (next) — all in `multi-model/`, not part of the Django app. Part 1 was submitted on Canvas on 2026-10-26. |
-| **Last completed** | P1-A7 Part 1 — model size selection and benchmarking — merged into `main` (PR #12, 2026-10-26) |
-| **`main` status** | Has P1-A2 to P1-A6 and P1-A7 Part 1 (`17cfa98`, PR #12). `feature/p1-a7-part-2` was cut from it. |
-| **What remains** | P1-A7 Part 2's PR into `main`, then Part 3 (routing) (§9, §12). |
+| **Assignment in flight** | None. **P1-A7** — Multi-Model AI Systems (250 pts, group) — is complete in `multi-model/` (not part of the Django app): Part 1 benchmarking (PR #12), Part 2 cost at six traffic levels (PR #13), Part 3 routing strategy (PR #14). Part 1 alone was submitted on Canvas on 2026-10-26. |
+| **Last completed** | P1-A7 Part 3 — multi-model routing strategy — merged into `main` (PR #14, 2026-11-03) |
+| **`main` status** | Has P1-A2 to P1-A6 and all three parts of P1-A7 (PRs #12, #13, #14). |
+| **What remains** | Nothing in the repo for P1-A7. Submitting Parts 2 and 3 on Canvas is the team's call (§12). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -56,7 +56,7 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A4) | `feature/p1-a4` | all four A4 parts | `/api/summary/`, `/vega-lite/...`, `/api/icebreakers/`, `/reports/`, `/export/...` | ✅ DONE — merged to `main` in PR #9 (2026-10-05); live at <https://manojkmohan43.pythonanywhere.com/>; see §9 |
 | Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–4 | `/accounts/...`, every route behind a login, `/api/summary/` public | ✅ DONE — merged to `main` in PR #10 (2026-10-12); deployed 2026-10-09; see §9 |
 | Manojkumar Mohankumar (P1-A6) | `feature/p1-a6` | Parts 1–3 | `/search/ask/`, the venue check on `/locations/`, `llm-test/` | ✅ DONE — merged to `main` in PR #11 (2026-10-19); see §9 |
-| Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, then `feature/p1-a7-part-2` | Parts 1–2 of 3 | `multi-model/` (not Django) | BUILDING — Part 1 merged to `main` in PR #12 (2026-10-26); Part 2 done 2026-11-03 on `feature/p1-a7-part-2`; Part 3 next; see §9 |
+| Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -603,9 +603,38 @@ that property when adding checks.
 
 The running history of what has actually been built. Newest at the top.
 
-### BUILDING `feature/p1-a7-part-2` - Manojkumar Mohankumar - 2026-11-03
-**Shipped so far:** P1-A7 Part 2 (cost comparison and infrastructure
-planning), on a branch cut from `main` at `17cfa98`.
+### DONE `feature/p1-a7-part-3` - Manojkumar Mohankumar - 2026-11-03
+**Shipped:** P1-A7 Part 3 (multi-model routing strategy), on a branch cut
+from `main` at `38e5248`, merged into `main` in PR #14.
+- `multi_model_system.ipynb`, Part 3:
+  - The router's menu: our Qwen2.5-3B, and gpt-oss-20b, gpt-oss-120b and
+    Qwen3.8-27B on Hugging Face. It shows their Part 1 scores per job and
+    every provider's measured speed.
+  - Step 3.1: five scenarios (normal operation, peak usage hours,
+    high-complexity queries, cost optimization, overload or outage).
+  - Step 3.2: a routing strategy for each, in the brief's table, and the
+    router's six rules in order.
+  - Step 3.3: every strategy run against the same situation without it,
+    for latency, cost and quality, with a chart across the six traffic
+    levels.
+- `system_design.md`: section 3, the routing design, with the same tables.
+
+**Files changed:**
+- The notebook: Part 3 added. Part 2's `capacity()` gained an optional cap
+  on requests in flight, which leaves its results byte-identical.
+- `system_design.md`, `README.md`, the CI workflow (now on
+  `feature/p1-a7-part-3`), this file and notes.txt.
+
+**Gotchas:**
+- Part 3 runs after Part 2's cells and needs no models.
+- Its provider speeds are Hugging Face's measurements of 3 November 2026.
+- On an L4, our Qwen2.5-3B cannot write icebreakers within 1 second, so
+  that target is 2 seconds (the words stream).
+
+### DONE `feature/p1-a7-part-2` - Manojkumar Mohankumar - 2026-11-03
+**Shipped:** P1-A7 Part 2 (cost comparison and infrastructure planning), on
+a branch cut from `main` at `17cfa98`, merged into `main` in PR #13
+(2026-11-03, merge commit `38e5248`).
 - `multi_model_system.ipynb`, Part 2:
   - Tokens per request and per user, from Part 1's 375 replies: 392 per
     request, 697 per user a day.
