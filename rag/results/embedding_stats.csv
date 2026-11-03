@@ -1,10 +1,10 @@
 Size,Model,Parameters (M),Dimensions,Strategy,Chunks,Longest chunk (tokens),Model limit,Load (s),Index (s),ms per chunk,Vectors (KB),Finds itself first
-Small,BAAI/bge-small-en-v1.5,33,384,Fixed,50,156,512,0.8,1.62,32.3,75.0,50/50
-Small,BAAI/bge-small-en-v1.5,33,384,Overlapping,31,346,512,0.8,2.27,73.1,46.5,31/31
-Small,BAAI/bge-small-en-v1.5,33,384,Hybrid,48,162,512,0.8,1.7,35.4,72.0,48/48
-Medium,BAAI/bge-base-en-v1.5,109,768,Fixed,50,156,512,1.0,4.93,98.6,150.0,50/50
-Medium,BAAI/bge-base-en-v1.5,109,768,Overlapping,31,346,512,1.0,7.19,231.9,93.0,31/31
-Medium,BAAI/bge-base-en-v1.5,109,768,Hybrid,48,162,512,1.0,6.59,137.4,144.0,48/48
-Large,BAAI/bge-large-en-v1.5,335,1024,Fixed,50,156,512,2.3,17.1,342.0,200.0,50/50
-Large,BAAI/bge-large-en-v1.5,335,1024,Overlapping,31,346,512,2.3,23.5,758.1,124.0,31/31
-Large,BAAI/bge-large-en-v1.5,335,1024,Hybrid,48,162,512,2.3,17.46,363.7,192.0,48/48
+Small,BAAI/bge-small-en-v1.5,33,384,Fixed,50,156,512,1.0,2.33,46.7,75.0,50/50
+Small,BAAI/bge-small-en-v1.5,33,384,Overlapping,31,346,512,1.0,3.02,97.5,46.5,31/31
+Small,BAAI/bge-small-en-v1.5,33,384,Hybrid,48,162,512,1.0,2.27,47.3,72.0,48/48
+Medium,BAAI/bge-base-en-v1.5,109,768,Fixed,50,156,512,1.2,6.78,135.5,150.0,50/50
+Medium,BAAI/bge-base-en-v1.5,109,768,Overlapping,31,346,512,1.2,10.31,332.7,93.0,31/31
+Medium,BAAI/bge-base-en-v1.5,109,768,Hybrid,48,162,512,1.2,7.41,154.3,144.0,48/48
+Large,BAAI/bge-large-en-v1.5,335,1024,Fixed,50,156,512,3.0,22.56,451.3,200.0,50/50
+Large,BAAI/bge-large-en-v1.5,335,1024,Overlapping,31,346,512,3.0,30.26,976.1,124.0,31/31
+Large,BAAI/bge-large-en-v1.5,335,1024,Hybrid,48,162,512,3.0,22.86,476.3,192.0,48/48
