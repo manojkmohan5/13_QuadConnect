@@ -87,20 +87,26 @@ exist.)
 
 ## P1-A7: multi-model AI systems
 
-Built on `feature/p1-a7-part-1`, cut from `main` after P1-A6. This assignment is not
-part of the Django app: everything lives in [`multi-model/`](multi-model/) and
-only reuses QuadConnect's data (interests, colleges, venues, feedback notes) as
-test inputs.
+This assignment is not part of the Django app: everything lives in
+[`multi-model/`](multi-model/) and only reuses QuadConnect's data (interests,
+colleges, venues, feedback notes) as inputs. Part 1 was built on
+`feature/p1-a7-part-1` and merged into `main` (PR #12). Part 2 is built on
+`feature/p1-a7-part-2`, cut from that `main`.
 
 - [`multi-model/multi_model_system.ipynb`](multi-model/multi_model_system.ipynb):
-  Part 1, the 15 models from P1-A6 benchmarked on 25 prompts (5 prompt types ×
-  5), each reply scored from 1 to 10 on accuracy, instruction adherence,
-  structure and clarity, with tokens per second and latency.
+  - Part 1: the 15 models from P1-A6 benchmarked on 25 prompts (5 prompt
+    types × 5). Each reply is scored from 1 to 10 on accuracy, instruction
+    adherence, structure and clarity, with tokens per second and latency.
+  - Part 2: what every model would cost at six traffic levels, from 1,000 to
+    100 million daily users. It compares hosting on AWS GPU machines
+    (`g6.4xlarge`, one NVIDIA L4) with Hugging Face's Inference Providers, and
+    finds the break-even points. It needs no models and runs in seconds.
 - [`multi-model/system_design.md`](multi-model/system_design.md): the design
-  write-up (model selection so far).
+  write-up, with model selection (Part 1) and the cost analysis (Part 2).
 - `multi-model/results/`: every reply (`runs.jsonl`, so a re-run only
-  generates what is missing), the full benchmark table (`benchmark_table.csv`)
-  and our hand-scored spot check (`manual_check.json`).
+  generates what is missing), the full benchmark table (`benchmark_table.csv`),
+  our hand-scored spot check (`manual_check.json`), and Part 2's two 90-row
+  tables (`local_hosting_costs.csv`, `api_costs.csv`).
 
 ```bash
 cd multi-model
