@@ -25,10 +25,10 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | None. **P1-A7** — Multi-Model AI Systems (250 pts, group) — is complete in `multi-model/` (not part of the Django app): Part 1 benchmarking (PR #12), Part 2 cost at six traffic levels (PR #13), Part 3 routing strategy (PR #14). Part 1 alone was submitted on Canvas on 2026-10-26. |
+| **Assignment in flight** | **P1-A8** — Semantic Relationships and Retrieval (300 pts, due Mon 2026-11-09): Part 1, the RAG pipeline, done on `feature/p1-a8`; Parts 2–4 next — in `rag/`, not part of the Django app. **P1-A7** — Multi-Model AI Systems (250 pts, group) — is complete in `multi-model/` (not part of the Django app): Part 1 benchmarking (PR #12), Part 2 cost at six traffic levels (PR #13), Part 3 routing strategy (PR #14). Part 1 alone was submitted on Canvas on 2026-10-26. |
 | **Last completed** | P1-A7 Part 3 — multi-model routing strategy — merged into `main` (PR #14, 2026-11-03) |
 | **`main` status** | Has P1-A2 to P1-A6 and all three parts of P1-A7 (PRs #12, #13, #14). |
-| **What remains** | Nothing in the repo for P1-A7. Submitting Parts 2 and 3 on Canvas is the team's call (§12). |
+| **What remains** | P1-A8 Parts 2–4, then a PR into `main` and the Canvas submission (a single ZIP of `rag/`) (§9, §12). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -57,6 +57,7 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–4 | `/accounts/...`, every route behind a login, `/api/summary/` public | ✅ DONE — merged to `main` in PR #10 (2026-10-12); deployed 2026-10-09; see §9 |
 | Manojkumar Mohankumar (P1-A6) | `feature/p1-a6` | Parts 1–3 | `/search/ask/`, the venue check on `/locations/`, `llm-test/` | ✅ DONE — merged to `main` in PR #11 (2026-10-19); see §9 |
 | Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
+| Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Part 1 of 4 | `rag/` (not Django) | BUILDING — Part 1 done 2026-11-03; Parts 2–4 next; see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -602,6 +603,32 @@ that property when adding checks.
 ## 9. Work log
 
 The running history of what has actually been built. Newest at the top.
+
+### BUILDING `feature/p1-a8` - Manojkumar Mohankumar - 2026-11-03
+**Shipped so far:** P1-A8 Part 1 (the RAG pipeline), on a branch cut from
+`main` at `e36b97e`. The assignment is independent of the Django app, so
+everything is in `rag/`.
+- `data/handbook.md`: the knowledge base, QuadConnect's student handbook
+  (13 sections, 44 paragraphs, 4,875 words), every fact taken from the app.
+- `rag_system.ipynb`, Steps 1.1–1.5:
+  - the handbook read and checked against the brief's size rules;
+  - three chunking strategies, with every chunk checked for split sentences
+    and mixed sections;
+  - three BGE embedding models (384 / 768 / 1,024 dimensions) in nine
+    vector stores;
+  - top-3 cosine retrieval;
+  - generation with gpt-oss-20b, its replies saved in
+    `results/generations.jsonl`.
+- `rag_analysis.md` (Part 1), `README.md`, `requirements.txt`.
+
+**Files changed:** `README.md` (P1-A8 section, layout), `ruff.toml` (E402
+for the notebook), `.gitattributes` (LF for `rag/data` and `rag/results`),
+the CI workflow (now runs on `feature/p1-a8`), this file, notes.txt.
+
+**Gotchas:**
+- The first run downloads about 1.9 GB of embedding models.
+- Timings differ from run to run; the answers do not, because they are
+  saved.
 
 ### DONE `feature/p1-a7-part-3` - Manojkumar Mohankumar - 2026-11-03
 **Shipped:** P1-A7 Part 3 (multi-model routing strategy), on a branch cut

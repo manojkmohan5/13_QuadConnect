@@ -1,0 +1,10 @@
+Embedding,Chunking,Top chunk,Score,Its paragraphs,Top-3 paragraphs,Embed (ms),Search (ms)
+Small,Fixed,fix-24,0.7584,"S06-P2, S06-P3","S06-P2, S06-P3, S10-P1, S10-P2, S07-P1",23.1,2.1
+Small,Overlapping,ove-15,0.7582,"S06-P3, S06-P4","S06-P3, S06-P4, S06-P2, S10-P1, S10-P2",21.2,2.409
+Small,Hybrid,hyb-23,0.7729,S06-P3,"S06-P3, S10-P2, S06-P2",18.9,2.479
+Medium,Fixed,fix-24,0.6903,"S06-P2, S06-P3","S06-P2, S06-P3, S10-P1, S10-P2, S06-P4",48.6,2.259
+Medium,Overlapping,ove-15,0.7229,"S06-P3, S06-P4","S06-P3, S06-P4, S06-P2, S10-P1, S10-P2",50.2,2.689
+Medium,Hybrid,hyb-23,0.7274,S06-P3,"S06-P3, S06-P2, S10-P2",64.8,2.49
+Large,Fixed,fix-24,0.7305,"S06-P2, S06-P3","S06-P2, S06-P3, S07-P2, S07-P3, S10-P1, S10-P2",193.1,2.667
+Large,Overlapping,ove-15,0.7381,"S06-P3, S06-P4","S06-P3, S06-P4, S06-P2, S10-P1, S10-P2",192.5,2.467
+Large,Hybrid,hyb-23,0.7561,S06-P3,"S06-P3, S10-P2, S10-P1",192.6,2.551

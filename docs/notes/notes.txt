@@ -23,6 +23,24 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 11 (w/c 2026-11-02)  -  P1-A8 Part 1 on feature/p1-a8  [Manojkumar]
+--------------------------------------------------------------------------------
+P1-A8 (Semantic Relationships and Retrieval, 300 pts, due Mon 2026-11-09) is
+not a Django assignment, so it lives in rag/ on feature/p1-a8, cut from main
+after P1-A7.
+
+Done: Part 1 (the RAG pipeline).
+  - Knowledge base: QuadConnect's student handbook (rag/data/handbook.md),
+    44 paragraphs of 90-165 words, 4,875 words, written from the app's code.
+  - Three chunking strategies: fixed length (120 words of whole sentences),
+    overlapping paragraph pairs, hybrid (titled paragraphs, long ones halved).
+  - Three embedding models, BGE v1.5 small / base / large (384 / 768 / 1,024
+    dimensions), nine NumPy vector stores, top-3 cosine retrieval.
+  - Generation with gpt-oss-20b (A7), A7's settings, answers saved so the
+    notebook re-runs without an API key.
+Next: Part 2 (3 models x 3 chunkings = 9 configurations on test questions).
+
+--------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A7 Parts 2 and 3; P1-A7 complete  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A7 Part 1 reached main through PR #12 (2026-10-26, merge commit 17cfa98).

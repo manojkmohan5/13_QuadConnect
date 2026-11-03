@@ -85,6 +85,32 @@ exist.)
 
 ---
 
+## P1-A8: semantic relationships and retrieval
+
+Built on `feature/p1-a8`, cut from `main` after P1-A7. Like P1-A7, it is not part
+of the Django app: everything lives in [`rag/`](rag/), a retrieval-augmented
+generation (RAG) system that answers students' questions about QuadConnect from
+its student handbook.
+
+- [`rag/rag_system.ipynb`](rag/rag_system.ipynb): Part 1, the pipeline.
+  - The knowledge base: QuadConnect's student handbook, with 44 paragraphs and
+    4,875 words.
+  - Three chunking strategies: fixed length, overlapping paragraphs and hybrid.
+  - Three BGE embedding models: 384, 768 and 1,024 dimensions.
+  - A NumPy vector store with top-k retrieval.
+  - Answers from gpt-oss-20b, the same generation model as in A7.
+- [`rag/rag_analysis.md`](rag/rag_analysis.md): the analysis, with Parts 2 to 4
+  to come.
+- [`rag/README.md`](rag/README.md): setup and how to run the notebook.
+
+```bash
+cd rag
+pip install -r requirements.txt     # sentence-transformers, torch, pandas, ...
+jupyter nbconvert --to notebook --execute --inplace rag_system.ipynb
+```
+
+---
+
 ## P1-A7: multi-model AI systems
 
 This assignment is not part of the Django app: everything lives in
@@ -840,6 +866,7 @@ own login, for staff.
 ├── README_AI.md                  P1-A6: the AI features, their data, preprocessing and guardrails
 ├── llm-test/                     P1-A6 model lab: ai_prototype.ipynb, its extra requirements, results/
 ├── multi-model/                  P1-A7 (not Django): multi_model_system.ipynb, system_design.md, requirements, results/
+├── rag/                          P1-A8 (not Django): rag_system.ipynb, rag_analysis.md, README, requirements, data/, results/
 ├── db.sqlite3                    committed: seed data only (P1-A4 deploys it)
 ├── templates/                    site-wide templates
 │   ├── account/                  login, sign-up and logout pages (allauth)
