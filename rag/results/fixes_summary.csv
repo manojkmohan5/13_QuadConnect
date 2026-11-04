@@ -1,0 +1,5 @@
+Stage,Facts in context,Facts stated,Answer score (1-10),Q8 declined,Unsupported 'account settings',Noise chunks,Prompt tokens,"Generate (s, median)"
+"A. Before (Part 2): k = 3, original prompt",47/54,39/54,7.214285714285714,3/3,0,1.619047619047619,553.6666666666666,0.722
+"B. Fix 1: k = 5, original prompt",54/54,44/54,8.285714285714286,3/3,0,3.238095238095238,820.375,1.1105
+"C. Fix 2, first try: k = 5, new prompt (first try)",54/54,47/54,8.785714285714286,3/3,3,3.238095238095238,866.375,0.7975000000000001
+"D. Fix 2, final: k = 5, new prompt (final)",54/54,44/54,8.214285714285714,3/3,2,3.238095238095238,873.375,0.9955
