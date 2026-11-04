@@ -4,3 +4,4 @@ llm-test/results/* text eol=lf
 multi-model/results/* text eol=lf
 rag/results/* text eol=lf
 rag/data/* text eol=lf
+rag/results/*.png binary
