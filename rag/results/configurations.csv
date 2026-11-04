@@ -1,10 +1,10 @@
 Size,Strategy,Good,Partial,Poor,Facts in context,Relevant chunks,Answer score,Facts stated,Q8 declined,"Embed (ms, median)","Generate (s, median)",Prompt tokens (mean)
-Small,Fixed,5,2,0,15/18,1.71,7.86,14/18,yes,22.3,0.91,547.0
-Small,Overlapping,7,0,0,18/18,1.71,8.93,16/18,yes,21.1,0.89,992.0
-Small,Hybrid,6,0,1,16/18,1.43,7.21,13/18,yes,23.1,0.74,549.0
-Medium,Fixed,5,2,0,14/18,1.57,7.1,11/18,yes,49.1,0.95,542.0
-Medium,Overlapping,6,1,0,17/18,1.71,7.86,14/18,yes,51.7,0.81,989.0
-Medium,Hybrid,6,0,1,16/18,1.43,7.21,13/18,yes,49.5,0.72,555.0
-Large,Fixed,6,0,1,15/18,1.71,8.07,14/18,yes,190.3,1.27,556.0
-Large,Overlapping,7,0,0,18/18,1.86,8.5,15/18,yes,188.5,0.87,994.0
-Large,Hybrid,5,1,1,15/18,1.29,7.21,13/18,yes,190.2,0.73,557.0
+Small,Fixed,5,2,0,15/18,1.71,7.86,14/18,yes,23.4,0.91,547.0
+Small,Overlapping,7,0,0,18/18,1.71,8.93,16/18,yes,22.5,0.89,992.0
+Small,Hybrid,6,0,1,16/18,1.43,7.21,13/18,yes,21.6,0.74,549.0
+Medium,Fixed,5,2,0,14/18,1.57,7.1,11/18,yes,52.7,0.95,542.0
+Medium,Overlapping,6,1,0,17/18,1.71,7.86,14/18,yes,51.4,0.81,989.0
+Medium,Hybrid,6,0,1,16/18,1.43,7.21,13/18,yes,51.9,0.72,555.0
+Large,Fixed,6,0,1,15/18,1.71,8.07,14/18,yes,192.4,1.27,556.0
+Large,Overlapping,7,0,0,18/18,1.86,8.5,15/18,yes,188.2,0.87,994.0
+Large,Hybrid,5,1,1,15/18,1.29,7.21,13/18,yes,187.5,0.73,557.0
