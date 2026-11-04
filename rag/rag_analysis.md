@@ -10,7 +10,7 @@ experiments show about it. The implementation and every number below are in
 |---|---|---|
 | 1. Build the RAG pipeline | [1. The pipeline](#1-the-pipeline) | Done |
 | 2. System experiments | [2. Experiments](#2-experiments) | Done |
-| 3. Failure analysis and improvement | 3. Failures and a fix | Next |
+| 3. Failure analysis and improvement | [3. Failures and a fix](#3-failures-and-a-fix) | Done |
 | 4. System design reflection | 4. System design | Next |
 
 ---
@@ -111,19 +111,19 @@ next to the chunk table. That makes nine stores.
 
 | Size | Strategy | Chunks | Longest chunk | Indexing time | Per chunk | Vectors | Finds itself first |
 |---|---|---|---|---|---|---|---|
-| Small | Fixed | 50 | 156 tokens | 1.62 s | 32 ms | 75 KB | 50/50 |
-| Small | Overlapping | 31 | 346 tokens | 2.26 s | 73 ms | 46 KB | 31/31 |
-| Small | Hybrid | 48 | 162 tokens | 1.62 s | 34 ms | 72 KB | 48/48 |
-| Medium | Fixed | 50 | 156 tokens | 4.80 s | 96 ms | 150 KB | 50/50 |
-| Medium | Overlapping | 31 | 346 tokens | 7.12 s | 230 ms | 93 KB | 31/31 |
-| Medium | Hybrid | 48 | 162 tokens | 4.98 s | 104 ms | 144 KB | 48/48 |
-| Large | Fixed | 50 | 156 tokens | 16.98 s | 340 ms | 200 KB | 50/50 |
-| Large | Overlapping | 31 | 346 tokens | 23.33 s | 752 ms | 124 KB | 31/31 |
-| Large | Hybrid | 48 | 162 tokens | 17.12 s | 357 ms | 192 KB | 48/48 |
+| Small | Fixed | 50 | 156 tokens | 1.75 s | 35 ms | 75 KB | 50/50 |
+| Small | Overlapping | 31 | 346 tokens | 2.42 s | 78 ms | 46 KB | 31/31 |
+| Small | Hybrid | 48 | 162 tokens | 1.82 s | 38 ms | 72 KB | 48/48 |
+| Medium | Fixed | 50 | 156 tokens | 5.28 s | 106 ms | 150 KB | 50/50 |
+| Medium | Overlapping | 31 | 346 tokens | 7.48 s | 241 ms | 93 KB | 31/31 |
+| Medium | Hybrid | 48 | 162 tokens | 5.22 s | 109 ms | 144 KB | 48/48 |
+| Large | Fixed | 50 | 156 tokens | 17.59 s | 352 ms | 200 KB | 50/50 |
+| Large | Overlapping | 31 | 346 tokens | 93.95 s | 3031 ms | 124 KB | 31/31 |
+| Large | Hybrid | 48 | 162 tokens | 18.59 s | 387 ms | 192 KB | 48/48 |
 
 No chunk reaches the 512-token limit, so nothing is cut off, and every chunk, searched with its own vector, finds
-itself first. Indexing time grows with the model: about 46 ms
-a chunk for the small model and 483 ms for the large one, on
+itself first. Indexing time grows with the model: about 50 ms
+a chunk for the small model and 1257 ms for the large one, on
 our laptop's CPU.
 
 ### 1.4 Retrieval
@@ -134,19 +134,19 @@ I get to the meetup?" (the check-in paragraph is S06-P3):
 
 | Embedding | Chunking | Top chunk | Score | Its paragraphs | Paragraphs in the top 3 | Embed question | Search |
 |---|---|---|---|---|---|---|---|
-| Small | Fixed | fix-24 | 0.7584 | S06-P2, S06-P3 | S06-P2, S06-P3, S10-P1, S10-P2, S07-P1 | 22 ms | 2.5 ms |
-| Small | Overlapping | ove-15 | 0.7582 | S06-P3, S06-P4 | S06-P3, S06-P4, S06-P2, S10-P1, S10-P2 | 23 ms | 2.4 ms |
-| Small | Hybrid | hyb-23 | 0.7729 | S06-P3 | S06-P3, S10-P2, S06-P2 | 25 ms | 2.4 ms |
-| Medium | Fixed | fix-24 | 0.6903 | S06-P2, S06-P3 | S06-P2, S06-P3, S10-P1, S10-P2, S06-P4 | 52 ms | 2.3 ms |
-| Medium | Overlapping | ove-15 | 0.7229 | S06-P3, S06-P4 | S06-P3, S06-P4, S06-P2, S10-P1, S10-P2 | 54 ms | 2.0 ms |
-| Medium | Hybrid | hyb-23 | 0.7274 | S06-P3 | S06-P3, S06-P2, S10-P2 | 50 ms | 2.3 ms |
-| Large | Fixed | fix-24 | 0.7305 | S06-P2, S06-P3 | S06-P2, S06-P3, S07-P2, S07-P3, S10-P1, S10-P2 | 207 ms | 2.5 ms |
-| Large | Overlapping | ove-15 | 0.7381 | S06-P3, S06-P4 | S06-P3, S06-P4, S06-P2, S10-P1, S10-P2 | 226 ms | 2.5 ms |
-| Large | Hybrid | hyb-23 | 0.7561 | S06-P3 | S06-P3, S10-P2, S10-P1 | 206 ms | 2.4 ms |
+| Small | Fixed | fix-24 | 0.7584 | S06-P2, S06-P3 | S06-P2, S06-P3, S10-P1, S10-P2, S07-P1 | 38 ms | 2.9 ms |
+| Small | Overlapping | ove-15 | 0.7582 | S06-P3, S06-P4 | S06-P3, S06-P4, S06-P2, S10-P1, S10-P2 | 27 ms | 3.0 ms |
+| Small | Hybrid | hyb-23 | 0.7729 | S06-P3 | S06-P3, S10-P2, S06-P2 | 29 ms | 2.8 ms |
+| Medium | Fixed | fix-24 | 0.6903 | S06-P2, S06-P3 | S06-P2, S06-P3, S10-P1, S10-P2, S06-P4 | 62 ms | 2.6 ms |
+| Medium | Overlapping | ove-15 | 0.7229 | S06-P3, S06-P4 | S06-P3, S06-P4, S06-P2, S10-P1, S10-P2 | 60 ms | 2.8 ms |
+| Medium | Hybrid | hyb-23 | 0.7274 | S06-P3 | S06-P3, S06-P2, S10-P2 | 134 ms | 2.4 ms |
+| Large | Fixed | fix-24 | 0.7305 | S06-P2, S06-P3 | S06-P2, S06-P3, S07-P2, S07-P3, S10-P1, S10-P2 | 219 ms | 2.6 ms |
+| Large | Overlapping | ove-15 | 0.7381 | S06-P3, S06-P4 | S06-P3, S06-P4, S06-P2, S10-P1, S10-P2 | 221 ms | 2.0 ms |
+| Large | Hybrid | hyb-23 | 0.7561 | S06-P3 | S06-P3, S10-P2, S10-P1 | 224 ms | 2.5 ms |
 
 Every configuration ranks a chunk containing S06-P3 first. Embedding the question takes about
-23 ms with the small model, 52 ms with the medium one and
-213 ms with the large one; the search itself takes a few milliseconds.
+31 ms with the small model, 85 ms with the medium one and
+222 ms with the large one; the search itself takes a few milliseconds.
 
 ### 1.5 Generation
 
@@ -165,9 +165,9 @@ The whole pipeline on three questions (the medium model with hybrid chunks); the
 
 | Question | Chunks retrieved | Answer | Embed | Search | Generate | Prompt tokens |
 |---|---|---|---|---|---|---|
-| Which venues can seat a full squad of eight? | hyb-19, hyb-22, hyb-20 | A full squad of eight can fit at the Illini Union (12 seats), the Grainger Engineering Library (8 seats), and the Main Quad (20 seats). Espresso Royale only seats six, so it does not accommodate a full squad of eight. [2] | 47 ms | 2.0 ms | 3.15 s | 561 |
-| What does Google send to QuadConnect when I sign in? | hyb-05, hyb-06, hyb-04 | When you sign in with Google, Google sends QuadConnect four pieces of information: your name, your email address, a link to your profile picture, and your Google account number. This is all that QuadConnect receives from Google. [1] | 48 ms | 2.4 ms | 1.16 s | 604 |
-| Can I use QuadConnect as an app on my phone? | hyb-01, hyb-03, hyb-05 | The handbook does not cover whether QuadConnect is available as a phone app. | 47 ms | 1.9 ms | 0.80 s | 596 |
+| Which venues can seat a full squad of eight? | hyb-19, hyb-22, hyb-20 | A full squad of eight can fit at the Illini Union (12 seats), the Grainger Engineering Library (8 seats), and the Main Quad (20 seats). Espresso Royale only seats six, so it does not accommodate a full squad of eight. [2] | 56 ms | 2.4 ms | 3.15 s | 561 |
+| What does Google send to QuadConnect when I sign in? | hyb-05, hyb-06, hyb-04 | When you sign in with Google, Google sends QuadConnect four pieces of information: your name, your email address, a link to your profile picture, and your Google account number. This is all that QuadConnect receives from Google. [1] | 65 ms | 2.6 ms | 1.16 s | 604 |
+| Can I use QuadConnect as an app on my phone? | hyb-01, hyb-03, hyb-05 | The handbook does not cover whether QuadConnect is available as a phone app. | 62 ms | 2.6 ms | 0.80 s | 596 |
 
 The first two answers are correct and cite the excerpt they used, and the third correctly says the handbook does not
 cover it. Generating takes about a second or more, far longer than retrieval, so the language model dominates the
@@ -247,15 +247,15 @@ and their 18 key facts; Q8 has its own column.
 
 | Embedding model | Chunking | Good | Partial | Poor | Facts in context | Relevant chunks (of 3) | Facts stated | Answer score | Q8 declined | Embed (ms, median) | Generate (s, median) | Prompt tokens |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Small | Fixed | 5 | 2 | 0 | 15/18 | 1.71 | 14/18 | 7.86 | yes | 22 | 0.91 | 547 |
-| Small | Overlapping | 7 | 0 | 0 | 18/18 | 1.71 | 16/18 | 8.93 | yes | 22 | 0.89 | 992 |
-| Small | Hybrid | 6 | 0 | 1 | 16/18 | 1.43 | 13/18 | 7.21 | yes | 23 | 0.74 | 549 |
-| Medium | Fixed | 5 | 2 | 0 | 14/18 | 1.57 | 11/18 | 7.10 | yes | 52 | 0.95 | 542 |
-| Medium | Overlapping | 6 | 1 | 0 | 17/18 | 1.71 | 14/18 | 7.86 | yes | 51 | 0.81 | 989 |
-| Medium | Hybrid | 6 | 0 | 1 | 16/18 | 1.43 | 13/18 | 7.21 | yes | 52 | 0.72 | 555 |
-| Large | Fixed | 6 | 0 | 1 | 15/18 | 1.71 | 14/18 | 8.07 | yes | 207 | 1.27 | 556 |
-| Large | Overlapping | 7 | 0 | 0 | 18/18 | 1.86 | 15/18 | 8.50 | yes | 209 | 0.87 | 994 |
-| Large | Hybrid | 5 | 1 | 1 | 15/18 | 1.29 | 13/18 | 7.21 | yes | 210 | 0.73 | 557 |
+| Small | Fixed | 5 | 2 | 0 | 15/18 | 1.71 | 14/18 | 7.86 | yes | 25 | 0.91 | 547 |
+| Small | Overlapping | 7 | 0 | 0 | 18/18 | 1.71 | 16/18 | 8.93 | yes | 24 | 0.89 | 992 |
+| Small | Hybrid | 6 | 0 | 1 | 16/18 | 1.43 | 13/18 | 7.21 | yes | 25 | 0.74 | 549 |
+| Medium | Fixed | 5 | 2 | 0 | 14/18 | 1.57 | 11/18 | 7.10 | yes | 59 | 0.95 | 542 |
+| Medium | Overlapping | 6 | 1 | 0 | 17/18 | 1.71 | 14/18 | 7.86 | yes | 59 | 0.81 | 989 |
+| Medium | Hybrid | 6 | 0 | 1 | 16/18 | 1.43 | 13/18 | 7.21 | yes | 58 | 0.72 | 555 |
+| Large | Fixed | 6 | 0 | 1 | 15/18 | 1.71 | 14/18 | 8.07 | yes | 211 | 1.27 | 556 |
+| Large | Overlapping | 7 | 0 | 0 | 18/18 | 1.86 | 15/18 | 8.50 | yes | 213 | 0.87 | 994 |
+| Large | Hybrid | 5 | 1 | 1 | 15/18 | 1.29 | 13/18 | 7.21 | yes | 213 | 0.73 | 557 |
 
 **The full table: 72 runs**, one table per question, each with its nine configurations. "Retrieved chunks" lists the
 three chunks in rank order, with the paragraphs each one comes from, its similarity score and the first words of its
@@ -267,15 +267,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q1 | [1] noise · fix-20 (S05-P3, S05-P4) · 0.712 · "This matters most in a squad, where several people ..."<br>[2] relevant · fix-24 (S06-P2, S06-P3) · 0.673 · "A full squad of eight therefore fits every venue ..."<br>[3] relevant · fix-23 (S06-P2) · 0.632 · "Each venue page tells you how to find your ..." | Good: 4/4 facts; 2/3 chunks relevant | 10/10: 4/4 facts stated | 1.66 s: embed 23 ms + search 2.4 ms + generate 1.64 s | Context had every fact. 1 of 3 chunks is noise. |
-| Small (bge-small-en-v1.5) | Overlapping | Q1 | [1] relevant · ove-14 (S06-P2, S06-P3) · 0.669 · "Each venue page tells you how to find your ..."<br>[2] noise · ove-16 (S07-P1, S07-P2) · 0.624 · "If you know a public place that would suit ..."<br>[3] noise · ove-12 (S05-P3, S05-P4) · 0.622 · "A match moves through four stages. It starts as ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.80 s: embed 23 ms + search 3.3 ms + generate 0.77 s | Context had every fact. 2 of 3 chunks are noise. |
-| Small (bge-small-en-v1.5) | Hybrid | Q1 | [1] noise · hyb-19 (S05-P4) · 0.677 · "Squad matches bring four to eight students together, so ..."<br>[2] relevant · hyb-22 (S06-P2) · 0.661 · "At Espresso Royale on Goodwin you meet in the ..."<br>[3] noise · hyb-38 (S10-P2) · 0.622 · "A good meetup depends on everyone showing up. Accept ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.72 s: embed 23 ms + search 2.2 ms + generate 0.70 s | Context had every fact. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Fixed | Q1 | [1] noise · fix-20 (S05-P3, S05-P4) · 0.667 · "This matters most in a squad, where several people ..."<br>[2] relevant · fix-24 (S06-P2, S06-P3) · 0.593 · "A full squad of eight therefore fits every venue ..."<br>[3] noise · fix-21 (S05-P4) · 0.530 · "Your group size preference matters here as well. A ..." | Partial: 1/4 facts; 1/3 chunks relevant | 3.2/10: 1/4 facts stated | 2.00 s: embed 58 ms + search 2.7 ms + generate 1.94 s | Context missed 'Illini Union' (its best chunk ranked 4), 'Grainger' (its best chunk ranked 4), 'Main Quad' (its best chunk ranked 4). 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q1 | [1] relevant · ove-14 (S06-P2, S06-P3) · 0.525 · "Each venue page tells you how to find your ..."<br>[2] noise · ove-12 (S05-P3, S05-P4) · 0.522 · "A match moves through four stages. It starts as ..."<br>[3] noise · ove-16 (S07-P1, S07-P2) · 0.505 · "If you know a public place that would suit ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.94 s: embed 53 ms + search 2.3 ms + generate 0.89 s | Context had every fact. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q1 | [1] noise · hyb-19 (S05-P4) · 0.658 · "Squad matches bring four to eight students together, so ..."<br>[2] relevant · hyb-22 (S06-P2) · 0.577 · "At Espresso Royale on Goodwin you meet in the ..."<br>[3] noise · hyb-25 (S07-P1) · 0.537 · "If you know a public place that would suit ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.96 s: embed 53 ms + search 2.3 ms + generate 0.91 s | Context had every fact. 2 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Fixed | Q1 | [1] noise · fix-20 (S05-P3, S05-P4) · 0.667 · "This matters most in a squad, where several people ..."<br>[2] relevant · fix-23 (S06-P2) · 0.625 · "Each venue page tells you how to find your ..."<br>[3] relevant · fix-24 (S06-P2, S06-P3) · 0.623 · "A full squad of eight therefore fits every venue ..." | Good: 4/4 facts; 2/3 chunks relevant | 10/10: 4/4 facts stated | 0.88 s: embed 208 ms + search 2.3 ms + generate 0.67 s | Context had every fact. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Overlapping | Q1 | [1] relevant · ove-14 (S06-P2, S06-P3) · 0.637 · "Each venue page tells you how to find your ..."<br>[2] relevant · ove-13 (S06-P1, S06-P2) · 0.615 · "Every QuadConnect meetup takes place at an approved campus ..."<br>[3] noise · ove-16 (S07-P1, S07-P2) · 0.592 · "If you know a public place that would suit ..." | Good: 4/4 facts; 2/3 chunks relevant | 10/10: 4/4 facts stated | 0.99 s: embed 197 ms + search 1.9 ms + generate 0.80 s | Context had every fact. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Hybrid | Q1 | [1] relevant · hyb-22 (S06-P2) · 0.661 · "At Espresso Royale on Goodwin you meet in the ..."<br>[2] noise · hyb-19 (S05-P4) · 0.642 · "Squad matches bring four to eight students together, so ..."<br>[3] noise · hyb-26 (S07-P2) · 0.594 · "The form checks your suggestion before it is saved. ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.94 s: embed 209 ms + search 2.4 ms + generate 0.73 s | Context had every fact. 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Fixed | Q1 | [1] noise · fix-20 (S05-P3, S05-P4) · 0.712 · "This matters most in a squad, where several people ..."<br>[2] relevant · fix-24 (S06-P2, S06-P3) · 0.673 · "A full squad of eight therefore fits every venue ..."<br>[3] relevant · fix-23 (S06-P2) · 0.632 · "Each venue page tells you how to find your ..." | Good: 4/4 facts; 2/3 chunks relevant | 10/10: 4/4 facts stated | 1.67 s: embed 25 ms + search 2.8 ms + generate 1.64 s | Context had every fact. 1 of 3 chunks is noise. |
+| Small (bge-small-en-v1.5) | Overlapping | Q1 | [1] relevant · ove-14 (S06-P2, S06-P3) · 0.669 · "Each venue page tells you how to find your ..."<br>[2] noise · ove-16 (S07-P1, S07-P2) · 0.624 · "If you know a public place that would suit ..."<br>[3] noise · ove-12 (S05-P3, S05-P4) · 0.622 · "A match moves through four stages. It starts as ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.80 s: embed 24 ms + search 2.0 ms + generate 0.77 s | Context had every fact. 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Hybrid | Q1 | [1] noise · hyb-19 (S05-P4) · 0.677 · "Squad matches bring four to eight students together, so ..."<br>[2] relevant · hyb-22 (S06-P2) · 0.661 · "At Espresso Royale on Goodwin you meet in the ..."<br>[3] noise · hyb-38 (S10-P2) · 0.622 · "A good meetup depends on everyone showing up. Accept ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.72 s: embed 26 ms + search 2.4 ms + generate 0.70 s | Context had every fact. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Fixed | Q1 | [1] noise · fix-20 (S05-P3, S05-P4) · 0.667 · "This matters most in a squad, where several people ..."<br>[2] relevant · fix-24 (S06-P2, S06-P3) · 0.593 · "A full squad of eight therefore fits every venue ..."<br>[3] noise · fix-21 (S05-P4) · 0.530 · "Your group size preference matters here as well. A ..." | Partial: 1/4 facts; 1/3 chunks relevant | 3.2/10: 1/4 facts stated | 2.00 s: embed 60 ms + search 2.3 ms + generate 1.94 s | Context missed 'Illini Union' (its best chunk ranked 4), 'Grainger' (its best chunk ranked 4), 'Main Quad' (its best chunk ranked 4). 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q1 | [1] relevant · ove-14 (S06-P2, S06-P3) · 0.525 · "Each venue page tells you how to find your ..."<br>[2] noise · ove-12 (S05-P3, S05-P4) · 0.522 · "A match moves through four stages. It starts as ..."<br>[3] noise · ove-16 (S07-P1, S07-P2) · 0.505 · "If you know a public place that would suit ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.95 s: embed 59 ms + search 2.4 ms + generate 0.89 s | Context had every fact. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q1 | [1] noise · hyb-19 (S05-P4) · 0.658 · "Squad matches bring four to eight students together, so ..."<br>[2] relevant · hyb-22 (S06-P2) · 0.577 · "At Espresso Royale on Goodwin you meet in the ..."<br>[3] noise · hyb-25 (S07-P1) · 0.537 · "If you know a public place that would suit ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.97 s: embed 60 ms + search 2.3 ms + generate 0.91 s | Context had every fact. 2 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Fixed | Q1 | [1] noise · fix-20 (S05-P3, S05-P4) · 0.667 · "This matters most in a squad, where several people ..."<br>[2] relevant · fix-23 (S06-P2) · 0.625 · "Each venue page tells you how to find your ..."<br>[3] relevant · fix-24 (S06-P2, S06-P3) · 0.623 · "A full squad of eight therefore fits every venue ..." | Good: 4/4 facts; 2/3 chunks relevant | 10/10: 4/4 facts stated | 0.89 s: embed 213 ms + search 1.9 ms + generate 0.67 s | Context had every fact. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Overlapping | Q1 | [1] relevant · ove-14 (S06-P2, S06-P3) · 0.637 · "Each venue page tells you how to find your ..."<br>[2] relevant · ove-13 (S06-P1, S06-P2) · 0.615 · "Every QuadConnect meetup takes place at an approved campus ..."<br>[3] noise · ove-16 (S07-P1, S07-P2) · 0.592 · "If you know a public place that would suit ..." | Good: 4/4 facts; 2/3 chunks relevant | 10/10: 4/4 facts stated | 1.02 s: embed 219 ms + search 2.4 ms + generate 0.80 s | Context had every fact. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Hybrid | Q1 | [1] relevant · hyb-22 (S06-P2) · 0.661 · "At Espresso Royale on Goodwin you meet in the ..."<br>[2] noise · hyb-19 (S05-P4) · 0.642 · "Squad matches bring four to eight students together, so ..."<br>[3] noise · hyb-26 (S07-P2) · 0.594 · "The form checks your suggestion before it is saved. ..." | Good: 4/4 facts; 1/3 chunks relevant | 10/10: 4/4 facts stated | 0.95 s: embed 213 ms + search 2.4 ms + generate 0.73 s | Context had every fact. 2 of 3 chunks are noise. |
 
 <details>
 <summary>The nine answers to Q1</summary>
@@ -306,15 +306,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q2 | [1] relevant · fix-07 (S02-P2, S02-P3) · 0.695 · "Your QuadConnect profile is kept separate from the way ..."<br>[2] noise · fix-05 (S02-P1) · 0.635 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · fix-08 (S02-P3) · 0.606 · "There are no tracking cookies, no analytics cookies and ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 0.93 s: embed 30 ms + search 2.6 ms + generate 0.90 s | Context had every fact. 2 of 3 chunks are noise. |
-| Small (bge-small-en-v1.5) | Overlapping | Q2 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.644 · "You can create a QuadConnect account in two ways. ..."<br>[2] relevant · ove-04 (S02-P2, S02-P3) · 0.637 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-25 (S11-P1, S11-P2) · 0.571 · "QuadConnect keeps only what it needs. For your account ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 1.28 s: embed 22 ms + search 2.5 ms + generate 1.26 s | Context had every fact. 2 of 3 chunks are noise. |
-| Small (bge-small-en-v1.5) | Hybrid | Q2 | [1] relevant · hyb-06 (S02-P3) · 0.672 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[2] noise · hyb-04 (S02-P1) · 0.636 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · hyb-05 (S02-P2) · 0.616 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.75 s: embed 22 ms + search 2.1 ms + generate 0.72 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Fixed | Q2 | [1] relevant · fix-07 (S02-P2, S02-P3) · 0.622 · "Your QuadConnect profile is kept separate from the way ..."<br>[2] noise · fix-05 (S02-P1) · 0.581 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · fix-06 (S02-P1, S02-P2) · 0.482 · "The only pages open to everyone are the landing ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 0.89 s: embed 44 ms + search 2.3 ms + generate 0.84 s | Context had every fact. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q2 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.541 · "You can create a QuadConnect account in two ways. ..."<br>[2] relevant · ove-04 (S02-P2, S02-P3) · 0.522 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-21 (S08-P3, S08-P4) · 0.447 · "If you would rather describe the students you want ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 1.15 s: embed 51 ms + search 2.2 ms + generate 1.09 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q2 | [1] relevant · hyb-06 (S02-P3) · 0.595 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[2] noise · hyb-04 (S02-P1) · 0.567 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · hyb-05 (S02-P2) · 0.533 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.78 s: embed 51 ms + search 2.4 ms + generate 0.72 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Fixed | Q2 | [1] relevant · fix-07 (S02-P2, S02-P3) · 0.584 · "Your QuadConnect profile is kept separate from the way ..."<br>[2] noise · fix-05 (S02-P1) · 0.571 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · fix-06 (S02-P1, S02-P2) · 0.515 · "The only pages open to everyone are the landing ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 1.05 s: embed 207 ms + search 2.1 ms + generate 0.84 s | Context had every fact. 2 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Overlapping | Q2 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.568 · "You can create a QuadConnect account in two ways. ..."<br>[2] relevant · ove-04 (S02-P2, S02-P3) · 0.547 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-15 (S06-P3, S06-P4) · 0.502 · "When you arrive, you check in with your match's ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 2.33 s: embed 212 ms + search 2.3 ms + generate 2.11 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Hybrid | Q2 | [1] relevant · hyb-06 (S02-P3) · 0.584 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[2] noise · hyb-04 (S02-P1) · 0.558 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · hyb-05 (S02-P2) · 0.541 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.93 s: embed 210 ms + search 1.9 ms + generate 0.72 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Fixed | Q2 | [1] relevant · fix-07 (S02-P2, S02-P3) · 0.695 · "Your QuadConnect profile is kept separate from the way ..."<br>[2] noise · fix-05 (S02-P1) · 0.635 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · fix-08 (S02-P3) · 0.606 · "There are no tracking cookies, no analytics cookies and ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 0.93 s: embed 24 ms + search 2.6 ms + generate 0.90 s | Context had every fact. 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Overlapping | Q2 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.644 · "You can create a QuadConnect account in two ways. ..."<br>[2] relevant · ove-04 (S02-P2, S02-P3) · 0.637 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-25 (S11-P1, S11-P2) · 0.571 · "QuadConnect keeps only what it needs. For your account ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 1.28 s: embed 24 ms + search 2.5 ms + generate 1.26 s | Context had every fact. 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Hybrid | Q2 | [1] relevant · hyb-06 (S02-P3) · 0.672 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[2] noise · hyb-04 (S02-P1) · 0.636 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · hyb-05 (S02-P2) · 0.616 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.75 s: embed 24 ms + search 2.4 ms + generate 0.72 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Fixed | Q2 | [1] relevant · fix-07 (S02-P2, S02-P3) · 0.622 · "Your QuadConnect profile is kept separate from the way ..."<br>[2] noise · fix-05 (S02-P1) · 0.581 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · fix-06 (S02-P1, S02-P2) · 0.482 · "The only pages open to everyone are the landing ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 0.91 s: embed 66 ms + search 2.3 ms + generate 0.84 s | Context had every fact. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q2 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.541 · "You can create a QuadConnect account in two ways. ..."<br>[2] relevant · ove-04 (S02-P2, S02-P3) · 0.522 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-21 (S08-P3, S08-P4) · 0.447 · "If you would rather describe the students you want ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 1.15 s: embed 57 ms + search 2.3 ms + generate 1.09 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q2 | [1] relevant · hyb-06 (S02-P3) · 0.595 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[2] noise · hyb-04 (S02-P1) · 0.567 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · hyb-05 (S02-P2) · 0.533 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.78 s: embed 58 ms + search 2.3 ms + generate 0.72 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Fixed | Q2 | [1] relevant · fix-07 (S02-P2, S02-P3) · 0.584 · "Your QuadConnect profile is kept separate from the way ..."<br>[2] noise · fix-05 (S02-P1) · 0.571 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · fix-06 (S02-P1, S02-P2) · 0.515 · "The only pages open to everyone are the landing ..." | Good: 3/3 facts; 1/3 chunks relevant | 10/10: 3/3 facts stated | 1.05 s: embed 207 ms + search 1.9 ms + generate 0.84 s | Context had every fact. 2 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Overlapping | Q2 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.568 · "You can create a QuadConnect account in two ways. ..."<br>[2] relevant · ove-04 (S02-P2, S02-P3) · 0.547 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-15 (S06-P3, S06-P4) · 0.502 · "When you arrive, you check in with your match's ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 2.35 s: embed 237 ms + search 1.9 ms + generate 2.11 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Hybrid | Q2 | [1] relevant · hyb-06 (S02-P3) · 0.584 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[2] noise · hyb-04 (S02-P1) · 0.558 · "You can create a QuadConnect account in two ways. ..."<br>[3] noise · hyb-05 (S02-P2) · 0.541 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.96 s: embed 237 ms + search 2.3 ms + generate 0.72 s | Context had every fact. Answer left out 'no reset email' although the context had it. 2 of 3 chunks are noise. |
 
 <details>
 <summary>The nine answers to Q2</summary>
@@ -345,15 +345,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q3 | [1] relevant · fix-47 (S13-P2, S13-P3) · 0.689 · "Then QuadConnect cannot match you that week, because a ..."<br>[2] noise · fix-17 (S05-P1) · 0.683 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[3] relevant · fix-16 (S04-P2) · 0.645 · "Two students can be matched only if they share ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.95 s: embed 25 ms + search 2.4 ms + generate 0.92 s | Context had every fact. 1 of 3 chunks is noise. |
-| Small (bge-small-en-v1.5) | Overlapping | Q3 | [1] noise · ove-10 (S05-P1, S05-P2) · 0.679 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] noise · ove-11 (S05-P2, S05-P3) · 0.664 · "For every student in a match, QuadConnect records a ..."<br>[3] relevant · ove-29 (S13-P2, S13-P3) · 0.657 · "What happens if my free times do not overlap ..." | Good: 2/2 facts; 1/3 chunks relevant | 10/10: 2/2 facts stated | 1.08 s: embed 22 ms + search 2.3 ms + generate 1.06 s | Context had every fact. 2 of 3 chunks are noise. |
-| Small (bge-small-en-v1.5) | Hybrid | Q3 | [1] noise · hyb-17 (S05-P3) · 0.705 · "A match moves through four stages. It starts as ..."<br>[2] noise · hyb-15 (S05-P1) · 0.696 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[3] noise · hyb-18 (S05-P3) · 0.670 · "Declining is how you are withdrawn from a meetup ..." | Poor: 0/2 facts; 0/3 chunks relevant | 1/10: 0/2 facts stated | 0.78 s: embed 21 ms + search 2.2 ms + generate 0.76 s | Context missed 'shared slot needed' (its best chunk ranked 5), 'mark more windows' (its best chunk ranked 5). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Fixed | Q3 | [1] noise · fix-17 (S05-P1) · 0.650 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · fix-16 (S04-P2) · 0.608 · "Two students can be matched only if they share ..."<br>[3] relevant · fix-47 (S13-P2, S13-P3) · 0.605 · "Then QuadConnect cannot match you that week, because a ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.98 s: embed 49 ms + search 2.3 ms + generate 0.93 s | Context had every fact. 1 of 3 chunks is noise. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q3 | [1] noise · ove-10 (S05-P1, S05-P2) · 0.612 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · ove-28 (S13-P1, S13-P2) · 0.603 · "Can I choose who I meet? Not directly. QuadConnect ..."<br>[3] relevant · ove-29 (S13-P2, S13-P3) · 0.589 · "What happens if my free times do not overlap ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.91 s: embed 45 ms + search 2.2 ms + generate 0.86 s | Context had every fact. 1 of 3 chunks is noise. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q3 | [1] noise · hyb-15 (S05-P1) · 0.669 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] noise · hyb-17 (S05-P3) · 0.666 · "A match moves through four stages. It starts as ..."<br>[3] noise · hyb-18 (S05-P3) · 0.636 · "Declining is how you are withdrawn from a meetup ..." | Poor: 0/2 facts; 0/3 chunks relevant | 1/10: 0/2 facts stated | 0.71 s: embed 46 ms + search 2.3 ms + generate 0.67 s | Context missed 'shared slot needed' (its best chunk ranked 5), 'mark more windows' (its best chunk ranked 5). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Fixed | Q3 | [1] noise · fix-17 (S05-P1) · 0.666 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · fix-47 (S13-P2, S13-P3) · 0.663 · "Then QuadConnect cannot match you that week, because a ..."<br>[3] relevant · fix-16 (S04-P2) · 0.626 · "Two students can be matched only if they share ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.98 s: embed 206 ms + search 2.7 ms + generate 0.77 s | Context had every fact. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Overlapping | Q3 | [1] noise · ove-10 (S05-P1, S05-P2) · 0.671 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · ove-28 (S13-P1, S13-P2) · 0.639 · "Can I choose who I meet? Not directly. QuadConnect ..."<br>[3] noise · ove-11 (S05-P2, S05-P3) · 0.638 · "For every student in a match, QuadConnect records a ..." | Good: 2/2 facts; 1/3 chunks relevant | 10/10: 2/2 facts stated | 1.26 s: embed 196 ms + search 2.3 ms + generate 1.06 s | Context had every fact. 2 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Hybrid | Q3 | [1] noise · hyb-17 (S05-P3) · 0.686 · "A match moves through four stages. It starts as ..."<br>[2] noise · hyb-15 (S05-P1) · 0.675 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[3] noise · hyb-16 (S05-P2) · 0.652 · "For every student in a match, QuadConnect records a ..." | Poor: 0/2 facts; 0/3 chunks relevant | 1/10: 0/2 facts stated | 0.91 s: embed 197 ms + search 2.3 ms + generate 0.71 s | Context missed 'shared slot needed' (its best chunk ranked 5), 'mark more windows' (its best chunk ranked 5). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Fixed | Q3 | [1] relevant · fix-47 (S13-P2, S13-P3) · 0.689 · "Then QuadConnect cannot match you that week, because a ..."<br>[2] noise · fix-17 (S05-P1) · 0.683 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[3] relevant · fix-16 (S04-P2) · 0.645 · "Two students can be matched only if they share ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.95 s: embed 24 ms + search 2.3 ms + generate 0.92 s | Context had every fact. 1 of 3 chunks is noise. |
+| Small (bge-small-en-v1.5) | Overlapping | Q3 | [1] noise · ove-10 (S05-P1, S05-P2) · 0.679 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] noise · ove-11 (S05-P2, S05-P3) · 0.664 · "For every student in a match, QuadConnect records a ..."<br>[3] relevant · ove-29 (S13-P2, S13-P3) · 0.657 · "What happens if my free times do not overlap ..." | Good: 2/2 facts; 1/3 chunks relevant | 10/10: 2/2 facts stated | 1.09 s: embed 24 ms + search 1.9 ms + generate 1.06 s | Context had every fact. 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Hybrid | Q3 | [1] noise · hyb-17 (S05-P3) · 0.705 · "A match moves through four stages. It starts as ..."<br>[2] noise · hyb-15 (S05-P1) · 0.696 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[3] noise · hyb-18 (S05-P3) · 0.670 · "Declining is how you are withdrawn from a meetup ..." | Poor: 0/2 facts; 0/3 chunks relevant | 1/10: 0/2 facts stated | 0.78 s: embed 25 ms + search 2.4 ms + generate 0.76 s | Context missed 'shared slot needed' (its best chunk ranked 5), 'mark more windows' (its best chunk ranked 5). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Fixed | Q3 | [1] noise · fix-17 (S05-P1) · 0.650 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · fix-16 (S04-P2) · 0.608 · "Two students can be matched only if they share ..."<br>[3] relevant · fix-47 (S13-P2, S13-P3) · 0.605 · "Then QuadConnect cannot match you that week, because a ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.99 s: embed 59 ms + search 2.2 ms + generate 0.93 s | Context had every fact. 1 of 3 chunks is noise. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q3 | [1] noise · ove-10 (S05-P1, S05-P2) · 0.612 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · ove-28 (S13-P1, S13-P2) · 0.603 · "Can I choose who I meet? Not directly. QuadConnect ..."<br>[3] relevant · ove-29 (S13-P2, S13-P3) · 0.589 · "What happens if my free times do not overlap ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.92 s: embed 58 ms + search 2.3 ms + generate 0.86 s | Context had every fact. 1 of 3 chunks is noise. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q3 | [1] noise · hyb-15 (S05-P1) · 0.669 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] noise · hyb-17 (S05-P3) · 0.666 · "A match moves through four stages. It starts as ..."<br>[3] noise · hyb-18 (S05-P3) · 0.636 · "Declining is how you are withdrawn from a meetup ..." | Poor: 0/2 facts; 0/3 chunks relevant | 1/10: 0/2 facts stated | 0.72 s: embed 54 ms + search 2.3 ms + generate 0.67 s | Context missed 'shared slot needed' (its best chunk ranked 5), 'mark more windows' (its best chunk ranked 5). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Fixed | Q3 | [1] noise · fix-17 (S05-P1) · 0.666 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · fix-47 (S13-P2, S13-P3) · 0.663 · "Then QuadConnect cannot match you that week, because a ..."<br>[3] relevant · fix-16 (S04-P2) · 0.626 · "Two students can be matched only if they share ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.98 s: embed 204 ms + search 2.1 ms + generate 0.77 s | Context had every fact. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Overlapping | Q3 | [1] noise · ove-10 (S05-P1, S05-P2) · 0.671 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[2] relevant · ove-28 (S13-P1, S13-P2) · 0.639 · "Can I choose who I meet? Not directly. QuadConnect ..."<br>[3] noise · ove-11 (S05-P2, S05-P3) · 0.638 · "For every student in a match, QuadConnect records a ..." | Good: 2/2 facts; 1/3 chunks relevant | 10/10: 2/2 facts stated | 1.27 s: embed 204 ms + search 2.4 ms + generate 1.06 s | Context had every fact. 2 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Hybrid | Q3 | [1] noise · hyb-17 (S05-P3) · 0.686 · "A match moves through four stages. It starts as ..."<br>[2] noise · hyb-15 (S05-P1) · 0.675 · "QuadConnect works in weekly cycles. A matching week starts ..."<br>[3] noise · hyb-16 (S05-P2) · 0.652 · "For every student in a match, QuadConnect records a ..." | Poor: 0/2 facts; 0/3 chunks relevant | 1/10: 0/2 facts stated | 0.92 s: embed 213 ms + search 2.5 ms + generate 0.71 s | Context missed 'shared slot needed' (its best chunk ranked 5), 'mark more windows' (its best chunk ranked 5). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
 
 <details>
 <summary>The nine answers to Q3</summary>
@@ -384,15 +384,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q4 | [1] relevant · fix-21 (S05-P4) · 0.619 · "Your group size preference matters here as well. A ..."<br>[2] noise · fix-20 (S05-P3, S05-P4) · 0.606 · "This matters most in a squad, where several people ..."<br>[3] relevant · fix-12 (S03-P4) · 0.606 · "Then you choose how you want to meet. Friend ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.94 s: embed 22 ms + search 2.0 ms + generate 0.92 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
-| Small (bge-small-en-v1.5) | Overlapping | Q4 | [1] relevant · ove-08 (S03-P4, S03-P5) · 0.609 · "Then you choose how you want to meet. Friend ..."<br>[2] noise · ove-28 (S13-P1, S13-P2) · 0.586 · "Can I choose who I meet? Not directly. QuadConnect ..."<br>[3] relevant · ove-12 (S05-P3, S05-P4) · 0.579 · "A match moves through four stages. It starts as ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.93 s: embed 22 ms + search 2.7 ms + generate 0.91 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
-| Small (bge-small-en-v1.5) | Hybrid | Q4 | [1] noise · hyb-38 (S10-P2) · 0.602 · "A good meetup depends on everyone showing up. Accept ..."<br>[2] relevant · hyb-19 (S05-P4) · 0.596 · "Squad matches bring four to eight students together, so ..."<br>[3] relevant · hyb-10 (S03-P4) · 0.595 · "Then you choose how you want to meet. Friend ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.72 s: embed 23 ms + search 2.6 ms + generate 0.69 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
-| Medium (bge-base-en-v1.5) | Fixed | Q4 | [1] relevant · fix-21 (S05-P4) · 0.547 · "Your group size preference matters here as well. A ..."<br>[2] noise · fix-37 (S09-P2, S09-P3) · 0.529 · "In your feedback you can say that you want ..."<br>[3] noise · fix-20 (S05-P3, S05-P4) · 0.528 · "This matters most in a squad, where several people ..." | Good: 2/2 facts; 1/3 chunks relevant | 10/10: 2/2 facts stated | 0.87 s: embed 53 ms + search 2.3 ms + generate 0.81 s | Context had every fact. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q4 | [1] relevant · ove-08 (S03-P4, S03-P5) · 0.535 · "Then you choose how you want to meet. Friend ..."<br>[2] relevant · ove-12 (S05-P3, S05-P4) · 0.524 · "A match moves through four stages. It starts as ..."<br>[3] noise · ove-28 (S13-P1, S13-P2) · 0.512 · "Can I choose who I meet? Not directly. QuadConnect ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.82 s: embed 53 ms + search 2.5 ms + generate 0.76 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q4 | [1] noise · hyb-35 (S09-P2) · 0.536 · "Feedback is also how a one-off meetup can turn ..."<br>[2] relevant · hyb-19 (S05-P4) · 0.524 · "Squad matches bring four to eight students together, so ..."<br>[3] relevant · hyb-10 (S03-P4) · 0.522 · "Then you choose how you want to meet. Friend ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.77 s: embed 52 ms + search 2.4 ms + generate 0.72 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Fixed | Q4 | [1] relevant · fix-21 (S05-P4) · 0.624 · "Your group size preference matters here as well. A ..."<br>[2] relevant · fix-12 (S03-P4) · 0.591 · "Then you choose how you want to meet. Friend ..."<br>[3] noise · fix-37 (S09-P2, S09-P3) · 0.587 · "In your feedback you can say that you want ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 2.91 s: embed 211 ms + search 2.3 ms + generate 2.69 s | Context had every fact. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Overlapping | Q4 | [1] relevant · ove-08 (S03-P4, S03-P5) · 0.596 · "Then you choose how you want to meet. Friend ..."<br>[2] relevant · ove-12 (S05-P3, S05-P4) · 0.575 · "A match moves through four stages. It starts as ..."<br>[3] noise · ove-22 (S09-P1, S09-P2) · 0.566 · "After a meetup you can leave private feedback about ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.05 s: embed 212 ms + search 2.3 ms + generate 0.84 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Hybrid | Q4 | [1] noise · hyb-35 (S09-P2) · 0.609 · "Feedback is also how a one-off meetup can turn ..."<br>[2] relevant · hyb-10 (S03-P4) · 0.569 · "Then you choose how you want to meet. Friend ..."<br>[3] noise · hyb-38 (S10-P2) · 0.568 · "A good meetup depends on everyone showing up. Accept ..." | Partial: 1/2 facts; 1/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.04 s: embed 215 ms + search 2.3 ms + generate 0.82 s | Context missed 'group size' (its best chunk ranked 4). 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Fixed | Q4 | [1] relevant · fix-21 (S05-P4) · 0.619 · "Your group size preference matters here as well. A ..."<br>[2] noise · fix-20 (S05-P3, S05-P4) · 0.606 · "This matters most in a squad, where several people ..."<br>[3] relevant · fix-12 (S03-P4) · 0.606 · "Then you choose how you want to meet. Friend ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.94 s: embed 26 ms + search 2.5 ms + generate 0.92 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
+| Small (bge-small-en-v1.5) | Overlapping | Q4 | [1] relevant · ove-08 (S03-P4, S03-P5) · 0.609 · "Then you choose how you want to meet. Friend ..."<br>[2] noise · ove-28 (S13-P1, S13-P2) · 0.586 · "Can I choose who I meet? Not directly. QuadConnect ..."<br>[3] relevant · ove-12 (S05-P3, S05-P4) · 0.579 · "A match moves through four stages. It starts as ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.94 s: embed 26 ms + search 2.5 ms + generate 0.91 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
+| Small (bge-small-en-v1.5) | Hybrid | Q4 | [1] noise · hyb-38 (S10-P2) · 0.602 · "A good meetup depends on everyone showing up. Accept ..."<br>[2] relevant · hyb-19 (S05-P4) · 0.596 · "Squad matches bring four to eight students together, so ..."<br>[3] relevant · hyb-10 (S03-P4) · 0.595 · "Then you choose how you want to meet. Friend ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.72 s: embed 24 ms + search 2.4 ms + generate 0.69 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
+| Medium (bge-base-en-v1.5) | Fixed | Q4 | [1] relevant · fix-21 (S05-P4) · 0.547 · "Your group size preference matters here as well. A ..."<br>[2] noise · fix-37 (S09-P2, S09-P3) · 0.529 · "In your feedback you can say that you want ..."<br>[3] noise · fix-20 (S05-P3, S05-P4) · 0.528 · "This matters most in a squad, where several people ..." | Good: 2/2 facts; 1/3 chunks relevant | 10/10: 2/2 facts stated | 0.87 s: embed 59 ms + search 1.9 ms + generate 0.81 s | Context had every fact. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q4 | [1] relevant · ove-08 (S03-P4, S03-P5) · 0.535 · "Then you choose how you want to meet. Friend ..."<br>[2] relevant · ove-12 (S05-P3, S05-P4) · 0.524 · "A match moves through four stages. It starts as ..."<br>[3] noise · ove-28 (S13-P1, S13-P2) · 0.512 · "Can I choose who I meet? Not directly. QuadConnect ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.82 s: embed 61 ms + search 2.3 ms + generate 0.76 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q4 | [1] noise · hyb-35 (S09-P2) · 0.536 · "Feedback is also how a one-off meetup can turn ..."<br>[2] relevant · hyb-19 (S05-P4) · 0.524 · "Squad matches bring four to eight students together, so ..."<br>[3] relevant · hyb-10 (S03-P4) · 0.522 · "Then you choose how you want to meet. Friend ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.78 s: embed 61 ms + search 2.9 ms + generate 0.72 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Fixed | Q4 | [1] relevant · fix-21 (S05-P4) · 0.624 · "Your group size preference matters here as well. A ..."<br>[2] relevant · fix-12 (S03-P4) · 0.591 · "Then you choose how you want to meet. Friend ..."<br>[3] noise · fix-37 (S09-P2, S09-P3) · 0.587 · "In your feedback you can say that you want ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 2.92 s: embed 221 ms + search 2.3 ms + generate 2.69 s | Context had every fact. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Overlapping | Q4 | [1] relevant · ove-08 (S03-P4, S03-P5) · 0.596 · "Then you choose how you want to meet. Friend ..."<br>[2] relevant · ove-12 (S05-P3, S05-P4) · 0.575 · "A match moves through four stages. It starts as ..."<br>[3] noise · ove-22 (S09-P1, S09-P2) · 0.566 · "After a meetup you can leave private feedback about ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.06 s: embed 215 ms + search 2.4 ms + generate 0.84 s | Context had every fact. Answer left out 'group size' although the context had it. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Hybrid | Q4 | [1] noise · hyb-35 (S09-P2) · 0.609 · "Feedback is also how a one-off meetup can turn ..."<br>[2] relevant · hyb-10 (S03-P4) · 0.569 · "Then you choose how you want to meet. Friend ..."<br>[3] noise · hyb-38 (S10-P2) · 0.568 · "A good meetup depends on everyone showing up. Accept ..." | Partial: 1/2 facts; 1/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.05 s: embed 225 ms + search 2.4 ms + generate 0.82 s | Context missed 'group size' (its best chunk ranked 4). 2 of 3 chunks are noise. |
 
 <details>
 <summary>The nine answers to Q4</summary>
@@ -423,15 +423,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q5 | [1] relevant · fix-36 (S09-P1, S09-P2) · 0.789 · "After a meetup you can leave private feedback about ..."<br>[2] noise · fix-19 (S05-P3) · 0.697 · "A match moves through four stages. It starts as ..."<br>[3] noise · fix-24 (S06-P2, S06-P3) · 0.695 · "A full squad of eight therefore fits every venue ..." | Partial: 1/2 facts; 1/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.79 s: embed 22 ms + search 2.3 ms + generate 0.76 s | Context missed 'only totals' (its best chunk ranked 4). 2 of 3 chunks are noise. |
-| Small (bge-small-en-v1.5) | Overlapping | Q5 | [1] relevant · ove-22 (S09-P1, S09-P2) · 0.779 · "After a meetup you can leave private feedback about ..."<br>[2] noise · ove-11 (S05-P2, S05-P3) · 0.723 · "For every student in a match, QuadConnect records a ..."<br>[3] relevant · ove-23 (S09-P2, S09-P3) · 0.720 · "Feedback is also how a one-off meetup can turn ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.89 s: embed 23 ms + search 2.3 ms + generate 0.86 s | Context had every fact. 1 of 3 chunks is noise. |
-| Small (bge-small-en-v1.5) | Hybrid | Q5 | [1] relevant · hyb-34 (S09-P1) · 0.800 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · hyb-48 (S13-P5) · 0.745 · "Who can see my feedback and my notes? Nobody ..."<br>[3] noise · hyb-35 (S09-P2) · 0.745 · "Feedback is also how a one-off meetup can turn ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.68 s: embed 23 ms + search 2.5 ms + generate 0.65 s | Context had every fact. 1 of 3 chunks is noise. |
-| Medium (bge-base-en-v1.5) | Fixed | Q5 | [1] relevant · fix-36 (S09-P1, S09-P2) · 0.713 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · fix-38 (S09-P3) · 0.678 · "It reports the number of feedback submissions, the average ..."<br>[3] noise · fix-24 (S06-P2, S06-P3) · 0.654 · "A full squad of eight therefore fits every venue ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.20 s: embed 52 ms + search 1.9 ms + generate 1.14 s | Context had every fact. Answer left out 'only totals' although the context had it. 1 of 3 chunks is noise. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q5 | [1] relevant · ove-22 (S09-P1, S09-P2) · 0.696 · "After a meetup you can leave private feedback about ..."<br>[2] noise · ove-11 (S05-P2, S05-P3) · 0.662 · "For every student in a match, QuadConnect records a ..."<br>[3] noise · ove-15 (S06-P3, S06-P4) · 0.656 · "When you arrive, you check in with your match's ..." | Partial: 1/2 facts; 1/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.68 s: embed 52 ms + search 2.3 ms + generate 0.62 s | Context missed 'only totals' (its best chunk ranked 4). 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q5 | [1] relevant · hyb-34 (S09-P1) · 0.733 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · hyb-48 (S13-P5) · 0.679 · "Who can see my feedback and my notes? Nobody ..."<br>[3] noise · hyb-23 (S06-P3) · 0.656 · "When you arrive, you check in with your match's ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.67 s: embed 56 ms + search 2.9 ms + generate 0.61 s | Context had every fact. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Fixed | Q5 | [1] relevant · fix-36 (S09-P1, S09-P2) · 0.790 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · fix-38 (S09-P3) · 0.719 · "It reports the number of feedback submissions, the average ..."<br>[3] noise · fix-24 (S06-P2, S06-P3) · 0.699 · "A full squad of eight therefore fits every venue ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.36 s: embed 215 ms + search 2.7 ms + generate 1.14 s | Context had every fact. Answer left out 'only totals' although the context had it. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Overlapping | Q5 | [1] relevant · ove-22 (S09-P1, S09-P2) · 0.789 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · ove-23 (S09-P2, S09-P3) · 0.735 · "Feedback is also how a one-off meetup can turn ..."<br>[3] noise · ove-11 (S05-P2, S05-P3) · 0.719 · "For every student in a match, QuadConnect records a ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 1.12 s: embed 213 ms + search 2.0 ms + generate 0.90 s | Context had every fact. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Hybrid | Q5 | [1] relevant · hyb-34 (S09-P1) · 0.798 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · hyb-48 (S13-P5) · 0.731 · "Who can see my feedback and my notes? Nobody ..."<br>[3] noise · hyb-35 (S09-P2) · 0.724 · "Feedback is also how a one-off meetup can turn ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.87 s: embed 216 ms + search 2.2 ms + generate 0.65 s | Context had every fact. 1 of 3 chunks is noise. |
+| Small (bge-small-en-v1.5) | Fixed | Q5 | [1] relevant · fix-36 (S09-P1, S09-P2) · 0.789 · "After a meetup you can leave private feedback about ..."<br>[2] noise · fix-19 (S05-P3) · 0.697 · "A match moves through four stages. It starts as ..."<br>[3] noise · fix-24 (S06-P2, S06-P3) · 0.695 · "A full squad of eight therefore fits every venue ..." | Partial: 1/2 facts; 1/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.79 s: embed 26 ms + search 2.8 ms + generate 0.76 s | Context missed 'only totals' (its best chunk ranked 4). 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Overlapping | Q5 | [1] relevant · ove-22 (S09-P1, S09-P2) · 0.779 · "After a meetup you can leave private feedback about ..."<br>[2] noise · ove-11 (S05-P2, S05-P3) · 0.723 · "For every student in a match, QuadConnect records a ..."<br>[3] relevant · ove-23 (S09-P2, S09-P3) · 0.720 · "Feedback is also how a one-off meetup can turn ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.89 s: embed 25 ms + search 2.3 ms + generate 0.86 s | Context had every fact. 1 of 3 chunks is noise. |
+| Small (bge-small-en-v1.5) | Hybrid | Q5 | [1] relevant · hyb-34 (S09-P1) · 0.800 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · hyb-48 (S13-P5) · 0.745 · "Who can see my feedback and my notes? Nobody ..."<br>[3] noise · hyb-35 (S09-P2) · 0.745 · "Feedback is also how a one-off meetup can turn ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.68 s: embed 25 ms + search 2.0 ms + generate 0.65 s | Context had every fact. 1 of 3 chunks is noise. |
+| Medium (bge-base-en-v1.5) | Fixed | Q5 | [1] relevant · fix-36 (S09-P1, S09-P2) · 0.713 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · fix-38 (S09-P3) · 0.678 · "It reports the number of feedback submissions, the average ..."<br>[3] noise · fix-24 (S06-P2, S06-P3) · 0.654 · "A full squad of eight therefore fits every venue ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.20 s: embed 54 ms + search 1.9 ms + generate 1.14 s | Context had every fact. Answer left out 'only totals' although the context had it. 1 of 3 chunks is noise. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q5 | [1] relevant · ove-22 (S09-P1, S09-P2) · 0.696 · "After a meetup you can leave private feedback about ..."<br>[2] noise · ove-11 (S05-P2, S05-P3) · 0.662 · "For every student in a match, QuadConnect records a ..."<br>[3] noise · ove-15 (S06-P3, S06-P4) · 0.656 · "When you arrive, you check in with your match's ..." | Partial: 1/2 facts; 1/3 chunks relevant | 5.5/10: 1/2 facts stated | 0.69 s: embed 59 ms + search 2.3 ms + generate 0.62 s | Context missed 'only totals' (its best chunk ranked 4). 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q5 | [1] relevant · hyb-34 (S09-P1) · 0.733 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · hyb-48 (S13-P5) · 0.679 · "Who can see my feedback and my notes? Nobody ..."<br>[3] noise · hyb-23 (S06-P3) · 0.656 · "When you arrive, you check in with your match's ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.67 s: embed 63 ms + search 2.3 ms + generate 0.61 s | Context had every fact. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Fixed | Q5 | [1] relevant · fix-36 (S09-P1, S09-P2) · 0.790 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · fix-38 (S09-P3) · 0.719 · "It reports the number of feedback submissions, the average ..."<br>[3] noise · fix-24 (S06-P2, S06-P3) · 0.699 · "A full squad of eight therefore fits every venue ..." | Good: 2/2 facts; 2/3 chunks relevant | 5.5/10: 1/2 facts stated | 1.36 s: embed 212 ms + search 2.3 ms + generate 1.14 s | Context had every fact. Answer left out 'only totals' although the context had it. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Overlapping | Q5 | [1] relevant · ove-22 (S09-P1, S09-P2) · 0.789 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · ove-23 (S09-P2, S09-P3) · 0.735 · "Feedback is also how a one-off meetup can turn ..."<br>[3] noise · ove-11 (S05-P2, S05-P3) · 0.719 · "For every student in a match, QuadConnect records a ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 1.11 s: embed 207 ms + search 2.3 ms + generate 0.90 s | Context had every fact. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Hybrid | Q5 | [1] relevant · hyb-34 (S09-P1) · 0.798 · "After a meetup you can leave private feedback about ..."<br>[2] relevant · hyb-48 (S13-P5) · 0.731 · "Who can see my feedback and my notes? Nobody ..."<br>[3] noise · hyb-35 (S09-P2) · 0.724 · "Feedback is also how a one-off meetup can turn ..." | Good: 2/2 facts; 2/3 chunks relevant | 10/10: 2/2 facts stated | 0.87 s: embed 214 ms + search 2.3 ms + generate 0.65 s | Context had every fact. 1 of 3 chunks is noise. |
 
 <details>
 <summary>The nine answers to Q5</summary>
@@ -462,15 +462,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q6 | [1] relevant · fix-49 (S13-P4, S13-P5) · 0.799 · "Ask in plain English uses a language model on ..."<br>[2] relevant · fix-29 (S07-P3, S07-P4) · 0.776 · "The venue's name, address and meeting note go to ..."<br>[3] relevant · fix-48 (S13-P3, S13-P4) · 0.760 · "Every QuadConnect meetup is scheduled at an approved campus ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.00 s: embed 20 ms + search 2.0 ms + generate 0.98 s | Context had every fact. |
-| Small (bge-small-en-v1.5) | Overlapping | Q6 | [1] relevant · ove-31 (S13-P4, S13-P5) · 0.795 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · ove-17 (S07-P2, S07-P3) · 0.784 · "The form checks your suggestion before it is saved. ..."<br>[3] relevant · ove-18 (S07-P3, S07-P4) · 0.780 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.35 s: embed 22 ms + search 2.5 ms + generate 1.32 s | Context had every fact. |
-| Small (bge-small-en-v1.5) | Hybrid | Q6 | [1] relevant · hyb-47 (S13-P4) · 0.804 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · hyb-29 (S07-P4) · 0.792 · "A suggestion that tries to give the AI instructions ..."<br>[3] relevant · hyb-27 (S07-P3) · 0.786 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.90 s: embed 24 ms + search 2.4 ms + generate 0.88 s | Context had every fact. |
-| Medium (bge-base-en-v1.5) | Fixed | Q6 | [1] relevant · fix-49 (S13-P4, S13-P5) · 0.739 · "Ask in plain English uses a language model on ..."<br>[2] relevant · fix-29 (S07-P3, S07-P4) · 0.702 · "The venue's name, address and meeting note go to ..."<br>[3] relevant · fix-48 (S13-P3, S13-P4) · 0.699 · "Every QuadConnect meetup is scheduled at an approved campus ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.03 s: embed 51 ms + search 2.3 ms + generate 0.98 s | Context had every fact. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q6 | [1] relevant · ove-31 (S13-P4, S13-P5) · 0.725 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · ove-18 (S07-P3, S07-P4) · 0.699 · "When you send a suggestion, QuadConnect also runs an ..."<br>[3] relevant · ove-30 (S13-P3, S13-P4) · 0.688 · "Can we meet at a place that is not ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.72 s: embed 51 ms + search 2.3 ms + generate 0.66 s | Context had every fact. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q6 | [1] relevant · hyb-47 (S13-P4) · 0.736 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · hyb-29 (S07-P4) · 0.724 · "A suggestion that tries to give the AI instructions ..."<br>[3] relevant · hyb-27 (S07-P3) · 0.696 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.93 s: embed 49 ms + search 2.3 ms + generate 0.88 s | Context had every fact. |
-| Large (bge-large-en-v1.5) | Fixed | Q6 | [1] relevant · fix-29 (S07-P3, S07-P4) · 0.755 · "The venue's name, address and meeting note go to ..."<br>[2] relevant · fix-49 (S13-P4, S13-P5) · 0.724 · "Ask in plain English uses a language model on ..."<br>[3] relevant · fix-48 (S13-P3, S13-P4) · 0.703 · "Every QuadConnect meetup is scheduled at an approved campus ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.60 s: embed 203 ms + search 2.4 ms + generate 1.40 s | Context had every fact. |
-| Large (bge-large-en-v1.5) | Overlapping | Q6 | [1] relevant · ove-18 (S07-P3, S07-P4) · 0.745 · "When you send a suggestion, QuadConnect also runs an ..."<br>[2] relevant · ove-31 (S13-P4, S13-P5) · 0.735 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[3] relevant · ove-30 (S13-P3, S13-P4) · 0.734 · "Can we meet at a place that is not ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 2.40 s: embed 206 ms + search 2.4 ms + generate 2.20 s | Context had every fact. |
-| Large (bge-large-en-v1.5) | Hybrid | Q6 | [1] relevant · hyb-29 (S07-P4) · 0.758 · "A suggestion that tries to give the AI instructions ..."<br>[2] relevant · hyb-47 (S13-P4) · 0.746 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[3] relevant · hyb-27 (S07-P3) · 0.745 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.92 s: embed 201 ms + search 2.4 ms + generate 0.71 s | Context had every fact. |
+| Small (bge-small-en-v1.5) | Fixed | Q6 | [1] relevant · fix-49 (S13-P4, S13-P5) · 0.799 · "Ask in plain English uses a language model on ..."<br>[2] relevant · fix-29 (S07-P3, S07-P4) · 0.776 · "The venue's name, address and meeting note go to ..."<br>[3] relevant · fix-48 (S13-P3, S13-P4) · 0.760 · "Every QuadConnect meetup is scheduled at an approved campus ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.00 s: embed 24 ms + search 2.4 ms + generate 0.98 s | Context had every fact. |
+| Small (bge-small-en-v1.5) | Overlapping | Q6 | [1] relevant · ove-31 (S13-P4, S13-P5) · 0.795 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · ove-17 (S07-P2, S07-P3) · 0.784 · "The form checks your suggestion before it is saved. ..."<br>[3] relevant · ove-18 (S07-P3, S07-P4) · 0.780 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.35 s: embed 23 ms + search 2.4 ms + generate 1.32 s | Context had every fact. |
+| Small (bge-small-en-v1.5) | Hybrid | Q6 | [1] relevant · hyb-47 (S13-P4) · 0.804 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · hyb-29 (S07-P4) · 0.792 · "A suggestion that tries to give the AI instructions ..."<br>[3] relevant · hyb-27 (S07-P3) · 0.786 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.90 s: embed 25 ms + search 2.4 ms + generate 0.88 s | Context had every fact. |
+| Medium (bge-base-en-v1.5) | Fixed | Q6 | [1] relevant · fix-49 (S13-P4, S13-P5) · 0.739 · "Ask in plain English uses a language model on ..."<br>[2] relevant · fix-29 (S07-P3, S07-P4) · 0.702 · "The venue's name, address and meeting note go to ..."<br>[3] relevant · fix-48 (S13-P3, S13-P4) · 0.699 · "Every QuadConnect meetup is scheduled at an approved campus ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.04 s: embed 59 ms + search 2.4 ms + generate 0.98 s | Context had every fact. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q6 | [1] relevant · ove-31 (S13-P4, S13-P5) · 0.725 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · ove-18 (S07-P3, S07-P4) · 0.699 · "When you send a suggestion, QuadConnect also runs an ..."<br>[3] relevant · ove-30 (S13-P3, S13-P4) · 0.688 · "Can we meet at a place that is not ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.72 s: embed 59 ms + search 2.3 ms + generate 0.66 s | Context had every fact. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q6 | [1] relevant · hyb-47 (S13-P4) · 0.736 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[2] relevant · hyb-29 (S07-P4) · 0.724 · "A suggestion that tries to give the AI instructions ..."<br>[3] relevant · hyb-27 (S07-P3) · 0.696 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.94 s: embed 59 ms + search 2.4 ms + generate 0.88 s | Context had every fact. |
+| Large (bge-large-en-v1.5) | Fixed | Q6 | [1] relevant · fix-29 (S07-P3, S07-P4) · 0.755 · "The venue's name, address and meeting note go to ..."<br>[2] relevant · fix-49 (S13-P4, S13-P5) · 0.724 · "Ask in plain English uses a language model on ..."<br>[3] relevant · fix-48 (S13-P3, S13-P4) · 0.703 · "Every QuadConnect meetup is scheduled at an approved campus ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 1.61 s: embed 211 ms + search 2.4 ms + generate 1.40 s | Context had every fact. |
+| Large (bge-large-en-v1.5) | Overlapping | Q6 | [1] relevant · ove-18 (S07-P3, S07-P4) · 0.745 · "When you send a suggestion, QuadConnect also runs an ..."<br>[2] relevant · ove-31 (S13-P4, S13-P5) · 0.735 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[3] relevant · ove-30 (S13-P3, S13-P4) · 0.734 · "Can we meet at a place that is not ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 2.41 s: embed 210 ms + search 2.4 ms + generate 2.20 s | Context had every fact. |
+| Large (bge-large-en-v1.5) | Hybrid | Q6 | [1] relevant · hyb-29 (S07-P4) · 0.758 · "A suggestion that tries to give the AI instructions ..."<br>[2] relevant · hyb-47 (S13-P4) · 0.746 · "Does an AI decide anything about me? QuadConnect uses ..."<br>[3] relevant · hyb-27 (S07-P3) · 0.745 · "When you send a suggestion, QuadConnect also runs an ..." | Good: 2/2 facts; 3/3 chunks relevant | 10/10: 2/2 facts stated | 0.94 s: embed 226 ms + search 2.3 ms + generate 0.71 s | Context had every fact. |
 
 <details>
 <summary>The nine answers to Q6</summary>
@@ -501,15 +501,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q7 | [1] noise · fix-43 (S11-P3) · 0.705 · "To stop QuadConnect from using your Google account, remove ..."<br>[2] noise · fix-06 (S02-P1, S02-P2) · 0.701 · "The only pages open to everyone are the landing ..."<br>[3] relevant · fix-41 (S11-P1, S11-P2) · 0.692 · "QuadConnect keeps only what it needs. For your account ..." | Partial: 1/3 facts; 1/3 chunks relevant | 4/10: 1/3 facts stated | 0.87 s: embed 21 ms + search 1.9 ms + generate 0.85 s | Context missed 'only counts public' (its best chunk ranked 8), 'outside services' (its best chunk ranked 8). 2 of 3 chunks are noise. |
-| Small (bge-small-en-v1.5) | Overlapping | Q7 | [1] relevant · ove-26 (S11-P2, S11-P3) · 0.712 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] relevant · ove-25 (S11-P1, S11-P2) · 0.693 · "QuadConnect keeps only what it needs. For your account ..."<br>[3] noise · ove-04 (S02-P2, S02-P3) · 0.669 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 2/3 chunks relevant | 7/10: 2/3 facts stated | 0.87 s: embed 24 ms + search 2.7 ms + generate 0.84 s | Context had every fact. Answer left out 'outside services' although the context had it. 1 of 3 chunks is noise. |
-| Small (bge-small-en-v1.5) | Hybrid | Q7 | [1] noise · hyb-39 (S11-P1) · 0.704 · "QuadConnect keeps only what it needs. For your account ..."<br>[2] noise · hyb-41 (S11-P3) · 0.699 · "You stay in control of your data. To delete ..."<br>[3] relevant · hyb-40 (S11-P2) · 0.682 · "Nothing about you is sold or shared. QuadConnect's one ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 1.59 s: embed 23 ms + search 2.4 ms + generate 1.56 s | Context had every fact. Answer left out 'outside services' although the context had it. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Fixed | Q7 | [1] noise · fix-06 (S02-P1, S02-P2) · 0.689 · "The only pages open to everyone are the landing ..."<br>[2] noise · fix-43 (S11-P3) · 0.655 · "To stop QuadConnect from using your Google account, remove ..."<br>[3] relevant · fix-42 (S11-P2, S11-P3) · 0.655 · "QuadConnect's one public API, the interest summary at /api/summary/, ..." | Partial: 2/3 facts; 1/3 chunks relevant | 1/10: 0/3 facts stated | 1.66 s: embed 54 ms + search 2.3 ms + generate 1.61 s | Context missed 'not sold' (its best chunk ranked 5). Answer left out 'only counts public', 'outside services' although the context had them. Answer said the handbook does not cover it. 2 of 3 chunks are noise. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q7 | [1] relevant · ove-26 (S11-P2, S11-P3) · 0.716 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.678 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] relevant · ove-25 (S11-P1, S11-P2) · 0.665 · "QuadConnect keeps only what it needs. For your account ..." | Good: 3/3 facts; 2/3 chunks relevant | 7/10: 2/3 facts stated | 0.78 s: embed 53 ms + search 2.3 ms + generate 0.72 s | Context had every fact. Answer left out 'outside services' although the context had it. 1 of 3 chunks is noise. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q7 | [1] relevant · hyb-40 (S11-P2) · 0.711 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] noise · hyb-41 (S11-P3) · 0.675 · "You stay in control of your data. To delete ..."<br>[3] noise · hyb-39 (S11-P1) · 0.668 · "QuadConnect keeps only what it needs. For your account ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.64 s: embed 53 ms + search 2.3 ms + generate 0.58 s | Context had every fact. Answer left out 'outside services' although the context had it. 2 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Fixed | Q7 | [1] noise · fix-06 (S02-P1, S02-P2) · 0.738 · "The only pages open to everyone are the landing ..."<br>[2] noise · fix-43 (S11-P3) · 0.715 · "To stop QuadConnect from using your Google account, remove ..."<br>[3] noise · fix-05 (S02-P1) · 0.706 · "You can create a QuadConnect account in two ways. ..." | Poor: 0/3 facts; 0/3 chunks relevant | 1/10: 0/3 facts stated | 2.81 s: embed 207 ms + search 2.3 ms + generate 2.60 s | Context missed 'not sold' (its best chunk ranked 9), 'only counts public' (its best chunk ranked 6), 'outside services' (its best chunk ranked 6). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
-| Large (bge-large-en-v1.5) | Overlapping | Q7 | [1] relevant · ove-26 (S11-P2, S11-P3) · 0.775 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.717 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] relevant · ove-27 (S12-P1, S12-P2) · 0.705 · "QuadConnect has a few pages that describe the community ..." | Good: 3/3 facts; 2/3 chunks relevant | 7/10: 2/3 facts stated | 0.96 s: embed 197 ms + search 2.0 ms + generate 0.76 s | Context had every fact. Answer left out 'outside services' although the context had it. 1 of 3 chunks is noise. |
-| Large (bge-large-en-v1.5) | Hybrid | Q7 | [1] noise · hyb-41 (S11-P3) · 0.746 · "You stay in control of your data. To delete ..."<br>[2] relevant · hyb-40 (S11-P2) · 0.726 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[3] noise · hyb-05 (S02-P2) · 0.708 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 1.28 s: embed 202 ms + search 2.6 ms + generate 1.08 s | Context had every fact. Answer left out 'outside services' although the context had it. 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Fixed | Q7 | [1] noise · fix-43 (S11-P3) · 0.705 · "To stop QuadConnect from using your Google account, remove ..."<br>[2] noise · fix-06 (S02-P1, S02-P2) · 0.701 · "The only pages open to everyone are the landing ..."<br>[3] relevant · fix-41 (S11-P1, S11-P2) · 0.692 · "QuadConnect keeps only what it needs. For your account ..." | Partial: 1/3 facts; 1/3 chunks relevant | 4/10: 1/3 facts stated | 0.87 s: embed 26 ms + search 2.5 ms + generate 0.85 s | Context missed 'only counts public' (its best chunk ranked 8), 'outside services' (its best chunk ranked 8). 2 of 3 chunks are noise. |
+| Small (bge-small-en-v1.5) | Overlapping | Q7 | [1] relevant · ove-26 (S11-P2, S11-P3) · 0.712 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] relevant · ove-25 (S11-P1, S11-P2) · 0.693 · "QuadConnect keeps only what it needs. For your account ..."<br>[3] noise · ove-04 (S02-P2, S02-P3) · 0.669 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 2/3 chunks relevant | 7/10: 2/3 facts stated | 0.87 s: embed 25 ms + search 2.2 ms + generate 0.84 s | Context had every fact. Answer left out 'outside services' although the context had it. 1 of 3 chunks is noise. |
+| Small (bge-small-en-v1.5) | Hybrid | Q7 | [1] noise · hyb-39 (S11-P1) · 0.704 · "QuadConnect keeps only what it needs. For your account ..."<br>[2] noise · hyb-41 (S11-P3) · 0.699 · "You stay in control of your data. To delete ..."<br>[3] relevant · hyb-40 (S11-P2) · 0.682 · "Nothing about you is sold or shared. QuadConnect's one ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 1.59 s: embed 26 ms + search 2.4 ms + generate 1.56 s | Context had every fact. Answer left out 'outside services' although the context had it. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Fixed | Q7 | [1] noise · fix-06 (S02-P1, S02-P2) · 0.689 · "The only pages open to everyone are the landing ..."<br>[2] noise · fix-43 (S11-P3) · 0.655 · "To stop QuadConnect from using your Google account, remove ..."<br>[3] relevant · fix-42 (S11-P2, S11-P3) · 0.655 · "QuadConnect's one public API, the interest summary at /api/summary/, ..." | Partial: 2/3 facts; 1/3 chunks relevant | 1/10: 0/3 facts stated | 1.67 s: embed 60 ms + search 2.4 ms + generate 1.61 s | Context missed 'not sold' (its best chunk ranked 5). Answer left out 'only counts public', 'outside services' although the context had them. Answer said the handbook does not cover it. 2 of 3 chunks are noise. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q7 | [1] relevant · ove-26 (S11-P2, S11-P3) · 0.716 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.678 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] relevant · ove-25 (S11-P1, S11-P2) · 0.665 · "QuadConnect keeps only what it needs. For your account ..." | Good: 3/3 facts; 2/3 chunks relevant | 7/10: 2/3 facts stated | 0.78 s: embed 59 ms + search 2.3 ms + generate 0.72 s | Context had every fact. Answer left out 'outside services' although the context had it. 1 of 3 chunks is noise. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q7 | [1] relevant · hyb-40 (S11-P2) · 0.711 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] noise · hyb-41 (S11-P3) · 0.675 · "You stay in control of your data. To delete ..."<br>[3] noise · hyb-39 (S11-P1) · 0.668 · "QuadConnect keeps only what it needs. For your account ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 0.64 s: embed 56 ms + search 2.4 ms + generate 0.58 s | Context had every fact. Answer left out 'outside services' although the context had it. 2 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Fixed | Q7 | [1] noise · fix-06 (S02-P1, S02-P2) · 0.738 · "The only pages open to everyone are the landing ..."<br>[2] noise · fix-43 (S11-P3) · 0.715 · "To stop QuadConnect from using your Google account, remove ..."<br>[3] noise · fix-05 (S02-P1) · 0.706 · "You can create a QuadConnect account in two ways. ..." | Poor: 0/3 facts; 0/3 chunks relevant | 1/10: 0/3 facts stated | 2.81 s: embed 213 ms + search 2.8 ms + generate 2.60 s | Context missed 'not sold' (its best chunk ranked 9), 'only counts public' (its best chunk ranked 6), 'outside services' (its best chunk ranked 6). Answer said the handbook does not cover it. 3 of 3 chunks are noise. |
+| Large (bge-large-en-v1.5) | Overlapping | Q7 | [1] relevant · ove-26 (S11-P2, S11-P3) · 0.775 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.717 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] relevant · ove-27 (S12-P1, S12-P2) · 0.705 · "QuadConnect has a few pages that describe the community ..." | Good: 3/3 facts; 2/3 chunks relevant | 7/10: 2/3 facts stated | 0.98 s: embed 219 ms + search 2.3 ms + generate 0.76 s | Context had every fact. Answer left out 'outside services' although the context had it. 1 of 3 chunks is noise. |
+| Large (bge-large-en-v1.5) | Hybrid | Q7 | [1] noise · hyb-41 (S11-P3) · 0.746 · "You stay in control of your data. To delete ..."<br>[2] relevant · hyb-40 (S11-P2) · 0.726 · "Nothing about you is sold or shared. QuadConnect's one ..."<br>[3] noise · hyb-05 (S02-P2) · 0.708 · "When you continue with Google, Google sends QuadConnect four ..." | Good: 3/3 facts; 1/3 chunks relevant | 7/10: 2/3 facts stated | 1.29 s: embed 213 ms + search 2.5 ms + generate 1.08 s | Context had every fact. Answer left out 'outside services' although the context had it. 2 of 3 chunks are noise. |
 
 <details>
 <summary>The nine answers to Q7</summary>
@@ -540,15 +540,15 @@ text. The answers are under each table.
 
 | Embedding Model | Chunking Strategy | Query | Retrieved chunks | Retrieved Context Quality | Answer Quality | Latency | Notes |
 |---|---|---|---|---|---|---|---|
-| Small (bge-small-en-v1.5) | Fixed | Q8 | [1] noise · fix-05 (S02-P1) · 0.738 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · fix-01 (S01-P1) · 0.730 · "QuadConnect is a social app for students at the ..."<br>[3] noise · fix-34 (S08-P3, S08-P4) · 0.726 · "You type a request such as students who like ..." | n/a: nothing to find (top score 0.738) | 10/10: declined correctly | 0.92 s: embed 20 ms + search 1.9 ms + generate 0.89 s | Declined correctly: the handbook does not say. |
-| Small (bge-small-en-v1.5) | Overlapping | Q8 | [1] noise · ove-01 (S01-P1, S01-P2) · 0.722 · "QuadConnect is a social app for students at the ..."<br>[2] noise · ove-29 (S13-P2, S13-P3) · 0.722 · "What happens if my free times do not overlap ..."<br>[3] noise · ove-02 (S01-P2, S01-P3) · 0.720 · "QuadConnect is a closed community for verified Illinois students. ..." | n/a: nothing to find (top score 0.722) | 10/10: declined correctly | 0.65 s: embed 20 ms + search 2.4 ms + generate 0.63 s | Declined correctly: the handbook does not say. |
-| Small (bge-small-en-v1.5) | Hybrid | Q8 | [1] noise · hyb-02 (S01-P2) · 0.734 · "QuadConnect is a closed community for verified Illinois students. ..."<br>[2] noise · hyb-01 (S01-P1) · 0.731 · "QuadConnect is a social app for students at the ..."<br>[3] noise · hyb-40 (S11-P2) · 0.720 · "Nothing about you is sold or shared. QuadConnect's one ..." | n/a: nothing to find (top score 0.734) | 10/10: declined correctly | 0.88 s: embed 22 ms + search 2.3 ms + generate 0.86 s | Declined correctly: the handbook does not say. |
-| Medium (bge-base-en-v1.5) | Fixed | Q8 | [1] noise · fix-05 (S02-P1) · 0.721 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · fix-01 (S01-P1) · 0.689 · "QuadConnect is a social app for students at the ..."<br>[3] noise · fix-06 (S02-P1, S02-P2) · 0.686 · "The only pages open to everyone are the landing ..." | n/a: nothing to find (top score 0.721) | 10/10: declined correctly | 0.67 s: embed 47 ms + search 2.4 ms + generate 0.62 s | Declined correctly: the handbook does not say. |
-| Medium (bge-base-en-v1.5) | Overlapping | Q8 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.712 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.692 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-01 (S01-P1, S01-P2) · 0.674 · "QuadConnect is a social app for students at the ..." | n/a: nothing to find (top score 0.712) | 10/10: declined correctly | 1.05 s: embed 47 ms + search 1.9 ms + generate 1.00 s | Declined correctly: the handbook does not say. |
-| Medium (bge-base-en-v1.5) | Hybrid | Q8 | [1] noise · hyb-04 (S02-P1) · 0.711 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · hyb-01 (S01-P1) · 0.693 · "QuadConnect is a social app for students at the ..."<br>[3] noise · hyb-05 (S02-P2) · 0.692 · "When you continue with Google, Google sends QuadConnect four ..." | n/a: nothing to find (top score 0.711) | 10/10: declined correctly | 1.32 s: embed 47 ms + search 2.3 ms + generate 1.27 s | Declined correctly: the handbook does not say. |
-| Large (bge-large-en-v1.5) | Fixed | Q8 | [1] noise · fix-05 (S02-P1) · 0.777 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · fix-06 (S02-P1, S02-P2) · 0.733 · "The only pages open to everyone are the landing ..."<br>[3] noise · fix-03 (S01-P2, S01-P3) · 0.726 · "The current prototype signs you in with a username ..." | n/a: nothing to find (top score 0.777) | 10/10: declined correctly | 2.42 s: embed 199 ms + search 2.3 ms + generate 2.21 s | Declined correctly: the handbook does not say. |
-| Large (bge-large-en-v1.5) | Overlapping | Q8 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.758 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.742 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-26 (S11-P2, S11-P3) · 0.734 · "Nothing about you is sold or shared. QuadConnect's one ..." | n/a: nothing to find (top score 0.758) | 10/10: declined correctly | 1.05 s: embed 217 ms + search 2.1 ms + generate 0.83 s | Declined correctly: the handbook does not say. |
-| Large (bge-large-en-v1.5) | Hybrid | Q8 | [1] noise · hyb-04 (S02-P1) · 0.771 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · hyb-06 (S02-P3) · 0.738 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[3] noise · hyb-05 (S02-P2) · 0.737 · "When you continue with Google, Google sends QuadConnect four ..." | n/a: nothing to find (top score 0.771) | 10/10: declined correctly | 2.52 s: embed 227 ms + search 2.3 ms + generate 2.29 s | Declined correctly: the handbook does not say. |
+| Small (bge-small-en-v1.5) | Fixed | Q8 | [1] noise · fix-05 (S02-P1) · 0.738 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · fix-01 (S01-P1) · 0.730 · "QuadConnect is a social app for students at the ..."<br>[3] noise · fix-34 (S08-P3, S08-P4) · 0.726 · "You type a request such as students who like ..." | n/a: nothing to find (top score 0.738) | 10/10: declined correctly | 0.92 s: embed 25 ms + search 2.4 ms + generate 0.89 s | Declined correctly: the handbook does not say. |
+| Small (bge-small-en-v1.5) | Overlapping | Q8 | [1] noise · ove-01 (S01-P1, S01-P2) · 0.722 · "QuadConnect is a social app for students at the ..."<br>[2] noise · ove-29 (S13-P2, S13-P3) · 0.722 · "What happens if my free times do not overlap ..."<br>[3] noise · ove-02 (S01-P2, S01-P3) · 0.720 · "QuadConnect is a closed community for verified Illinois students. ..." | n/a: nothing to find (top score 0.722) | 10/10: declined correctly | 0.66 s: embed 24 ms + search 2.4 ms + generate 0.63 s | Declined correctly: the handbook does not say. |
+| Small (bge-small-en-v1.5) | Hybrid | Q8 | [1] noise · hyb-02 (S01-P2) · 0.734 · "QuadConnect is a closed community for verified Illinois students. ..."<br>[2] noise · hyb-01 (S01-P1) · 0.731 · "QuadConnect is a social app for students at the ..."<br>[3] noise · hyb-40 (S11-P2) · 0.720 · "Nothing about you is sold or shared. QuadConnect's one ..." | n/a: nothing to find (top score 0.734) | 10/10: declined correctly | 0.88 s: embed 24 ms + search 2.3 ms + generate 0.86 s | Declined correctly: the handbook does not say. |
+| Medium (bge-base-en-v1.5) | Fixed | Q8 | [1] noise · fix-05 (S02-P1) · 0.721 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · fix-01 (S01-P1) · 0.689 · "QuadConnect is a social app for students at the ..."<br>[3] noise · fix-06 (S02-P1, S02-P2) · 0.686 · "The only pages open to everyone are the landing ..." | n/a: nothing to find (top score 0.721) | 10/10: declined correctly | 0.67 s: embed 56 ms + search 2.3 ms + generate 0.62 s | Declined correctly: the handbook does not say. |
+| Medium (bge-base-en-v1.5) | Overlapping | Q8 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.712 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.692 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-01 (S01-P1, S01-P2) · 0.674 · "QuadConnect is a social app for students at the ..." | n/a: nothing to find (top score 0.712) | 10/10: declined correctly | 1.06 s: embed 55 ms + search 3.3 ms + generate 1.00 s | Declined correctly: the handbook does not say. |
+| Medium (bge-base-en-v1.5) | Hybrid | Q8 | [1] noise · hyb-04 (S02-P1) · 0.711 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · hyb-01 (S01-P1) · 0.693 · "QuadConnect is a social app for students at the ..."<br>[3] noise · hyb-05 (S02-P2) · 0.692 · "When you continue with Google, Google sends QuadConnect four ..." | n/a: nothing to find (top score 0.711) | 10/10: declined correctly | 1.33 s: embed 57 ms + search 2.1 ms + generate 1.27 s | Declined correctly: the handbook does not say. |
+| Large (bge-large-en-v1.5) | Fixed | Q8 | [1] noise · fix-05 (S02-P1) · 0.777 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · fix-06 (S02-P1, S02-P2) · 0.733 · "The only pages open to everyone are the landing ..."<br>[3] noise · fix-03 (S01-P2, S01-P3) · 0.726 · "The current prototype signs you in with a username ..." | n/a: nothing to find (top score 0.777) | 10/10: declined correctly | 2.42 s: embed 208 ms + search 2.4 ms + generate 2.21 s | Declined correctly: the handbook does not say. |
+| Large (bge-large-en-v1.5) | Overlapping | Q8 | [1] noise · ove-03 (S02-P1, S02-P2) · 0.758 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · ove-04 (S02-P2, S02-P3) · 0.742 · "When you continue with Google, Google sends QuadConnect four ..."<br>[3] noise · ove-26 (S11-P2, S11-P3) · 0.734 · "Nothing about you is sold or shared. QuadConnect's one ..." | n/a: nothing to find (top score 0.758) | 10/10: declined correctly | 1.04 s: embed 205 ms + search 2.3 ms + generate 0.83 s | Declined correctly: the handbook does not say. |
+| Large (bge-large-en-v1.5) | Hybrid | Q8 | [1] noise · hyb-04 (S02-P1) · 0.771 · "You can create a QuadConnect account in two ways. ..."<br>[2] noise · hyb-06 (S02-P3) · 0.738 · "QuadConnect cannot send email yet, so it cannot send ..."<br>[3] noise · hyb-05 (S02-P2) · 0.737 · "When you continue with Google, Google sends QuadConnect four ..." | n/a: nothing to find (top score 0.771) | 10/10: declined correctly | 2.50 s: embed 211 ms + search 2.3 ms + generate 2.29 s | Declined correctly: the handbook does not say. |
 
 <details>
 <summary>The nine answers to Q8</summary>
@@ -584,11 +584,11 @@ question). Timings are from this machine's CPU and change a little from run to r
 
 | Model | Parameters | Dimensions | Embed a chunk | Embed a question | Vectors for 129 chunks |
 |---|---|---|---|---|---|
-| Small | 33 million | 384 | 46 ms | 22 ms | 194 KB |
-| Medium | 109 million | 768 | 143 ms | 51 ms | 387 KB |
-| Large | 335 million | 1024 | 483 ms | 208 ms | 516 KB |
+| Small | 33 million | 384 | 50 ms | 25 ms | 194 KB |
+| Medium | 109 million | 768 | 152 ms | 59 ms | 387 KB |
+| Large | 335 million | 1024 | 1257 ms | 213 ms | 516 KB |
 
-Large against small, on the run saved in the notebook: 10 times the parameters, 2.7 times the dimensions and storage, 10.4 times the time to embed a chunk and 9.3 times the time to embed a question.
+Large against small, on the run saved in the notebook: 10 times the parameters, 2.7 times the dimensions and storage, 25.0 times the time to embed a chunk and 8.7 times the time to embed a question.
 
 **Quality** (seven answerable questions × three strategies = 21 runs and 54 key facts per model):
 
@@ -878,3 +878,310 @@ near-misses. The second effect grows with scale, which is why Part 4 returns to 
 | 2.3 Embedding models | Model size against retrieval, answers and cost | The small model did as well as the large one at a fraction of the cost: larger was not always better |
 | 2.4 Chunking strategies | Fixed length, overlapping and hybrid compared | Overlapping retrieved 98% of the facts and gave the best answers; leaving out Q3, which hybrid missed, hybrid's answers averaged as high at about half the prompt size |
 | 2.5 Dataset size | Small (25 paragraphs), full (44) and large (88) datasets | A smaller dataset loses coverage; a larger one kept the facts, but the evidence's lead over the nearest noise shrank to a third or a half |
+
+---
+
+## 3. Failures and a fix
+
+Every failure below happened in Part 2's 72 runs; none was staged for this part. Step 3.1 counts where the key facts
+were lost and shows four failures in detail. Step 3.2 tests each failure's possible causes one at a time. Step 3.3
+fixes the two main causes and measures the system before and after.
+
+### 3.1 Failure cases
+
+A key fact can be lost in two places: in **retrieval**, when it never reaches the context, or in **generation**, when
+it is in the context but the answer leaves it out. Counting every key fact of every run (18 facts × 9 configurations
+= 162) shows where the system loses information.
+
+| Strategy | Key facts | Stated | Lost in retrieval | Lost by the generator | Stated without its evidence |
+|---|---|---|---|---|---|
+| Fixed | 54 | 39 | 10 | 5 | 0 |
+| Overlapping | 54 | 45 | 1 | 8 | 0 |
+| Hybrid | 54 | 39 | 7 | 8 | 0 |
+| All nine configurations | 162 | 123 | 18 | 21 | 0 |
+
+**The facts that were lost, and where** (each fact is counted once per configuration, 9 runs):
+
+| Q | Fact | Stated | Lost in retrieval | Lost by the generator |
+|---|---|---|---|---|
+| Q1 | Illini Union | 8 | 1 | 0 |
+| Q1 | Grainger | 8 | 1 | 0 |
+| Q1 | Main Quad | 8 | 1 | 0 |
+| Q2 | no reset email | 4 | 0 | 5 |
+| Q3 | shared slot needed | 6 | 3 | 0 |
+| Q3 | mark more windows | 6 | 3 | 0 |
+| Q4 | group size | 2 | 1 | 6 |
+| Q5 | only totals | 5 | 2 | 2 |
+| Q7 | not sold | 7 | 2 | 0 |
+| Q7 | only counts public | 6 | 2 | 1 |
+| Q7 | outside services | 0 | 2 | 7 |
+
+**Both halves of the system lose facts.** Retrieval lost 18 of the 162 key facts, and the generator lost 21 more that
+were in the context. No answer stated a key fact without its evidence, so no fact was guessed.
+
+**Four failures, one of each kind the brief names and one more:**
+
+| | Failure | Kind | Where it happened |
+|---|---|---|---|
+| F1 | Q3's evidence never reached the context, so the answer said the handbook does not explain it | Wrong chunks retrieved | Hybrid chunks, all three models |
+| F2 | Q1's seat counts were missing, so the answer could not name a single venue | Incomplete context | Medium model, fixed chunks |
+| F3 | Q7's answer said the handbook does not mention selling or sharing data, although the context held two of the question's three facts | Incorrect answer | Medium model, fixed chunks |
+| F4 | Every answer to Q7 says that QuadConnect does not share data with other companies, and none says that Groq, Google and PythonAnywhere do receive some | Incomplete, misleading answer | All nine configurations |
+
+#### F1: wrong chunks retrieved
+
+*Q3, medium model, hybrid chunks:* "Why didn't I get a match this week?" Poor: 0/2 facts; 0/3 chunks relevant. Where each fact's evidence ranked: shared slot needed 5, mark more windows 5.
+
+| Chunk | Relevance | Score | Its text begins |
+|---|---|---|---|
+| [1] hyb-15 | noise | 0.669 | How weekly matching works: QuadConnect works in weekly cycles. A matching week starts on a Monday, and each cycle produces a small number of scheduled meetings rather than a feed ... |
+| [2] hyb-17 | noise | 0.666 | How weekly matching works: A match moves through four stages. It starts as Proposed, when it has been offered to the students in it. Each student then answers. Your answer ... |
+| [3] hyb-18 | noise | 0.636 | How weekly matching works: Declining is how you are withdrawn from a meetup that other students are still planning to attend, and a student cannot be dropped from a match ... |
+
+Answer (1/10: 0/2 facts stated): "The handbook excerpts you provided don’t explain why you might not receive a match in a given week."
+
+The same failure with every model:
+
+| Model | Chunk 1 | Chunk 2 | Chunk 3 | Best rank per fact | Answer quality |
+|---|---|---|---|---|---|
+| Small | hyb-17 | hyb-15 | hyb-18 | 5 5 | 1/10: 0/2 facts stated |
+| Medium | hyb-15 | hyb-17 | hyb-18 | 5 5 | 1/10: 0/2 facts stated |
+| Large | hyb-17 | hyb-15 | hyb-16 | 5 5 | 1/10: 0/2 facts stated |
+
+#### F2: incomplete context
+
+*Q1, medium model, fixed chunks:* "Our squad has eight people. Which venues have enough seats for all of us?" Partial: 1/4 facts; 1/3 chunks relevant. Where each fact's evidence ranked: Illini Union 4, Grainger 4, Main Quad 4, not Espresso Royale 2.
+
+| Chunk | Relevance | Score | Its text begins |
+|---|---|---|---|
+| [1] fix-20 | noise | 0.667 | This matters most in a squad, where several people plan their weekend around the group. A clear decline lets the others know who is coming, while a silent no-show leaves ... |
+| [2] fix-24 | relevant | 0.593 | A full squad of eight therefore fits every venue except Espresso Royale, which suits Friend Connect meetups and smaller squads. If you are not sure where to go, open the ... |
+| [3] fix-21 | noise | 0.530 | Your group size preference matters here as well. A student who chose One person as their group size suits Friend Connect, while a student who chose Small group suits a ... |
+
+Answer (3.2/10: 1/4 facts stated): "All venues can accommodate a full squad of eight people except Espresso Royale, which is only suitable for Friend Connect meetups and smaller squads. [2]"
+
+#### F3: incorrect answer
+
+*Q7, medium model, fixed chunks:* "Does QuadConnect sell my data or share it with other companies?" Partial: 2/3 facts; 1/3 chunks relevant. Where each fact's evidence ranked: not sold 5, only counts public 3, outside services 3.
+
+| Chunk | Relevance | Score | Its text begins |
+|---|---|---|---|
+| [1] fix-06 | noise | 0.689 | The only pages open to everyone are the landing page, the privacy notice, the login and sign-up pages, and one public summary of interests. When you continue with Google, Google ... |
+| [2] fix-43 | noise | 0.655 | To stop QuadConnect from using your Google account, remove it from the third-party connections in your Google account settings. The student lists that staff can download for reports leave out ... |
+| [3] fix-42 | relevant | 0.655 | QuadConnect's one public API, the interest summary at /api/summary/, publishes only how many students picked each interest, never names, NetIDs or email addresses. The site is hosted on PythonAnywhere, and ... |
+
+Answer (1/10: 0/3 facts stated): "The handbook excerpts do not mention QuadConnect selling or sharing your data with other companies."
+
+#### F4: incomplete, misleading answer
+
+| Model | Chunks | Outside services in context | In the answer | Answer quality | The answer begins |
+|---|---|---|---|---|---|
+| Small | Fixed | no | no | 4/10: 1/3 facts stated | The handbook states that QuadConnect does not sell or share your data with other companies. It ... |
+| Small | Overlapping | yes | no | 7/10: 2/3 facts stated | QuadConnect does not sell or share your personal data. The handbook states that “Nothing about you ... |
+| Small | Hybrid | yes | no | 7/10: 2/3 facts stated | QuadConnect does not sell or share your personal data. The handbook states that “Nothing about you ... |
+| Medium | Fixed | yes | no | 1/10: 0/3 facts stated | The handbook excerpts do not mention QuadConnect selling or sharing your data with other companies. ... |
+| Medium | Overlapping | yes | no | 7/10: 2/3 facts stated | QuadConnect does not sell or share your personal data. The handbook states that “Nothing about you ... |
+| Medium | Hybrid | yes | no | 7/10: 2/3 facts stated | QuadConnect does not sell or share your personal data. The handbook states that nothing about you ... |
+| Large | Fixed | no | no | 1/10: 0/3 facts stated | The handbook excerpts you provided do not contain any information about QuadConnect selling or sharing your ... |
+| Large | Overlapping | yes | no | 7/10: 2/3 facts stated | QuadConnect does not sell or share your personal data. The handbook states that nothing about you ... |
+| Large | Hybrid | yes | no | 7/10: 2/3 facts stated | QuadConnect does not sell or share your personal data with other companies. The handbook states that ... |
+
+### 3.2 Root cause analysis
+
+The brief asks whether each failure came from the chunking, the embedding model or the way the question was asked.
+Each of these can be tested on its own: change it, keep everything else the same, and see whether the evidence comes
+back. These tests change only retrieval, so they need no new answers; they measure where the evidence ranks.
+
+* **Chunking:** the same handbook text, cut or labelled differently.
+* **Embedding model:** the same chunks and question, with the other two models.
+* **Query formulation:** the same chunks and model, with the question reworded but meaning the same thing.
+* **Generation:** when the fact was already in the context, none of the three can be the cause; the generator is.
+
+**F1, Q3 on hybrid chunks:** the rank (and score) of the first chunk that holds Q3's evidence; ranks 1 to 3 are
+retrieved.
+
+| Test | Small | Medium | Large |
+|---|---|---|---|
+| As in Part 2: titled chunks, the student's question | 5 (0.655) | 5 (0.606) | 5 (0.621) |
+| Chunking: the same chunks without their section titles | 3 (0.655) | 2 (0.612) | 2 (0.629) |
+| Query: 'I got no match this week. What could be the reason?' | 5 (0.669) | 5 (0.608) | 5 (0.615) |
+| Query: 'Why didn't QuadConnect match me with anyone this week?' | 2 (0.774) | 3 (0.684) | 2 (0.743) |
+| Query: 'Why didn't I get a match this week? Does my availability matter?' | 1 (0.756) | 1 (0.71) | 1 (0.707) |
+
+**F2, Q1 on fixed chunks:** where the chunk with the seat counts ranks.
+
+| Test | Small | Medium | Large |
+|---|---|---|---|
+| As in Part 2: the student's question | 3 (0.632) | 4 (0.526) | 2 (0.625) |
+| Query: 'Which venues have at least eight seats?' | 1 (0.614) | 1 (0.521) | 1 (0.601) |
+| Query: 'How many people does each venue seat?' | 2 (0.643) | 2 (0.581) | 1 (0.632) |
+
+**F3, Q7 on fixed chunks:** where the sentence "Nothing about you is sold or shared." ranks.
+
+| Test | Small | Medium | Large |
+|---|---|---|---|
+| As in Part 2: the student's question | 3 (0.692) | 5 (0.649) | 9 (0.674) |
+| Query: 'Does QuadConnect sell or share my personal data?' | 3 (0.749) | 3 (0.692) | 4 (0.73) |
+| The same question, overlapping chunks | 1 (0.712) | 1 (0.716) | 1 (0.775) |
+| The same question, hybrid chunks | 3 (0.682) | 1 (0.711) | 2 (0.726) |
+
+**F4, and the other facts the generator dropped:**
+
+| Q | Fact | Runs with the fact in the context | Answers that left it out |
+|---|---|---|---|
+| Q2 | no reset email | 9 | 5 |
+| Q4 | group size | 8 | 6 |
+| Q5 | only totals | 7 | 2 |
+| Q7 | only counts public | 7 | 1 |
+| Q7 | outside services | 7 | 7 |
+
+**The causes, failure by failure:**
+
+| | Chunking | Embedding model | Query formulation | Generation |
+|---|---|---|---|---|
+| **F1** Q3, wrong chunks | **Yes.** Without their section titles, the same chunks put the evidence 2nd or 3rd instead of 5th. The title "How weekly matching works" in front of four Section 5 chunks made them look like the answer. | **No.** All three models ranked the evidence 5th, behind the same Section 5 chunks. | **Yes.** The question names the symptom (no match this week), and those words are Section 5's subject: a plain paraphrase, "I got no match this week. What could be the reason?", still ranks the evidence 5th. Adding the cause's word ("Does my availability matter?") puts it 1st with every model. | – |
+| **F2** Q1, incomplete context | **Yes.** The 120-word window cut paragraph S06-P2 in two. The seat counts became the last sentence of `fix-23`, whose other sentences say where to wait at each venue, and the conclusion about a squad of eight opened `fix-24`. | **Partly.** Only the medium model missed it, by 0.004 (0.526 against 0.530 for the 3rd chunk); the small and large models ranked it 3rd and 2nd. | **Yes.** "Which venues have at least eight seats?" puts the seat counts 1st with every model; the student's "squad of eight people" matches chunks about squads instead. | – |
+| **F3** Q7, incorrect answer | **Yes.** The window cut paragraph S11-P2 after its first sentence: "Nothing about you is sold or shared." became the last line of `fix-41`, a chunk about what QuadConnect keeps, and the rest of the paragraph opened `fix-42`. | **Yes.** That sentence ranked 3rd with the small model, 5th with the medium and 9th with the large. | **Yes.** "Other companies" matches the chunks about Google, a company that does receive data. Without it ("Does QuadConnect sell or share my personal data?"), the sentence ranks 3rd or 4th. | **Yes.** The context still held two of the three facts, but the prompt's rule "if the excerpts do not contain the answer, say that the handbook does not cover it" led the generator to refuse instead of answering the part it could. |
+| **F4** Q7, incomplete answer | No | No | No | **Yes, alone.** The fact was in the context in 7 of the 9 runs, and no answer gave it. The prompt asks for at most four sentences and does not ask for exceptions, so the generator answers "no" and stops. |
+
+**In short:** each retrieval failure had more than one cause. The chunking decided what text sat together in a
+chunk, and the question's wording decided which chunks looked closest; the embedding model only tipped near-ties
+(F2, F3). The generator's failures had one cause: the prompt. It lost 21 facts that were in the context, more than
+retrieval lost, and the same habit shows in Q2 (the missing reset link) and Q4 (the group size). Step 3.3 fixes one
+cause on each side.
+
+### 3.3 System improvement
+
+Two fixes, one for each half of the system:
+
+1. **Fix 1, retrieval: change top-k from 3 to 5.** Every key fact that hybrid chunks missed in Part 2 ranked 4th or
+   5th (Q3's evidence 5th with every model, Q4's group size 4th with the large model), so two more chunks should
+   bring them in. The table below compares the retrieval options first, without generating answers. Removing the
+   section titles (a chunking change) also brings Q3's evidence in, with no extra text, but still misses Q4's group
+   size; k = 5 is the only option that puts all 54 key facts into the context, and five hybrid chunks are still less
+   text than three overlapping ones. Rewording the question works too (Step 3.2), but students cannot be asked to
+   word questions like the handbook: the system would have to rewrite every question, at the cost of another model
+   call each.
+2. **Fix 2, generation: improve the prompt.** The first try keeps every rule of the original instruction and adds
+   two: give every fact from the excerpts that answers the question, including any exception, limit or setting the
+   student can change; and when the excerpts answer only part of the question, answer that part and say which part
+   is not covered. It also allows five sentences instead of four. Reading its answers showed a side effect (below),
+   so a final version changes two phrases: only settings that "the excerpts mention", and "add nothing that they do
+   not say".
+
+**The test:** hybrid chunks with all three models and all eight questions (24 runs), in four stages: A, Part 2 as it
+was; B, with fix 1; C, with fix 1 and fix 2's first try; D, with fix 1 and the final fix 2. The failing runs on fixed
+chunks (F2, F3, and Q7 with the large model) go through the same four stages. Q8 stays in the test, to check that no
+change makes the system guess. Every new answer was read against its score. That found one more pattern miss: Q3's
+"shared slot" pattern did not accept "shares". It is corrected in Step 2.1, and it changes no Part 2 score.
+
+**Retrieval fixes considered** (retrieval only, all three models, the seven answerable questions):
+
+| Option | Key facts in the context (of 54) | Words in the context (mean) |
+|---|---|---|
+| Part 2: hybrid chunks, k = 3 | 47 | 304 |
+| Chunking: hybrid chunks without their titles, k = 3 | 53 | 310 |
+| Top-k: hybrid chunks, k = 4 | 48 | 405 |
+| Top-k: hybrid chunks, k = 5 | 54 | 512 |
+| For comparison, Part 2's best: overlapping chunks, k = 3 | 53 | 679 |
+
+**Fix 2's system instruction, first try** (stage C):
+
+> You are QuadConnect's help assistant. Answer the student's question using only the handbook excerpts below. Give every fact from the excerpts that answers the question, including any exception, limit or setting the student can change. If the excerpts answer only part of the question, answer that part and say which part the handbook does not cover. If they do not answer it at all, say that the handbook does not cover it, and do not guess. Keep the answer to at most five sentences, and cite the excerpts you used by their numbers, such as [1] or [2].
+
+**Fix 2's system instruction, final** (stage D):
+
+> You are QuadConnect's help assistant. Answer the student's question using only the handbook excerpts below. Give every fact from the excerpts that answers the question, including any exception, limit or setting the excerpts mention, and add nothing that they do not say. If the excerpts answer only part of the question, answer that part and say which part they do not cover. If they do not answer it at all, say that the handbook does not cover it, and do not guess. Keep the answer to at most five sentences, and cite the excerpts you used by their numbers, such as [1] or [2].
+
+**Before and after**, on hybrid chunks with all three models and all eight questions (21 answerable runs, 54 key
+facts, and Q8 three times per stage):
+
+| Stage | Facts in context | Facts stated | Answer score | Q8 declined | Answers with the invented 'account settings' | Noise chunks | Prompt tokens | Generate (median) |
+|---|---|---|---|---|---|---|---|---|
+| A. Before (Part 2): k = 3, original prompt | 47/54 | 39/54 | 7.21 | 3/3 | 0 | 1.62 | 554 | 0.72 s |
+| B. Fix 1: k = 5, original prompt | 54/54 | 44/54 | 8.29 | 3/3 | 0 | 3.24 | 820 | 1.11 s |
+| C. Fix 2, first try: k = 5, new prompt (first try) | 54/54 | 47/54 | 8.79 | 3/3 | 3 | 3.24 | 866 | 0.80 s |
+| D. Fix 2, final: k = 5, new prompt (final) | 54/54 | 44/54 | 8.21 | 3/3 | 2 | 3.24 | 873 | 1.00 s |
+
+**Answer score per question**, stage by stage (A = before, B = fix 1, C = fix 2's first try, D = both fixes):
+
+| Q | Small model: A → B → C → D | Medium model: A → B → C → D | Large model: A → B → C → D |
+|---|---|---|---|
+| Q1 | 10 → 10 → 10 → 10 | 10 → 10 → 10 → 10 | 10 → 10 → 10 → 10 |
+| Q2 | 7 → 7 → 10 → 10 | 7 → 7 → 7 → 7 | 7 → 7 → 7 → 7 |
+| Q3 | 1 → 10 → 10 → 5.5 | 1 → 5.5 → 10 → 5.5 | 1 → 10 → 5.5 → 10 |
+| Q4 | 5.5 → 5.5 → 10 → 5.5 | 5.5 → 5.5 → 10 → 10 | 5.5 → 5.5 → 5.5 → 5.5 |
+| Q5 | 10 → 10 → 10 → 10 | 10 → 10 → 10 → 10 | 10 → 10 → 5.5 → 5.5 |
+| Q6 | 10 → 10 → 10 → 10 | 10 → 10 → 10 → 10 | 10 → 10 → 10 → 10 |
+| Q7 | 7 → 7 → 7 → 7 | 7 → 7 → 10 → 7 | 7 → 7 → 7 → 7 |
+| Q8 | 10 → 10 → 10 → 10 | 10 → 10 → 10 → 10 | 10 → 10 → 10 → 10 |
+
+**The first try's side effect:** answers that tell the student to change a password in "account settings", which
+the handbook never mentions:
+
+* C, Q2, small model, hybrid chunks: "Once logged in, you can change your password in your account settings if you wish. [1] [2]"
+* C, Q2, medium model, hybrid chunks: "Once you regain access, you can change your password in your account settings."
+* C, Q2, large model, hybrid chunks: "Once you’re back in, you can change your password in your account settings if you wish."
+* D, Q2, medium model, hybrid chunks: "Once you regain access, you can change your password in your account settings. [1] [2]"
+* D, Q2, large model, hybrid chunks: "Once you’re logged in, you can change your password in your account settings. [1] [2]"
+
+**The failures from 3.1, stage by stage:**
+
+| Q | Model | Chunks | Facts in context, A → B | Answer score, A → B → C → D |
+|---|---|---|---|---|
+| Q3 | Small | Hybrid | 0 → 2 of 2 | 1 → 10 → 10 → 5.5 |
+| Q3 | Medium | Hybrid | 0 → 2 of 2 | 1 → 5.5 → 10 → 5.5 |
+| Q3 | Large | Hybrid | 0 → 2 of 2 | 1 → 10 → 5.5 → 10 |
+| Q1 | Medium | Fixed | 1 → 4 of 4 | 3.2 → 10 → 10 → 10 |
+| Q7 | Medium | Fixed | 2 → 3 of 3 | 1 → 1 → 7 → 7 |
+| Q7 | Large | Fixed | 0 → 0 of 3 | 1 → 1 → 1 → 1 |
+| Q7 | Small | Hybrid | 3 → 3 of 3 | 7 → 7 → 7 → 7 |
+| Q7 | Medium | Hybrid | 3 → 3 of 3 | 7 → 7 → 10 → 7 |
+| Q7 | Large | Hybrid | 3 → 3 of 3 | 7 → 7 → 7 → 7 |
+
+**The four failures after the fixes:**
+
+* **F1 at stage B** (Q3, medium model, hybrid chunks; 2 of 2 facts in context, 1 stated, score 5.5): "The handbook says that a match can only happen if you share at least one free time slot with other students. If you haven’t kept your availability up‑to‑date or you only marked a very narrow window, the system may not find anyone who can meet at that time, so no match is produced that week. In short, a lack of shared free slots is the most common reason for not getting a match. [5]"
+* **F2 at stage B** (Q1, medium model, fixed chunks; 4 of 4 facts in context, 4 stated, score 10): "Your squad of eight can fit at any venue that seats at least eight people. According to the handbook, the Illini Union seats 12, the Grainger Engineering Library seats 8, and the Main Quad seats 20, so all three can accommodate your group. Espresso Royale only seats six, so it would not be large enough for eight people. [1] [4]"
+* **F3 at stage B** (Q7, medium model, fixed chunks; 3 of 3 facts in context, 0 stated, score 1): "The handbook does not state that QuadConnect sells or shares your data with other companies."
+* **F3 at stage D** (Q7, medium model, fixed chunks; 3 of 3 facts in context, 2 stated, score 7): "QuadConnect does not sell or share your data with other companies. The handbook states that “nothing about you is sold or shared” [5]. It also notes that data sent to external AI services is stripped of personal identifiers before use, and no other sharing is described [3]."
+* **F4 at stage D** (Q7, medium model, hybrid chunks; 3 of 3 facts in context, 2 stated, score 7): "QuadConnect does not sell or share your personal data. The handbook states that “Nothing about you is sold or shared” and that the public API only publishes aggregated interest counts without names, NetIDs or email addresses [1]. No other excerpt indicates any sale or sharing of your data."
+
+**What the fixes did.**
+
+* **Fix 1 worked, with no side effects.** With five chunks, all 54 key facts reached the context with every model
+  (47 before), and the answer score rose from 7.21 to 8.29. Three runs got better (Q3 with every model) and none got
+  worse. F1 is fixed: the small and large models now answer Q3 in full (10), and the medium model gives the rule but
+  not the advice to mark more windows (5.5). F2 is fixed too: on fixed chunks, the medium model now gets the seat
+  counts and names every venue (3.2 → 10). The price is size: about 820 prompt tokens instead of 550, which is still
+  17% less than overlapping chunks (990), with every key fact in the context against overlapping's 53.
+* **Fix 2 fixed the false refusal, but it did not make answers reliably more complete.** With the original prompt,
+  the medium model still refused Q7 on fixed chunks even when its five chunks held all three facts (stage B). Both
+  new prompts made it answer (1 → 7), so F3's last cause was the prompt, as Step 3.2 found. The first try also stated
+  three more facts (47 against 44) and raised the score to 8.79, but all three of its answers to Q2 added a step the
+  handbook never mentions: "you can change your password in your account settings". The final version, which tells
+  the model to add nothing the excerpts do not say, still added it in two of three runs, and it stated no more facts
+  than the original prompt (44; score 8.21). Both versions also lost a fact the original prompt had kept: the large
+  model's answer to Q5 dropped the totals on the Feedback summary page (10 → 5.5).
+* **F4 is not fixed.** Most answers to Q7 still leave out the outside services: asking for "every exception" did not
+  make the generator treat Groq, Google and PythonAnywhere as part of the answer, and some answers still say the
+  handbook mentions no other sharing.
+* **Q7 with the large model on fixed chunks still fails.** Its evidence ranks 6th to 9th, so five chunks are not
+  enough. Step 3.2 shows the fix it would need: without the words "other companies", the evidence ranks 4th.
+
+**What we keep: fix 1.** Hybrid chunks with k = 5 and the original prompt put every key fact into the context,
+raise the answer score from 7.2 to 8.3 and add no invented claims, at about 820 prompt tokens. We would not ship
+either new prompt: with this generator, wording that asks for more facts also invites facts of its own, and the
+stricter wording took the gain away without removing the invention. The answers' remaining omissions need a
+different kind of fix, such as a second step that checks each answer against the excerpts, which Part 4 discusses.
+
+These results come from the same eight questions that revealed the failures. They show that the fixes work on these
+failures; a real system would confirm them on new questions before relying on them.
+
+### Part 3 at a glance
+
+| Step | What was done | Main result |
+|---|---|---|
+| 3.1 Failure cases | Every key fact of the 72 runs traced; four failures shown with their chunks and answers | Retrieval lost 18 of 162 facts and the generator 21 more; the failures cover wrong chunks, incomplete context, an incorrect answer and a misleading one |
+| 3.2 Root causes | Each possible cause tested alone: the chunking, the model and the question's wording, changed one at a time | Retrieval failures came from chunking and wording, with the model only tipping near-ties; the generator's failures came from the prompt |
+| 3.3 Improvement | Fix 1: top-k from 3 to 5. Fix 2: the prompt, in two versions. Before and after on 24 runs and the failing ones | Fix 1 put all 54 facts in the context and raised answers from 7.2 to 8.3 with no regressions. Fix 2 cured the false refusal but invented a password step, so we keep fix 1 only |

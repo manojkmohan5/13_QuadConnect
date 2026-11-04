@@ -10,7 +10,7 @@ folder is independent of the Django app.
 |---|---|
 | 1. Build the RAG pipeline | Done |
 | 2. System experiments | Done |
-| 3. Failure analysis and improvement | Next |
+| 3. Failure analysis and improvement | Done |
 | 4. System design reflection | Next |
 
 ## Files
@@ -18,7 +18,7 @@ folder is independent of the Django app.
 | File | What it is |
 |---|---|
 | `rag_system.ipynb` | The full implementation and the experiments, with every output saved |
-| `rag_analysis.md` | The analysis: the pipeline, the evaluation tables and comparisons, and later the failures and design |
+| `rag_analysis.md` | The analysis: the pipeline, the evaluation tables and comparisons, the failures and the fix, and later the design |
 | `requirements.txt` | Every package the notebook needs, with pinned versions |
 | `data/handbook.md` | The knowledge base: QuadConnect's student handbook (13 sections, 44 paragraphs, 4,875 words) |
 | `data/staff_guide.md` | QuadConnect's staff and developer guide (11 sections, 44 paragraphs, 4,555 words): the extra documents of the larger dataset in Step 2.5 |
@@ -31,13 +31,17 @@ folder is independent of the Django app.
 | `chunks.csv` | Step 1.2 | Every chunk of the three strategies |
 | `embedding_stats.csv` | Step 1.3 | Each model and strategy: size, indexing time, storage |
 | `retrieval_demo.csv`, `generation_demo.csv` | Steps 1.4, 1.5 | The demonstration tables |
-| `generations.jsonl` | Steps 1.5 to 2.5 | Every answer from the language model, saved under a hash of its prompt |
+| `generations.jsonl` | Steps 1.5 to 3.3 | Every answer from the language model, saved under a hash of its prompt |
 | `test_queries.csv` | Step 2.1 | The eight test questions with their key facts and evidence |
 | `evaluation.csv` | Step 2.2 | The 72 runs: retrieved chunks (full text), scores, answers, timings |
 | `configurations.csv` | Step 2.2 | The nine configurations, summarised |
 | `by_model.csv`, `embedding_models.png` | Step 2.3 | The embedding models compared |
 | `by_strategy.csv`, `chunking_strategies.png` | Step 2.4 | The chunking strategies compared |
 | `scaling.csv`, `scaling_summary.csv`, `dataset_size.png` | Step 2.5 | The data scaling experiment |
+| `fact_outcomes.csv` | Step 3.1 | Every key fact of every Part 2 run: in the context or not, in the answer or not |
+| `root_causes.csv` | Step 3.2 | The tests of each failure's causes: where the evidence ranks when one thing changes |
+| `fix_options.csv` | Step 3.3 | The retrieval fixes considered |
+| `fixes.csv`, `fixes_summary.csv` | Step 3.3 | The system before and after the two fixes |
 
 ## Setup
 

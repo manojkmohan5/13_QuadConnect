@@ -23,7 +23,7 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
-WEEK 11 (w/c 2026-11-02)  -  P1-A8 Parts 1 and 2 on feature/p1-a8  [Manojkumar]
+WEEK 11 (w/c 2026-11-02)  -  P1-A8 Parts 1 to 3 on feature/p1-a8  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A8 (Semantic Relationships and Retrieval, 300 pts, due Mon 2026-11-09) is
 not a Django assignment, so it lives in rag/ on feature/p1-a8, cut from main
@@ -56,7 +56,25 @@ Done: Part 2 (the experiments).
     and developer guide, rag/data/staff_guide.md, written from the app's
     code). Smaller lost coverage; larger kept the facts but the evidence's
     lead over the nearest noise shrank to a third or a half.
-Next: Part 3 (failures, their causes, and one fix shown before and after).
+
+Done: Part 3 (failure analysis and improvement).
+  - Every key fact of the 72 runs traced: retrieval lost 18 of 162, the
+    generator 21 more (results/fact_outcomes.csv).
+  - Four failures: Q3's evidence never retrieved on hybrid chunks, Q1's
+    seat counts split off by fixed chunks, a false refusal on Q7, and Q7's
+    answers leaving out the outside services.
+  - Root causes tested one at a time (results/root_causes.csv): section
+    titles and the question's wording for Q3, a fixed-length split for Q1
+    and Q7, the prompt for the generator's failures; the model only tipped
+    near-ties.
+  - Fix 1, top-k 3 -> 5 on hybrid chunks: all 54 key facts in the context
+    and answers 7.21 -> 8.29, no run worse. Kept.
+  - Fix 2, a new prompt: cured the false refusal, but its answers invented
+    a password step ("account settings") and a stricter version did not
+    stop it, so it is not kept. All new answers were read against their
+    scores; one more pattern ("shares") was corrected.
+Next: Part 4 (cost, RAG against its alternatives, a design for 10K users a
+day).
 
 --------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A7 Parts 2 and 3; P1-A7 complete  [Manojkumar]

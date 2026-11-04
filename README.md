@@ -106,8 +106,15 @@ its student handbook.
   - Comparisons of the embedding models and the chunking strategies.
   - A data scaling experiment on three datasets, including a staff and
     developer guide written from the app's code.
-- [`rag/rag_analysis.md`](rag/rag_analysis.md): the analysis. Parts 1 and 2
-  are written; Parts 3 and 4 are to come.
+- The same notebook, Part 3, failure analysis and improvement.
+  - Every key fact of the 72 runs traced to where it was lost, and four
+    failures shown in detail.
+  - Each failure's causes tested one at a time: the chunking, the model and
+    the question's wording.
+  - Two fixes measured before and after: retrieving 5 chunks instead of 3,
+    which is kept, and a new prompt, which is not.
+- [`rag/rag_analysis.md`](rag/rag_analysis.md): the analysis. Parts 1 to 3
+  are written; Part 4 is to come.
 - [`rag/README.md`](rag/README.md): setup and how to run the notebook.
 
 ```bash
