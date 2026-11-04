@@ -113,8 +113,14 @@ its student handbook.
     the question's wording.
   - Two fixes measured before and after: retrieving 5 chunks instead of 3,
     which is kept, and a new prompt, which is not.
-- [`rag/rag_analysis.md`](rag/rag_analysis.md): the analysis. Parts 1 to 3
-  are written; Part 4 is to come.
+- The same notebook, Part 4, the system design.
+  - What each factor costs at 10,000 users a day: chunk size and top-k set
+    the bill; embedding size adds latency, not dollars.
+  - RAG against pure prompting and the whole handbook in the prompt, on the
+    same questions, and when to use fine-tuning: RAG is the choice.
+  - The design for 10,000 users a day, with its diagram.
+- [`rag/rag_analysis.md`](rag/rag_analysis.md): the analysis of all four
+  parts.
 - [`rag/README.md`](rag/README.md): setup and how to run the notebook.
 
 ```bash
