@@ -50,8 +50,8 @@ Done: Part 2 (the experiments).
     of 54 facts retrieved) at a fraction of the cost; larger was not
     always better.
   - Chunking: overlapping paragraphs retrieved 53 of 54 facts and gave the
-    best answers; hybrid matched them on six of seven questions at about
-    half the prompt size, but missed Q3 with every model.
+    best answers; hybrid missed Q3 with every model, but on the other six
+    questions its answers averaged as high, at about half the prompt size.
   - Data scaling: small (sections 1-7), full and large (handbook + a staff
     and developer guide, rag/data/staff_guide.md, written from the app's
     code). Smaller lost coverage; larger kept the facts but the evidence's
