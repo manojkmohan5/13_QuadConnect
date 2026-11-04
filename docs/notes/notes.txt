@@ -23,7 +23,7 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
-WEEK 11 (w/c 2026-11-02)  -  P1-A8 Part 1 on feature/p1-a8  [Manojkumar]
+WEEK 11 (w/c 2026-11-02)  -  P1-A8 Parts 1 and 2 on feature/p1-a8  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A8 (Semantic Relationships and Retrieval, 300 pts, due Mon 2026-11-09) is
 not a Django assignment, so it lives in rag/ on feature/p1-a8, cut from main
@@ -38,7 +38,25 @@ Done: Part 1 (the RAG pipeline).
     dimensions), nine NumPy vector stores, top-3 cosine retrieval.
   - Generation with gpt-oss-20b (A7), A7's settings, answers saved so the
     notebook re-runs without an API key.
-Next: Part 2 (3 models x 3 chunkings = 9 configurations on test questions).
+
+Done: Part 2 (the experiments).
+  - 8 test questions in a student's words, with 18 key facts and the
+    handbook sentences that state them; Q8 is not in the handbook.
+  - 72 runs (9 configurations x 8 questions), each with its retrieved
+    chunks, context quality, a 1-10 answer score, latency and notes
+    (results/evaluation.csv). All 72 answers were read against their
+    scores; two patterns were corrected.
+  - Embedding size: the small model did as well as the large one (49 vs 48
+    of 54 facts retrieved) at a fraction of the cost; larger was not
+    always better.
+  - Chunking: overlapping paragraphs retrieved 53 of 54 facts and gave the
+    best answers; hybrid matched them on six of seven questions at about
+    half the prompt size, but missed Q3 with every model.
+  - Data scaling: small (sections 1-7), full and large (handbook + a staff
+    and developer guide, rag/data/staff_guide.md, written from the app's
+    code). Smaller lost coverage; larger kept the facts but the evidence's
+    lead over the nearest noise shrank to a third or a half.
+Next: Part 3 (failures, their causes, and one fix shown before and after).
 
 --------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A7 Parts 2 and 3; P1-A7 complete  [Manojkumar]

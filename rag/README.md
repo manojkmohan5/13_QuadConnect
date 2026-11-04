@@ -9,7 +9,7 @@ folder is independent of the Django app.
 | Part | Status |
 |---|---|
 | 1. Build the RAG pipeline | Done |
-| 2. System experiments | Next |
+| 2. System experiments | Done |
 | 3. Failure analysis and improvement | Next |
 | 4. System design reflection | Next |
 
@@ -18,10 +18,26 @@ folder is independent of the Django app.
 | File | What it is |
 |---|---|
 | `rag_system.ipynb` | The full implementation and the experiments, with every output saved |
-| `rag_analysis.md` | The analysis: the pipeline, and the evaluation, comparisons, failures and design as the parts are added |
+| `rag_analysis.md` | The analysis: the pipeline, the evaluation tables and comparisons, and later the failures and design |
 | `requirements.txt` | Every package the notebook needs, with pinned versions |
 | `data/handbook.md` | The knowledge base: QuadConnect's student handbook (13 sections, 44 paragraphs, 4,875 words) |
-| `results/` | What the notebook saves: the chunks, the embedding statistics, the demo tables and every generated answer |
+| `data/staff_guide.md` | QuadConnect's staff and developer guide (11 sections, 44 paragraphs, 4,555 words): the extra documents of the larger dataset in Step 2.5 |
+| `results/` | Everything the notebook saves, listed below |
+
+**In `results/`:**
+
+| File | Saved by | What it holds |
+|---|---|---|
+| `chunks.csv` | Step 1.2 | Every chunk of the three strategies |
+| `embedding_stats.csv` | Step 1.3 | Each model and strategy: size, indexing time, storage |
+| `retrieval_demo.csv`, `generation_demo.csv` | Steps 1.4, 1.5 | The demonstration tables |
+| `generations.jsonl` | Steps 1.5 to 2.5 | Every answer from the language model, saved under a hash of its prompt |
+| `test_queries.csv` | Step 2.1 | The eight test questions with their key facts and evidence |
+| `evaluation.csv` | Step 2.2 | The 72 runs: retrieved chunks (full text), scores, answers, timings |
+| `configurations.csv` | Step 2.2 | The nine configurations, summarised |
+| `by_model.csv`, `embedding_models.png` | Step 2.3 | The embedding models compared |
+| `by_strategy.csv`, `chunking_strategies.png` | Step 2.4 | The chunking strategies compared |
+| `scaling.csv`, `scaling_summary.csv`, `dataset_size.png` | Step 2.5 | The data scaling experiment |
 
 ## Setup
 
@@ -47,6 +63,7 @@ jupyter nbconvert --to notebook --execute --inplace rag_system.ipynb
 
 * Run it from this folder: every path in the notebook is relative to it (`data/`, `results/`, `../.env`).
 * The first run downloads the three embedding models from Hugging Face, about 1.9 GB, into the usual Hugging Face
-  cache. After that, a full run takes about two minutes on a laptop CPU; no GPU is needed.
-* The answers come from the saved file, so they are the same on every run. The timings (indexing, embedding a
-  question, searching) are measured on each run, so they vary a little from one run to the next.
+  cache. After that, a full run takes three to four minutes on a laptop CPU; no GPU is needed.
+* The answers come from the saved file, so they are the same on every run, and so are the retrieval results and
+  every score. The timings (indexing, embedding a question, searching) are measured on each run, so they vary a little
+  from one run to the next.

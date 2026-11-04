@@ -99,8 +99,15 @@ its student handbook.
   - Three BGE embedding models: 384, 768 and 1,024 dimensions.
   - A NumPy vector store with top-k retrieval.
   - Answers from gpt-oss-20b, the same generation model as in A7.
-- [`rag/rag_analysis.md`](rag/rag_analysis.md): the analysis, with Parts 2 to 4
-  to come.
+- The same notebook, Part 2, the experiments.
+  - Eight test questions, each with its key facts and evidence.
+  - All 9 configurations (3 models × 3 strategies): 72 runs, each with its
+    retrieved chunks, context quality, answer score, latency and notes.
+  - Comparisons of the embedding models and the chunking strategies.
+  - A data scaling experiment on three datasets, including a staff and
+    developer guide written from the app's code.
+- [`rag/rag_analysis.md`](rag/rag_analysis.md): the analysis. Parts 1 and 2
+  are written; Parts 3 and 4 are to come.
 - [`rag/README.md`](rag/README.md): setup and how to run the notebook.
 
 ```bash
