@@ -1,0 +1,6 @@
+Option,Facts in context (of 54),Words in the context (mean)
+"Part 2: hybrid chunks, k = 3",47,304
+"Chunking: hybrid chunks without their titles, k = 3",53,310
+"Top-k: hybrid chunks, k = 4",48,405
+"Top-k: hybrid chunks, k = 5",54,512
+"For comparison, Part 2's best: overlapping chunks, k = 3",53,679

@@ -22,5 +22,6 @@ select = [
 # The notebook's first cell silences a tqdm warning before transformers imports tqdm.
 "llm-test/ai_prototype.ipynb" = ["E402"]
 "multi-model/multi_model_system.ipynb" = ["E402"]
+"rag/rag_system.ipynb" = ["E402"]
 # Test fixtures create users with throwaway passwords.
 "connect/tests.py" = ["S106"]

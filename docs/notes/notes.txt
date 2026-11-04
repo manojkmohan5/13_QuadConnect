@@ -23,6 +23,68 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 11 (w/c 2026-11-02)  -  P1-A8 Parts 1 to 4 on feature/p1-a8  [Manojkumar]
+--------------------------------------------------------------------------------
+P1-A8 (Semantic Relationships and Retrieval, 300 pts, due Mon 2026-11-09) is
+not a Django assignment, so it lives in rag/ on feature/p1-a8, cut from main
+after P1-A7.
+
+Done: Part 1 (the RAG pipeline).
+  - Knowledge base: QuadConnect's student handbook (rag/data/handbook.md),
+    44 paragraphs of 90-165 words, 4,875 words, written from the app's code.
+  - Three chunking strategies: fixed length (120 words of whole sentences),
+    overlapping paragraph pairs, hybrid (titled paragraphs, long ones halved).
+  - Three embedding models, BGE v1.5 small / base / large (384 / 768 / 1,024
+    dimensions), nine NumPy vector stores, top-3 cosine retrieval.
+  - Generation with gpt-oss-20b (A7), A7's settings, answers saved so the
+    notebook re-runs without an API key.
+
+Done: Part 2 (the experiments).
+  - 8 test questions in a student's words, with 18 key facts and the
+    handbook sentences that state them; Q8 is not in the handbook.
+  - 72 runs (9 configurations x 8 questions), each with its retrieved
+    chunks, context quality, a 1-10 answer score, latency and notes
+    (results/evaluation.csv). All 72 answers were read against their
+    scores; two patterns were corrected.
+  - Embedding size: the small model did as well as the large one (49 vs 48
+    of 54 facts retrieved) at a fraction of the cost; larger was not
+    always better.
+  - Chunking: overlapping paragraphs retrieved 53 of 54 facts and gave the
+    best answers; hybrid missed Q3 with every model, but on the other six
+    questions its answers averaged as high, at about half the prompt size.
+  - Data scaling: small (sections 1-7), full and large (handbook + a staff
+    and developer guide, rag/data/staff_guide.md, written from the app's
+    code). Smaller lost coverage; larger kept the facts but the evidence's
+    lead over the nearest noise shrank to a third or a half.
+
+Done: Part 3 (failure analysis and improvement).
+  - Every key fact of the 72 runs traced: retrieval lost 18 of 162, the
+    generator 21 more (results/fact_outcomes.csv).
+  - Four failures: Q3's evidence never retrieved on hybrid chunks, Q1's
+    seat counts split off by fixed chunks, a false refusal on Q7, and Q7's
+    answers leaving out the outside services.
+  - Root causes tested one at a time (results/root_causes.csv): section
+    titles and the question's wording for Q3, a fixed-length split for Q1
+    and Q7, the prompt for the generator's failures; the model only tipped
+    near-ties.
+  - Fix 1, top-k 3 -> 5 on hybrid chunks: all 54 key facts in the context
+    and answers 7.21 -> 8.29, no run worse. Kept.
+  - Fix 2, a new prompt: cured the false refusal, but its answers invented
+    a password step ("account settings") and a stricter version did not
+    stop it, so it is not kept. All new answers were read against their
+    scores; one more pattern ("shares") was corrected.
+Done: Part 4 (system design reflection).
+  - Cost at 10,000 users / 20,000 questions a day (A7's prices): tokens
+    $1.87-$2.80 a day by chunk size and k; embedding CPU under $0.10 a day;
+    server $2.42 a day. Chunk size and top-k matter most.
+  - RAG 8.50 vs whole handbook in the prompt 7.86 (at $13.66 a day) vs pure
+    prompting 3.36 (invented venues, a reset link and a price); fine-tuning
+    compared by how it works. RAG chosen.
+  - Design for 10K users a day: one m7i.large plus a paid LLM plan, about
+    $5 a day; diagram in rag/results/system_design.png.
+Next: the PR into main, and the ZIP of rag/ for Canvas.
+
+--------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A7 Parts 2 and 3; P1-A7 complete  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A7 Part 1 reached main through PR #12 (2026-10-26, merge commit 17cfa98).
