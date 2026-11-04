@@ -29,8 +29,7 @@ matching decides, which times and places are possible, and what happens to their
 knowledge base the system needs.
 
 QuadConnect had no such document: its database holds short fields, and its repository documents are written for
-developers. We wrote the handbook for this assignment from the app's own code and pages, so every fact in it is one
-the app enforces or shows:
+developers. We wrote the handbook for this assignment from the app's own code, data and pages:
 
 * the formats and preferences come from the data model: Friend Connect (1-on-1) and Squad Connect (4 to 8 students),
   the five-step social energy scale, weekends only in four two-hour windows, the 0–100 fit score and the check-in
@@ -38,6 +37,15 @@ the app enforces or shows:
 * the venues with their seats and arrival notes, the interests and the colleges come from the seeded database;
 * sign-in, cookies and data sharing come from the Privacy page and the settings, the venue check from its module, and
   search from the search pages.
+
+**What the prototype stores but does not run yet.** The data model is built for weekly matching, check-ins and
+feedback, and the app's pages show them. The match page gives a match's venue, time, status and check-in code, and
+for each participant the fit score, what they were matched on and when they checked in; the Feedback summary page
+shows the feedback totals. But the prototype has no matching engine, and no page where a student enters a check-in
+code or submits feedback, so its matches, check-ins and feedback are sample data, as the handbook's first section
+says. Nothing pairs up two students who both want to stay connected either: the Feedback summary only counts those
+answers. Where the handbook describes matching, check-in and feedback, it gives the rules the data model sets out,
+such as a shared free slot being required for a match.
 
 A **paragraph** is a block of text between blank lines under a section heading. Each paragraph covers one idea, and
 each section covers one subject.

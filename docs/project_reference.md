@@ -609,7 +609,9 @@ The running history of what has actually been built. Newest at the top.
 experiments, failure analysis and improvement, and the system design), on a branch cut from `main` at `e36b97e`. The assignment is
 independent of the Django app, so everything is in `rag/`.
 - `data/handbook.md`: the knowledge base, QuadConnect's student handbook
-  (13 sections, 44 paragraphs, 4,875 words), every fact taken from the app.
+  (13 sections, 44 paragraphs, 4,875 words), written from the app's code,
+  data and pages; matching, check-in and feedback are described as the data
+  model defines them, since the prototype has no engine or forms for them.
 - `rag_system.ipynb`, Steps 1.1–1.5:
   - the handbook read and checked against the brief's size rules;
   - three chunking strategies, with every chunk checked for split sentences
