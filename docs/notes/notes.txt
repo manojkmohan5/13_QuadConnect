@@ -165,7 +165,8 @@ Done, by assignment part:
       loaded by transformers inside Django, turns a request into allow-listed
       search filters; the ORM does the search. The automatic check of venue
       suggestions (/locations/): an external API (Groq by default) advises
-      staff, who still approve every venue. Written up in README_AI.md.
+      staff, who still approve every venue. Written up in README_AI.md (moved to
+      docs/README_AI_P1-A6.md in P1-A9).
   P3  Section 3 below.
 
 Verified:

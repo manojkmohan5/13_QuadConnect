@@ -173,7 +173,8 @@ jupyter nbconvert --to notebook --execute --inplace multi_model_system.ipynb
 ## P1-A6 features
 
 Built on `feature/p1-a6`, cut from `main` after P1-A5. The AI features are
-written up in [`README_AI.md`](README_AI.md) (Part 2). The model lab is
+written up in [`docs/README_AI_P1-A6.md`](docs/README_AI_P1-A6.md) (Part 2; `README_AI.md`
+until P1-A9). The model lab is
 [`llm-test/ai_prototype.ipynb`](llm-test/ai_prototype.ipynb) (Part 1), and the
 production reflection is section 3 of
 [`docs/notes/notes.txt`](docs/notes/notes.txt) (Part 3). Tests are in
@@ -883,7 +884,7 @@ own login, for staff.
 13_QuadConnect/
 ├── manage.py                     defaults to development settings
 ├── requirements.txt              pip freeze: 61 pinned packages, torch and transformers included
-├── README_AI.md                  P1-A6: the AI features, their data, preprocessing and guardrails
+├── README_AI.md                  P1-A9 Parts 2-3: the AI workflow, architecture, model choice and evaluation
 ├── llm-test/                     P1-A6 model lab: ai_prototype.ipynb, its extra requirements, results/
 ├── multi-model/                  P1-A7 (not Django): multi_model_system.ipynb, system_design.md, requirements, results/
 ├── rag/                          P1-A8 (not Django): rag_system.ipynb, rag_analysis.md, README, requirements, data/, results/
@@ -907,6 +908,8 @@ own login, for staff.
 │   ├── build_tasks/              per-developer build instructions (A2)
 │   ├── screenshots/              A2 evidence; p1-a3/, p1-a4/ and p1-a5/
 │   ├── a5/                       the public API's chart and its three other uses
+│   ├── a9_evaluation/            P1-A9 Part 3: the raw before and after results
+│   ├── README_AI_P1-A6.md        the P1-A6 AI write-up: setup, guardrails, measurements
 │   ├── er_diagram.pdf
 │   └── data_model_notes.md       why each model and on_delete exists
 ├── quadconnect/
@@ -932,6 +935,7 @@ own login, for staff.
     ├── tests_a4.py               42 tests, one class per P1-A4 part
     ├── tests_a5.py               25 tests: access, navigation, accounts, Google
     ├── tests_a6.py               61 tests: the local model's pipeline, the API check, hygiene
+    ├── tests_a9.py               8 tests: the check of the model's filters against the request
     ├── urls.py                   all routes named
     ├── admin.py                  all 8 models registered, with inlines
     ├── templates/connect/        base.html, shared entity_list.html, pages

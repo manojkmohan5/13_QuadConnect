@@ -56,7 +56,7 @@ MAX_INTERESTS = 4
 MAX_NEW_TOKENS = 64
 CACHE_SECONDS = 60 * 60
 # Model runs per user per minute; cached answers are free. Like the model itself
-# and the cache, the count is per web-server process (see README_AI.md).
+# and the cache, the count is per web-server process (see docs/README_AI_P1-A6.md).
 RATE_LIMIT, RATE_WINDOW = 10, 60
 LOCK_WAIT_SECONDS = 5  # how long a search waits for the model before using keywords
 RETRY_LOAD_SECONDS = 300  # after a failed load, how long before trying again
@@ -590,7 +590,7 @@ class AskForm(forms.Form):
         return text
 
 
-SAMPLES = [  # each one read correctly by the default model (README_AI.md, "Measured")
+SAMPLES = [  # each one read correctly by the default model (docs/README_AI_P1-A6.md, "Measured")
     "quiet students who love reading",
     "a squad into music and food",
     "someone for one-on-one coffee on Sunday around noon",

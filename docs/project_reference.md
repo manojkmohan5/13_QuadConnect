@@ -214,7 +214,7 @@ the same models as a foundation.
 ├── .env                           IGNORED — never committed
 ├── .env.example                   committed, placeholders only
 ├── requirements.txt               pip freeze, 61 pins (A6): Django, django-allauth, whitenoise, matplotlib, requests, vl-convert-python, torch, transformers, ...
-├── README_AI.md                   (A6) the AI features: data input, preprocessing, guardrails
+├── README_AI.md                   (A9) Parts 2-3: AI workflow, architecture, model choice, evaluation
 ├── llm-test/                      (A6) ai_prototype.ipynb (the model lab), requirements.txt (its extras), results/runs.jsonl
 ├── manage.py                      -> quadconnect.settings.development
 ├── db.sqlite3                     COMMITTED since A4 — seed data only
@@ -231,6 +231,8 @@ the same models as a foundation.
 │   ├── build_tasks/               one spec per developer + shared rules
 │   ├── screenshots/               README.md manifest, A2 captures, p1-a3/ (19), p1-a4/ (19), p1-a5/
 │   ├── a5/                        (A5) the public API's Vega-Lite spec, its three uses, README
+│   ├── a9_evaluation/             (A9) the raw before and after results of the Part 3 runs
+│   ├── README_AI_P1-A6.md         (A6) the AI write-up, README_AI.md until A9
 │   ├── er_diagram.pdf
 │   └── data_model_notes.md        why each model and on_delete exists
 ├── quadconnect/
@@ -251,12 +253,14 @@ the same models as a foundation.
     ├── specs/                     (A4) chart1_bar.vl.json, chart2_line.vl.json
     ├── icebreakers.py             (A4) Open Trivia DB questions for a match
     ├── reports.py                 (A4) /reports/ and the CSV/JSON exports
-    ├── ai_search.py               (A6) "Ask in plain English": the local model, its prompt and guardrails, the view
+    ├── ai_search.py               (A6) "Ask in plain English": the local model, its prompt and guardrails, the view;
+    │                              (A9) check_against_request()
     ├── ai_venues.py               (A6) the external API that checks venue suggestions
     ├── tests.py                   (A3) 45 tests, one class per A3 section
     ├── tests_a4.py                (A4) 42 tests, one class per A4 part
     ├── tests_a5.py                (A5) 25 tests: access, navigation, accounts, Google
     ├── tests_a6.py                (A6) 61 tests: no model is loaded and no API called
+    ├── tests_a9.py                (A9) 8 tests: the request check; no model is loaded
     ├── urls.py                    every route named, namespace "connect"
     ├── admin.py                   all 8 registered, with inlines
     ├── migrations/                0001_initial.py; 0002 (A6) adds CampusLocation's ai_* fields
@@ -773,12 +777,12 @@ machine must download a pre-trained model by itself.
   Qwen3.8-27B, gpt-oss-120b), which came out after the leaderboard closed.
 - Part 2: "Ask in plain English" (`/search/ask/`, a local model in a Django
   view) and the automatic check of venue suggestions (an external API, Groq by
-  default), written up in `README_AI.md`. The model is Qwen2.5-1.5B-Instruct
+  default), written up in `README_AI.md` (now `docs/README_AI_P1-A6.md`). The model is Qwen2.5-1.5B-Instruct
   with the many-shot prompt (notebook Step 7): the smallest model that clears
   0.85 after the allow-list (0.92).
 - Part 3: the production reflection, section 3 of `docs/notes/notes.txt`.
 
-**Files added:** `README_AI.md`, `llm-test/` (notebook, requirements,
+**Files added:** `README_AI.md` (moved to `docs/README_AI_P1-A6.md` in A9), `llm-test/` (notebook, requirements,
 results), `connect/ai_search.py`, `connect/ai_venues.py`,
 `connect/tests_a6.py`, `connect/templates/connect/student_ask.html`,
 `connect/management/commands/download_ai_model.py`,
@@ -1376,7 +1380,7 @@ was added on 2026-10-13.
 ### P1-A6 — Text Intelligence (100 pts) — building
 Built on `feature/p1-a6` (§9). Due Mon 2026-10-19. Submission: the GitHub URL
 with the Django code and `llm-test/ai_prototype.ipynb` (Route A, so no
-fine-tuning notebook). Part 2 is `README_AI.md`; Part 3 is section 3 of
+fine-tuning notebook). Part 2 is `README_AI.md` (now `docs/README_AI_P1-A6.md`); Part 3 is section 3 of
 `docs/notes/notes.txt`.
 
 ### Next
