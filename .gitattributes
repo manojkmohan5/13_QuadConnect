@@ -5,3 +5,6 @@ multi-model/results/* text eol=lf
 rag/results/* text eol=lf
 rag/data/* text eol=lf
 rag/results/*.png binary
+# P1-A9 evaluation evidence stays exactly as collected; its CSV files use CRLF.
+docs/a9_evaluation/* text eol=lf
+docs/a9_evaluation/*.csv -text
