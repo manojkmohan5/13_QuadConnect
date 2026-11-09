@@ -14,7 +14,8 @@ it reaches the query:
 
     clean the request -> the rules, worked examples, then the request quoted as data
       -> the model -> the first JSON object in its reply -> clean_filters()
-      -> no JSON? one retry, then keyword_filters() -> the ORM query
+      -> check_against_request() -> the ORM query
+      (no JSON? one retry, then keyword_filters() -> the ORM query)
 
 The model, the prompt and the worked examples were chosen in
 llm-test/ai_prototype.ipynb, which compared 15 models and four ways of
@@ -264,7 +265,7 @@ INTEREST_WORDS = {  # the start of a word -> interest name; a name missing from 
     "engineers without borders": "Engineers Without Borders",
 }
 COLLEGE_WORDS = {  # whole words only: "technologies" is not Gies, and Business Illini is a club
-    r"\bengineer|\bgrainger\b": "Grainger College of Engineering",
+    r"\bengineer(?!s without borders)|\bgrainger\b": "Grainger College of Engineering",
     r"\bbusiness\b(?! illini)|\bgies\b": "Gies College of Business",
     r"\bjournalis|(?<!illini )\bmedia\b|\badvertising\b": "College of Media",
     r"\bliberal arts\b|\blas\b|\bpsycholog": "College of Liberal Arts & Sciences",
@@ -305,6 +306,25 @@ def keyword_filters(text, interests, colleges):
         if key not in found and re.search(pattern, low):
             found[key] = value
     return found
+
+
+def check_against_request(filters, text, interests, colleges):
+    """The model's filters, checked against the request's own words (P1-A9).
+    A day, time or connection type is kept only if the request names one, and
+    then the value it names is used; a college the request names replaces the
+    model's. Never adds a filter. The allow-list cannot catch these mistakes:
+    an invented "Sunday 10-12" or a wrong college are allowed values."""
+    words = keyword_filters(text, interests, colleges)
+    checked = dict(filters)
+    for key in ("day", "time", "connection"):
+        if key in checked:
+            if key in words:
+                checked[key] = words[key]
+            else:
+                del checked[key]
+    if "college" in checked and "college" in words:
+        checked["college"] = words["college"]
+    return checked
 
 
 # --- 5. The model ------------------------------------------------------------------------
@@ -472,7 +492,8 @@ def understand(raw_text, user=None):
         answer["note"] = "Too many AI searches in the last minute."
 
     if obj is not None:
-        answer.update(filters=clean_filters(obj, interests, colleges), source="model")
+        filters = clean_filters(obj, interests, colleges)
+        answer.update(filters=check_against_request(filters, text, interests, colleges), source="model")
     else:
         answer["filters"] = keyword_filters(text, interests, colleges)
     answer["seconds"] = round(time.perf_counter() - started, 1)
