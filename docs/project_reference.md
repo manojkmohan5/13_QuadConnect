@@ -25,10 +25,10 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | **P1-A8** — Semantic Relationships and Retrieval (300 pts, due Mon 2026-11-09): all four parts done on `feature/p1-a8` (the RAG pipeline, the experiments, failure analysis and improvement, and the system design) — in `rag/`, not part of the Django app. **P1-A7** — Multi-Model AI Systems (250 pts, group) — is complete in `multi-model/` (not part of the Django app): Part 1 benchmarking (PR #12), Part 2 cost at six traffic levels (PR #13), Part 3 routing strategy (PR #14). Part 1 alone was submitted on Canvas on 2026-10-26. |
-| **Last completed** | P1-A7 Part 3 — multi-model routing strategy — merged into `main` (PR #14, 2026-11-03) |
-| **`main` status** | Has P1-A2 to P1-A6 and all three parts of P1-A7 (PRs #12, #13, #14). |
-| **What remains** | P1-A8: a PR into `main` and the Canvas submission (a single ZIP of `rag/`) (§9, §12). |
+| **Assignment in flight** | **P1-A9** — Integrated AI Application Deployment (300 pts; GitHub and an in-person demo): Parts 2 and 3 done on `feature/p1-a9-part2-3` — `README_AI.md` (the AI system design and the evaluation of the integrated feature), the request check in `connect/ai_search.py`, `connect/tests_a9.py` and the raw results in `docs/a9_evaluation/` (§9). |
+| **Last completed** | P1-A8 — Semantic Relationships and Retrieval — merged into `main` (PR #15, 2026-11-08) |
+| **`main` status** | Has P1-A2 to P1-A8 (P1-A8 in PR #15). |
+| **What remains** | P1-A9: a PR into `main`, the Canvas file (the repository link, a summary of the AI feature and the demo time) and the in-person demo (§9). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -57,7 +57,8 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–4 | `/accounts/...`, every route behind a login, `/api/summary/` public | ✅ DONE — merged to `main` in PR #10 (2026-10-12); deployed 2026-10-09; see §9 |
 | Manojkumar Mohankumar (P1-A6) | `feature/p1-a6` | Parts 1–3 | `/search/ask/`, the venue check on `/locations/`, `llm-test/` | ✅ DONE — merged to `main` in PR #11 (2026-10-19); see §9 |
 | Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
-| Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | BUILDING — all four parts done 2026-11-04; PR and ZIP next; see §9 |
+| Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | ✅ DONE — merged to `main` in PR #15 (2026-11-08); see §9 |
+| Prathamesh Mulay, Manojkumar Mohankumar (P1-A9) | `feature/p1-a9-part2-3` | Parts 2–3 | `README_AI.md`, the request check in `connect/ai_search.py`, `docs/a9_evaluation/` | BUILDING — Parts 2 and 3 done 2026-11-08; PR next; see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -568,7 +569,7 @@ python manage.py migrate
 python manage.py seed_demo_data      # idempotent
 python manage.py verify_constraints  # 11/11 pass
 python manage.py check
-python manage.py test connect        # 173 tests (45 A3, 42 A4, 25 A5, 61 A6)
+python manage.py test connect        # 181 tests (45 A3, 42 A4, 25 A5, 61 A6, 8 A9)
 python manage.py download_ai_model   # A6: fetch the local model before the first search
 ruff check .                         # rules in ruff.toml; CI runs the same
 
@@ -608,9 +609,35 @@ that property when adding checks.
 
 The running history of what has actually been built. Newest at the top.
 
-### BUILDING `feature/p1-a8` - Manojkumar Mohankumar - 2026-11-03
-**Shipped so far:** P1-A8 Parts 1 to 4 (the RAG pipeline, the
-experiments, failure analysis and improvement, and the system design), on a branch cut from `main` at `e36b97e`. The assignment is
+### BUILDING `feature/p1-a9-part2-3` - Prathamesh Mulay, Manojkumar Mohankumar - 2026-11-08
+**Shipped so far:** P1-A9 Parts 2 and 3, on a branch cut from `main` at
+`5c24c9b`, after P1-A8 merged.
+- `README_AI.md`: the P1-A9 write-up. Part 2: the AI workflow, two
+  architecture diagrams, and the model choice tied to A6, A7 and A8. Part 3:
+  20 requests (A6's 15 and 5 new ones) through the live `/search/ask/` page,
+  before and after the improvement, with the failure analysis.
+- `connect/ai_search.py`: `check_against_request()`, run on every model answer
+  after `clean_filters()`. A day, time or connection type the request does not
+  name is removed, and a college it names wins. Exactly right went from 11 to
+  15 of 20, and unasked filters from 6 requests to none.
+- `connect/tests_a9.py`: 8 tests, no model loaded (181 tests in all).
+- `docs/a9_evaluation/`: the raw results of both runs, as collected.
+- `docs/README_AI_P1-A6.md`: the P1-A6 write-up, moved from `README_AI.md`.
+
+**Files changed:** `README.md` (P1-A9 section, layout, test count),
+`.gitattributes` (the evaluation evidence kept as collected), the CI workflow
+(now runs on `feature/p1-a9-part2-3`), this file, notes.txt.
+
+**Gotchas:**
+- The evaluation ran on Prathamesh's MacBook Air (Apple M4, 16 GB), on the
+  CPU: a median of 3.6 s per search, against 10 s on our A6 laptop.
+- The first search after a restart, or after `runserver` reloads a changed
+  file, loads the model again (about 20 s there).
+
+### DONE `feature/p1-a8` - Manojkumar Mohankumar - 2026-11-03
+**Shipped:** P1-A8 Parts 1 to 4 (the RAG pipeline, the
+experiments, failure analysis and improvement, and the system design), on a branch cut from `main` at `e36b97e`,
+merged into `main` in PR #15. The assignment is
 independent of the Django app, so everything is in `rag/`.
 - `data/handbook.md`: the knowledge base, QuadConnect's student handbook
   (13 sections, 44 paragraphs, 4,875 words), written from the app's code,

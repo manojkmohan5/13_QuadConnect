@@ -23,6 +23,23 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 11 (w/c 2026-11-02)  -  P1-A9 Parts 2 and 3 on feature/p1-a9-part2-3
+                             [Prathamesh, Manojkumar]
+--------------------------------------------------------------------------------
+P1-A9 Parts 2 and 3 (the AI system design, and the evaluation of the
+integrated feature), on feature/p1-a9-part2-3, cut from main after P1-A8
+merged (PR #15).
+  - README_AI.md is now the P1-A9 write-up; the P1-A6 one moved to
+    docs/README_AI_P1-A6.md.
+  - Improvement: check_against_request() in connect/ai_search.py. A day,
+    time or connection type the request does not name is removed; a college
+    it names wins. 20 requests through the live page: exactly right 11 -> 15
+    of 20, unasked filters 6 -> 0, median 3.6 s both times.
+  - connect/tests_a9.py: 8 tests (181 in all). Raw results:
+    docs/a9_evaluation/.
+Next: a PR into main, the Canvas file and the in-person demo.
+
+--------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A8 Parts 1 to 4 on feature/p1-a8  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A8 (Semantic Relationships and Retrieval, 300 pts, due Mon 2026-11-09) is

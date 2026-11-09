@@ -50,7 +50,7 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>, and log in as `tester` (see [Admin](#admin))
-or sign up. Run the test suite with `python manage.py test connect` (173
+or sign up. Run the test suite with `python manage.py test connect` (181
 tests).
 
 Since P1-A6, `requirements.txt` also installs `torch` and `transformers` for the
@@ -84,6 +84,27 @@ The seed data also ships two superusers, both with password `uiuc12345`:
 exist.)
 
 ---
+
+## P1-A9: the AI feature, designed and evaluated (Parts 2 and 3)
+
+Built on `feature/p1-a9-part2-3`, cut from `main` after P1-A8. Prathamesh Mulay
+built the improvement and ran the evaluation. The write-up is
+[`README_AI.md`](README_AI.md):
+
+- **Part 2:** how "Ask in plain English" and the venue-suggestion check work,
+  with two architecture diagrams, and why Qwen2.5-1.5B-Instruct runs the
+  search, tied to A6, A7 and A8.
+- **Part 3:** the same 20 requests through the live page, before and after one
+  improvement. Exactly right went from 11 to 15 of 20, and filters nobody
+  asked for from 6 requests to none, at the same median time (3.6 s). The raw
+  results are in [`docs/a9_evaluation/`](docs/a9_evaluation/).
+- **The improvement:** `check_against_request()` in
+  [`connect/ai_search.py`](connect/ai_search.py) checks the model's day, time,
+  connection type and college against the request's own words.
+  [`connect/tests_a9.py`](connect/tests_a9.py) tests it without loading a model.
+
+The P1-A6 write-up that `README_AI.md` replaced is kept at
+[`docs/README_AI_P1-A6.md`](docs/README_AI_P1-A6.md).
 
 ## P1-A8: semantic relationships and retrieval
 
