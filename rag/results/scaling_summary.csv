@@ -1,0 +1,10 @@
+Dataset,Size,Facts in the dataset (of 18),Facts in context (of 18),Answer score (7 questions),"Facts in context (of 13, shared)","Noise chunks (of 3, shared)","Guide chunks (of 3, shared)",Margin over the nearest noise (shared),Q8 declined,Q8 top score
+Small,Small,14,13,6.357142857142857,13,1.4,0.0,0.0489399790763855,yes,0.7221
+Small,Medium,14,13,6.357142857142857,13,1.4,0.0,0.03841999173164368,yes,0.7125
+Small,Large,14,13,6.357142857142857,13,1.2,0.0,0.039059996604919434,yes,0.7582
+Full,Small,18,18,8.928571428571429,13,1.4,0.0,0.03481999635696411,yes,0.7221
+Full,Medium,18,17,7.857142857142857,13,1.2,0.0,0.03147999048233032,yes,0.7125
+Full,Large,18,18,8.5,13,1.2,0.0,0.03709999322891235,yes,0.7582
+Large,Small,18,18,8.5,13,1.2,0.2,0.017039990425109862,yes,0.7221
+Large,Medium,18,17,8.285714285714286,13,1.0,0.2,0.011959993839263916,yes,0.7125
+Large,Large,18,18,8.5,13,1.0,0.4,0.011399996280670167,yes,0.7582

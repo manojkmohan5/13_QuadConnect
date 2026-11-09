@@ -1,0 +1,163 @@
+Q,Size,Strategy,Fact,In context,Stated,Outcome
+Q1,Small,Fixed,Illini Union,True,True,Stated
+Q1,Small,Fixed,Grainger,True,True,Stated
+Q1,Small,Fixed,Main Quad,True,True,Stated
+Q1,Small,Fixed,not Espresso Royale,True,True,Stated
+Q2,Small,Fixed,no reset email,True,True,Stated
+Q2,Small,Fixed,use Google,True,True,Stated
+Q2,Small,Fixed,email the team,True,True,Stated
+Q3,Small,Fixed,shared slot needed,True,True,Stated
+Q3,Small,Fixed,mark more windows,True,True,Stated
+Q4,Small,Fixed,Friend Connect,True,True,Stated
+Q4,Small,Fixed,group size,True,False,Lost by the generator
+Q5,Small,Fixed,never shown,True,True,Stated
+Q5,Small,Fixed,only totals,False,False,Lost in retrieval
+Q6,Small,Fixed,only advises,True,True,Stated
+Q6,Small,Fixed,staff decide,True,True,Stated
+Q7,Small,Fixed,not sold,True,True,Stated
+Q7,Small,Fixed,only counts public,False,False,Lost in retrieval
+Q7,Small,Fixed,outside services,False,False,Lost in retrieval
+Q1,Small,Overlapping,Illini Union,True,True,Stated
+Q1,Small,Overlapping,Grainger,True,True,Stated
+Q1,Small,Overlapping,Main Quad,True,True,Stated
+Q1,Small,Overlapping,not Espresso Royale,True,True,Stated
+Q2,Small,Overlapping,no reset email,True,True,Stated
+Q2,Small,Overlapping,use Google,True,True,Stated
+Q2,Small,Overlapping,email the team,True,True,Stated
+Q3,Small,Overlapping,shared slot needed,True,True,Stated
+Q3,Small,Overlapping,mark more windows,True,True,Stated
+Q4,Small,Overlapping,Friend Connect,True,True,Stated
+Q4,Small,Overlapping,group size,True,False,Lost by the generator
+Q5,Small,Overlapping,never shown,True,True,Stated
+Q5,Small,Overlapping,only totals,True,True,Stated
+Q6,Small,Overlapping,only advises,True,True,Stated
+Q6,Small,Overlapping,staff decide,True,True,Stated
+Q7,Small,Overlapping,not sold,True,True,Stated
+Q7,Small,Overlapping,only counts public,True,True,Stated
+Q7,Small,Overlapping,outside services,True,False,Lost by the generator
+Q1,Small,Hybrid,Illini Union,True,True,Stated
+Q1,Small,Hybrid,Grainger,True,True,Stated
+Q1,Small,Hybrid,Main Quad,True,True,Stated
+Q1,Small,Hybrid,not Espresso Royale,True,True,Stated
+Q2,Small,Hybrid,no reset email,True,False,Lost by the generator
+Q2,Small,Hybrid,use Google,True,True,Stated
+Q2,Small,Hybrid,email the team,True,True,Stated
+Q3,Small,Hybrid,shared slot needed,False,False,Lost in retrieval
+Q3,Small,Hybrid,mark more windows,False,False,Lost in retrieval
+Q4,Small,Hybrid,Friend Connect,True,True,Stated
+Q4,Small,Hybrid,group size,True,False,Lost by the generator
+Q5,Small,Hybrid,never shown,True,True,Stated
+Q5,Small,Hybrid,only totals,True,True,Stated
+Q6,Small,Hybrid,only advises,True,True,Stated
+Q6,Small,Hybrid,staff decide,True,True,Stated
+Q7,Small,Hybrid,not sold,True,True,Stated
+Q7,Small,Hybrid,only counts public,True,True,Stated
+Q7,Small,Hybrid,outside services,True,False,Lost by the generator
+Q1,Medium,Fixed,Illini Union,False,False,Lost in retrieval
+Q1,Medium,Fixed,Grainger,False,False,Lost in retrieval
+Q1,Medium,Fixed,Main Quad,False,False,Lost in retrieval
+Q1,Medium,Fixed,not Espresso Royale,True,True,Stated
+Q2,Medium,Fixed,no reset email,True,True,Stated
+Q2,Medium,Fixed,use Google,True,True,Stated
+Q2,Medium,Fixed,email the team,True,True,Stated
+Q3,Medium,Fixed,shared slot needed,True,True,Stated
+Q3,Medium,Fixed,mark more windows,True,True,Stated
+Q4,Medium,Fixed,Friend Connect,True,True,Stated
+Q4,Medium,Fixed,group size,True,True,Stated
+Q5,Medium,Fixed,never shown,True,True,Stated
+Q5,Medium,Fixed,only totals,True,False,Lost by the generator
+Q6,Medium,Fixed,only advises,True,True,Stated
+Q6,Medium,Fixed,staff decide,True,True,Stated
+Q7,Medium,Fixed,not sold,False,False,Lost in retrieval
+Q7,Medium,Fixed,only counts public,True,False,Lost by the generator
+Q7,Medium,Fixed,outside services,True,False,Lost by the generator
+Q1,Medium,Overlapping,Illini Union,True,True,Stated
+Q1,Medium,Overlapping,Grainger,True,True,Stated
+Q1,Medium,Overlapping,Main Quad,True,True,Stated
+Q1,Medium,Overlapping,not Espresso Royale,True,True,Stated
+Q2,Medium,Overlapping,no reset email,True,False,Lost by the generator
+Q2,Medium,Overlapping,use Google,True,True,Stated
+Q2,Medium,Overlapping,email the team,True,True,Stated
+Q3,Medium,Overlapping,shared slot needed,True,True,Stated
+Q3,Medium,Overlapping,mark more windows,True,True,Stated
+Q4,Medium,Overlapping,Friend Connect,True,True,Stated
+Q4,Medium,Overlapping,group size,True,False,Lost by the generator
+Q5,Medium,Overlapping,never shown,True,True,Stated
+Q5,Medium,Overlapping,only totals,False,False,Lost in retrieval
+Q6,Medium,Overlapping,only advises,True,True,Stated
+Q6,Medium,Overlapping,staff decide,True,True,Stated
+Q7,Medium,Overlapping,not sold,True,True,Stated
+Q7,Medium,Overlapping,only counts public,True,True,Stated
+Q7,Medium,Overlapping,outside services,True,False,Lost by the generator
+Q1,Medium,Hybrid,Illini Union,True,True,Stated
+Q1,Medium,Hybrid,Grainger,True,True,Stated
+Q1,Medium,Hybrid,Main Quad,True,True,Stated
+Q1,Medium,Hybrid,not Espresso Royale,True,True,Stated
+Q2,Medium,Hybrid,no reset email,True,False,Lost by the generator
+Q2,Medium,Hybrid,use Google,True,True,Stated
+Q2,Medium,Hybrid,email the team,True,True,Stated
+Q3,Medium,Hybrid,shared slot needed,False,False,Lost in retrieval
+Q3,Medium,Hybrid,mark more windows,False,False,Lost in retrieval
+Q4,Medium,Hybrid,Friend Connect,True,True,Stated
+Q4,Medium,Hybrid,group size,True,False,Lost by the generator
+Q5,Medium,Hybrid,never shown,True,True,Stated
+Q5,Medium,Hybrid,only totals,True,True,Stated
+Q6,Medium,Hybrid,only advises,True,True,Stated
+Q6,Medium,Hybrid,staff decide,True,True,Stated
+Q7,Medium,Hybrid,not sold,True,True,Stated
+Q7,Medium,Hybrid,only counts public,True,True,Stated
+Q7,Medium,Hybrid,outside services,True,False,Lost by the generator
+Q1,Large,Fixed,Illini Union,True,True,Stated
+Q1,Large,Fixed,Grainger,True,True,Stated
+Q1,Large,Fixed,Main Quad,True,True,Stated
+Q1,Large,Fixed,not Espresso Royale,True,True,Stated
+Q2,Large,Fixed,no reset email,True,True,Stated
+Q2,Large,Fixed,use Google,True,True,Stated
+Q2,Large,Fixed,email the team,True,True,Stated
+Q3,Large,Fixed,shared slot needed,True,True,Stated
+Q3,Large,Fixed,mark more windows,True,True,Stated
+Q4,Large,Fixed,Friend Connect,True,True,Stated
+Q4,Large,Fixed,group size,True,True,Stated
+Q5,Large,Fixed,never shown,True,True,Stated
+Q5,Large,Fixed,only totals,True,False,Lost by the generator
+Q6,Large,Fixed,only advises,True,True,Stated
+Q6,Large,Fixed,staff decide,True,True,Stated
+Q7,Large,Fixed,not sold,False,False,Lost in retrieval
+Q7,Large,Fixed,only counts public,False,False,Lost in retrieval
+Q7,Large,Fixed,outside services,False,False,Lost in retrieval
+Q1,Large,Overlapping,Illini Union,True,True,Stated
+Q1,Large,Overlapping,Grainger,True,True,Stated
+Q1,Large,Overlapping,Main Quad,True,True,Stated
+Q1,Large,Overlapping,not Espresso Royale,True,True,Stated
+Q2,Large,Overlapping,no reset email,True,False,Lost by the generator
+Q2,Large,Overlapping,use Google,True,True,Stated
+Q2,Large,Overlapping,email the team,True,True,Stated
+Q3,Large,Overlapping,shared slot needed,True,True,Stated
+Q3,Large,Overlapping,mark more windows,True,True,Stated
+Q4,Large,Overlapping,Friend Connect,True,True,Stated
+Q4,Large,Overlapping,group size,True,False,Lost by the generator
+Q5,Large,Overlapping,never shown,True,True,Stated
+Q5,Large,Overlapping,only totals,True,True,Stated
+Q6,Large,Overlapping,only advises,True,True,Stated
+Q6,Large,Overlapping,staff decide,True,True,Stated
+Q7,Large,Overlapping,not sold,True,True,Stated
+Q7,Large,Overlapping,only counts public,True,True,Stated
+Q7,Large,Overlapping,outside services,True,False,Lost by the generator
+Q1,Large,Hybrid,Illini Union,True,True,Stated
+Q1,Large,Hybrid,Grainger,True,True,Stated
+Q1,Large,Hybrid,Main Quad,True,True,Stated
+Q1,Large,Hybrid,not Espresso Royale,True,True,Stated
+Q2,Large,Hybrid,no reset email,True,False,Lost by the generator
+Q2,Large,Hybrid,use Google,True,True,Stated
+Q2,Large,Hybrid,email the team,True,True,Stated
+Q3,Large,Hybrid,shared slot needed,False,False,Lost in retrieval
+Q3,Large,Hybrid,mark more windows,False,False,Lost in retrieval
+Q4,Large,Hybrid,Friend Connect,True,True,Stated
+Q4,Large,Hybrid,group size,False,False,Lost in retrieval
+Q5,Large,Hybrid,never shown,True,True,Stated
+Q5,Large,Hybrid,only totals,True,True,Stated
+Q6,Large,Hybrid,only advises,True,True,Stated
+Q6,Large,Hybrid,staff decide,True,True,Stated
+Q7,Large,Hybrid,not sold,True,True,Stated
+Q7,Large,Hybrid,only counts public,True,True,Stated
+Q7,Large,Hybrid,outside services,True,False,Lost by the generator

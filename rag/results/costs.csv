@@ -1,0 +1,9 @@
+Factor,Setting,Words per chunk,Prompt tokens,Generated tokens,LLM (USD per day),Embed a question (ms),Embedding CPU (USD per day),Vectors for 1M chunks (GB),Variable cost (USD per day)
+Embedding size,"Small model (384 dims), hybrid, k = 5",101.5625,814.375,89.75,2.52625,30.625,0.008575000000000001,1.536,2.534825
+Embedding size,"Medium model (768 dims), hybrid, k = 5",101.5625,823.5,84.125,2.48825,69.67,0.0195076,3.072,2.5077575999999997
+Embedding size,"Large model (1024 dims), hybrid, k = 5",101.5625,823.25,90.75,2.554,257.46500000000003,0.07209020000000002,4.096,2.6260901999999997
+Chunk size,"Fixed chunks, small model, k = 3",97.5,546.875,90.25,1.99625,30.625,0.008575000000000001,1.536,2.0048250000000003
+Chunk size,"Hybrid chunks, small model, k = 3",101.5625,548.625,77.5,1.8722500000000002,30.625,0.008575000000000001,1.536,1.8808250000000002
+Chunk size,"Overlapping chunks, small model, k = 3",222.16129032258064,992.125,81.5,2.79925,30.625,0.008575000000000001,1.536,2.807825
+Top-k,"Hybrid chunks, small model, k = 3",101.5625,548.625,77.5,1.8722500000000002,30.625,0.008575000000000001,1.536,1.8808250000000002
+Top-k,"Hybrid chunks, small model, k = 5",101.5625,814.375,89.75,2.52625,30.625,0.008575000000000001,1.536,2.534825

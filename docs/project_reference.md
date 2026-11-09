@@ -25,10 +25,10 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | None. **P1-A7** — Multi-Model AI Systems (250 pts, group) — is complete in `multi-model/` (not part of the Django app): Part 1 benchmarking (PR #12), Part 2 cost at six traffic levels (PR #13), Part 3 routing strategy (PR #14). Part 1 alone was submitted on Canvas on 2026-10-26. |
+| **Assignment in flight** | **P1-A8** — Semantic Relationships and Retrieval (300 pts, due Mon 2026-11-09): all four parts done on `feature/p1-a8` (the RAG pipeline, the experiments, failure analysis and improvement, and the system design) — in `rag/`, not part of the Django app. **P1-A7** — Multi-Model AI Systems (250 pts, group) — is complete in `multi-model/` (not part of the Django app): Part 1 benchmarking (PR #12), Part 2 cost at six traffic levels (PR #13), Part 3 routing strategy (PR #14). Part 1 alone was submitted on Canvas on 2026-10-26. |
 | **Last completed** | P1-A7 Part 3 — multi-model routing strategy — merged into `main` (PR #14, 2026-11-03) |
 | **`main` status** | Has P1-A2 to P1-A6 and all three parts of P1-A7 (PRs #12, #13, #14). |
-| **What remains** | Nothing in the repo for P1-A7. Submitting Parts 2 and 3 on Canvas is the team's call (§12). |
+| **What remains** | P1-A8: a PR into `main` and the Canvas submission (a single ZIP of `rag/`) (§9, §12). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -57,6 +57,7 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–4 | `/accounts/...`, every route behind a login, `/api/summary/` public | ✅ DONE — merged to `main` in PR #10 (2026-10-12); deployed 2026-10-09; see §9 |
 | Manojkumar Mohankumar (P1-A6) | `feature/p1-a6` | Parts 1–3 | `/search/ask/`, the venue check on `/locations/`, `llm-test/` | ✅ DONE — merged to `main` in PR #11 (2026-10-19); see §9 |
 | Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
+| Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | BUILDING — all four parts done 2026-11-04; PR and ZIP next; see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -602,6 +603,56 @@ that property when adding checks.
 ## 9. Work log
 
 The running history of what has actually been built. Newest at the top.
+
+### BUILDING `feature/p1-a8` - Manojkumar Mohankumar - 2026-11-03
+**Shipped so far:** P1-A8 Parts 1 to 4 (the RAG pipeline, the
+experiments, failure analysis and improvement, and the system design), on a branch cut from `main` at `e36b97e`. The assignment is
+independent of the Django app, so everything is in `rag/`.
+- `data/handbook.md`: the knowledge base, QuadConnect's student handbook
+  (13 sections, 44 paragraphs, 4,875 words), written from the app's code,
+  data and pages; matching, check-in and feedback are described as the data
+  model defines them, since the prototype has no engine or forms for them.
+- `rag_system.ipynb`, Steps 1.1–1.5:
+  - the handbook read and checked against the brief's size rules;
+  - three chunking strategies, with every chunk checked for split sentences
+    and mixed sections;
+  - three BGE embedding models (384 / 768 / 1,024 dimensions) in nine
+    vector stores;
+  - top-3 cosine retrieval;
+  - generation with gpt-oss-20b, its replies saved in
+    `results/generations.jsonl`.
+- `rag_system.ipynb`, Steps 2.1–2.5:
+  - 8 test questions with 18 key facts and their evidence sentences;
+  - 72 runs (9 configurations x 8 questions) with retrieved chunks,
+    context quality, a 1-10 answer score, latency and notes;
+  - embedding models and chunking strategies compared, with charts;
+  - a data scaling experiment on three nested datasets.
+- `data/staff_guide.md`: a staff and developer guide (44 paragraphs,
+  4,555 words) written from the app's code, the larger dataset's extra
+  documents.
+- `rag_system.ipynb`, Steps 3.1–3.3:
+  - every key fact of the 72 runs traced to retrieval or generation;
+  - four failures in detail, each cause tested one at a time;
+  - two fixes measured before and after on 24 runs: top-k 3 -> 5 (kept)
+    and a new prompt in two versions (not kept: it invented a step).
+- `rag_system.ipynb`, Steps 4.1–4.3:
+  - cost per factor at 10,000 users a day, priced with A7's prices;
+  - RAG against pure prompting and the whole handbook in the prompt,
+    and when to use fine-tuning (RAG chosen);
+  - the design for 10,000 users a day, with its diagram.
+- `rag_analysis.md` (all four parts), `README.md`, `requirements.txt`.
+
+**Files changed:** `README.md` (P1-A8 section, layout), `ruff.toml` (E402
+for the notebook), `.gitattributes` (LF for `rag/data` and `rag/results`; binary for
+`rag/results/*.png`),
+the CI workflow (now runs on `feature/p1-a8`), this file, notes.txt.
+
+**Gotchas:**
+- The first run downloads about 1.9 GB of embedding models.
+- Timings differ from run to run; the answers, retrieval results and
+  scores do not, because the answers are saved and retrieval is exact.
+- Part 2 makes about 80 calls to Groq on a fresh cache, all saved; with
+  the saved file, a full run takes three to four minutes.
 
 ### DONE `feature/p1-a7-part-3` - Manojkumar Mohankumar - 2026-11-03
 **Shipped:** P1-A7 Part 3 (multi-model routing strategy), on a branch cut

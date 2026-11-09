@@ -1,0 +1,13 @@
+Test,Small,Medium,Large,Failure
+"As in Part 2: titled chunks, the student's question",5 (0.655),5 (0.606),5 (0.621),F1
+Chunking: the same chunks without their section titles,3 (0.655),2 (0.612),2 (0.629),F1
+Query: 'I got no match this week. What could be the reason?',5 (0.669),5 (0.608),5 (0.615),F1
+Query: 'Why didn't QuadConnect match me with anyone this week?',2 (0.774),3 (0.684),2 (0.743),F1
+Query: 'Why didn't I get a match this week? Does my availability matter?',1 (0.756),1 (0.71),1 (0.707),F1
+As in Part 2: the student's question,3 (0.632),4 (0.526),2 (0.625),F2
+Query: 'Which venues have at least eight seats?',1 (0.614),1 (0.521),1 (0.601),F2
+Query: 'How many people does each venue seat?',2 (0.643),2 (0.581),1 (0.632),F2
+As in Part 2: the student's question,3 (0.692),5 (0.649),9 (0.674),F3
+Query: 'Does QuadConnect sell or share my personal data?',3 (0.749),3 (0.692),4 (0.73),F3
+"The same question, overlapping chunks",1 (0.712),1 (0.716),1 (0.775),F3
+"The same question, hybrid chunks",3 (0.682),1 (0.711),2 (0.726),F3

@@ -1,0 +1,4 @@
+Approach,Facts stated (of 18),Answer score (1-10),Declined (of 7 answerable),Q8 declined,Contradicts the handbook,Prompt tokens,Generated tokens,LLM (USD per day),"Generate (s, median)"
+"RAG: our system (small model, hybrid chunks, k = 5)",15,8.5,0,yes,0,814.375,89.75,2.52625,1.182
+Pure prompting: no handbook,4,3.357142857142857,0,no,2,138.625,87.75,1.15475,0.7905
+Long-context prompting: the whole handbook,14,7.857142857142857,0,yes,0,6383.625,89.125,13.658500000000002,1.4615
