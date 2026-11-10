@@ -6,7 +6,7 @@ QuadConnect has two AI features. Both are part of the Django app and need a logi
 
 | Feature | Role | Model | Where |
 |---|---|---|---|
-| **Ask in plain English** | The primary AI feature | `Qwen/Qwen2.5-1.5B-Instruct`, an open model from Hugging Face, run on our server by `transformers` | **Search** → *ask in plain English* (`/search/ask/`), [`connect/ai_search.py`](connect/ai_search.py) |
+| **Ask in plain English** | The primary AI feature | `Qwen/Qwen2.5-1.5B-Instruct`, an open model from Hugging Face, run on our server by `transformers`; since Part 1, also `BAAI/bge-small-en-v1.5`, P1-A8's embedding model, run by `sentence-transformers` | **Search** → *ask in plain English* (`/search/ask/`), [`connect/ai_search.py`](connect/ai_search.py) |
 | **Venue-suggestion check** | Secondary and optional: advice for staff | `openai/gpt-oss-120b`, an open-weight model, through Groq's API | **Locations** → *Suggest a venue* (`/locations/`), [`connect/ai_venues.py`](connect/ai_venues.py) |
 
 | Rubric step | Points | Section |
@@ -46,9 +46,9 @@ adds two things:
 * **A time limit that ends the wait.** A generation stopped at `AI_LOCAL_MAX_SECONDS` is no longer asked again.
   The keyword parser answers at once, and the page says the model took too long.
 
-> **Parts 2 and 3 were written and measured before these two changes.** Their diagrams and tables describe the
-> pipeline without them. 1.2 below re-runs Part 3's 20 requests with the new step off and on. The measurements
-> are in [`docs/a9_part1/`](docs/a9_part1/).
+> **Part 2 describes the pipeline with these two changes. Part 3 was measured before them**, so its tables
+> show the pipeline without them. 1.2 below re-runs Part 3's 20 requests with the new step off and on, and 3.4
+> adds the result as a second improvement. The measurements are in [`docs/a9_part1/`](docs/a9_part1/).
 
 ### 1.1 The feature
 
@@ -282,7 +282,7 @@ The feature takes text only, so there is no file upload to validate.
    * 8 worked examples as earlier turns, the last of which answers an attempt to break the rules with `{}`;
    * the request itself, quoted as data: `Request: "..."`.
 
-**3. What model is used**
+**3. What models are used**
 
 * `Qwen/Qwen2.5-1.5B-Instruct` (setting `AI_LOCAL_MODEL`), an open model from Hugging Face.
 * It runs inside the Django process with `transformers` and PyTorch, in float32 on a CPU (bfloat16 on a CUDA GPU).
@@ -292,25 +292,36 @@ The feature takes text only, so there is no file upload to validate.
 * The rules and worked examples are the same for every request. The model reads them once, keeps its state
   (the key/value cache) and reuses it, so each request only reads its own few tokens. This is why a search in
   the app is faster than the same request in the A6 notebook.
+* Since Part 1, a second, much smaller model: `BAAI/bge-small-en-v1.5` (setting `AI_EMBED_MODEL`), P1-A8's
+  embedding model, run by `sentence-transformers` on the CPU. It is about 130 MB, downloads into the same cache
+  on first use, and places an interest the language model wrote in its own words on the list by meaning (step 3
+  below). `AI_EMBED_ENABLED=0` switches it off.
 
 **4. How the output is generated**
 
 1. Greedy decoding (no sampling), at most 64 new tokens, stopping at the first `}`. One generation may take
-   at most 60 seconds (setting `AI_LOCAL_MAX_SECONDS`).
+   at most 60 seconds (setting `AI_LOCAL_MAX_SECONDS`). A generation stopped at that limit is not asked again
+   (Part 1): the keyword parser answers at once, and the page says the model took too long.
 2. `first_json_object()` takes the first complete JSON object in the reply. If there is none, the model is
    asked once more with a reminder. If there is still none, the keyword parser reads the request instead.
-3. `clean_filters()` is the allow-list:
+3. `match_by_meaning()` (Part 1) takes each interest in the reply that matches no name on the list by spelling
+   (`match_name()`). The embedding model compares it with every interest on the list, and places it on the
+   closest one only at a cosine similarity of at least 0.78 and a lead of at least 0.08 over the next one.
+   *"Painting"* becomes Art and *"Tech"* becomes Technology. A word near no interest, or near two, is dropped as
+   before, and if the embedding model is missing, busy or fails, nothing is placed.
+4. `clean_filters()` is the allow-list:
    * only the six known keys survive: `interests`, `college`, `connection`, `day`, `time` and `energy`;
    * an interest or college must match a name in the database: ignoring case, as a whole word inside a longer
      name (*"Esports"* becomes *"UIUC Esports"*), or as a near-identical spelling (*"Outdoor"* becomes
-     *"Outdoors"*);
+     *"Outdoors"*). An interest may also be one that step 3 placed;
    * connection type, day, time and social energy must be allowed values;
    * at most 4 interests. Everything else is dropped.
-4. `check_against_request()` compares the model's day, time, connection type and college with the request's own words. A day, time or connection type the request doesn't name is removed, and a college it names replaces the model's.
-5. The deterministic keyword parser (`keyword_filters()`) also answers when the model:
+5. `check_against_request()` compares the model's day, time, connection type and college with the request's own words. A day, time or connection type the request doesn't name is removed, and a college it names replaces the model's.
+6. The deterministic keyword parser (`keyword_filters()`) also answers when the model:
    * is switched off (`AI_LOCAL_ENABLED=0`);
    * cannot load;
    * is busy for more than 5 seconds;
+   * reaches the 60-second limit;
    * raises any error;
    * has already run 10 times for this user in the last minute.
 
@@ -324,6 +335,7 @@ The feature takes text only, so there is no file upload to validate.
   * a student must share at least one requested interest, and students who share more come first.
 * The page then shows:
   * the filters as chips under **Understood as**, so the student can see what was understood and rephrase;
+  * a *Matched by meaning* note naming each word the embedding model placed, and the interest it was placed on;
   * who read the request (the model or the keyword parser) and how long it took;
   * a notice when instructions were ignored, or when the keyword parser answered;
   * the matching students, or *"No student matches all of these filters"* with a hint to ask for less.
@@ -391,17 +403,19 @@ flowchart TD
     P --> M["Qwen2.5-1.5B-Instruct on our server<br/>transformers and PyTorch, greedy,<br/>64 tokens, 60-second cap"]
     M --> J{"first_json_object():<br/>a JSON object in the reply?"}
     J -->|no, even after one retry| KW["keyword_filters():<br/>deterministic keyword parser"]
-    J -->|yes| A["clean_filters(): allow-list<br/>6 keys, database values, at most 4 interests"]
-    X["Model off, busy for 5 s, failed,<br/>or 10 runs this minute"] -.-> KW
+    J -->|yes| E["match_by_meaning(): an interest not on the list by spelling is placed by meaning<br/>with bge-small-en-v1.5 (A8), at a similarity of at least 0.78 and a lead of at least 0.08"]
+    E --> A["clean_filters(): allow-list<br/>6 keys, database values, at most 4 interests"]
+    X["Model off, busy for 5 s, past the 60-second cap,<br/>failed, or 10 runs this minute"] -.-> KW
     A --> CK["check_against_request(): day, time, connection and college<br/>checked against the request's own words"]
     CK --> Q["find_students(): Django ORM query"]
     KW --> Q
-    Q --> O["Page: the filters under Understood as, who read the request and how fast,<br/>notices, then the matching students or No student matches"]
+    Q --> O["Page: the filters under Understood as, the Matched by meaning note,<br/>who read the request and how fast, notices, then the matching students or No student matches"]
 ```
 
 In words: Student → `AskForm` → `clean_request()` → (cache) → `build_messages()` with the database's lists →
-**Qwen2.5-1.5B-Instruct** → `first_json_object()` → `clean_filters()` → `check_against_request()` (or
-`keyword_filters()` if the model gives no usable answer) → `find_students()` → results page.
+**Qwen2.5-1.5B-Instruct** → `first_json_object()` → `match_by_meaning()` with **bge-small-en-v1.5** for an
+interest not on the list → `clean_filters()` → `check_against_request()` (or `keyword_filters()` if the model
+gives no usable answer in time) → `find_students()` → results page.
 
 **Feature B: Venue-suggestion check**
 
@@ -428,6 +442,7 @@ unapproved → staff decide. Any failure on the way leads to "not checked", and 
 
 * The local model never sees a student record and cannot query the database. Its output is only a proposed
   filter object, and the allow-list checks it before the ORM uses it.
+* The embedding model sees only the interest words the language model wrote and the names of the interests.
 * The external API receives only the venue's fields, with contact details hidden. It never receives the
   identity of the person who made the suggestion.
 * Neither model can change data or approve anything. Staff approve every venue.
