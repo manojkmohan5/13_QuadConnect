@@ -13,13 +13,16 @@ lists of interests and colleges, and its output must pass an allow-list before
 it reaches the query:
 
     clean the request -> the rules, worked examples, then the request quoted as data
-      -> the model -> the first JSON object in its reply -> clean_filters()
-      -> check_against_request() -> the ORM query
+      -> the model -> the first JSON object in its reply
+      -> match_by_meaning() for the interests it wrote in its own words
+      -> clean_filters() -> check_against_request() -> the ORM query
       (no JSON? one retry, then keyword_filters() -> the ORM query)
 
 The model, the prompt and the worked examples were chosen in
 llm-test/ai_prototype.ipynb, which compared 15 models and four ways of
 prompting on this task. Keep SYSTEM_PROMPT and EXAMPLES in step with it.
+match_by_meaning() uses the smallest embedding model of P1-A8's retrieval
+experiments (rag/rag_system.ipynb), and is described in README_AI.md (Part 1).
 """
 
 import copy
@@ -60,6 +63,11 @@ CACHE_SECONDS = 60 * 60
 RATE_LIMIT, RATE_WINDOW = 10, 60
 LOCK_WAIT_SECONDS = 5  # how long a search waits for the model before using keywords
 RETRY_LOAD_SECONDS = 300  # after a failed load, how long before trying again
+# How close in meaning (cosine similarity) a word must be to an interest, and how
+# far ahead of the next-closest one, to be placed on it. Fitted to
+# BAAI/bge-small-en-v1.5 on 34 words that should match and 36 that should not;
+# another AI_EMBED_MODEL needs its own (docs/a9_part1/).
+MEANING_MIN, MEANING_LEAD = 0.78, 0.08
 
 DAYS = {"SATURDAY": Weekday.SATURDAY, "SUNDAY": Weekday.SUNDAY}
 ENERGY = {  # filter value -> SocialEnergy range
@@ -225,17 +233,50 @@ def match_name(item, names):
     return lower[close[0]] if close else None
 
 
-def clean_filters(obj, interests, colleges):
+def interest_words(obj):
+    """The interests a model answer names, as strings (one string is a list of one)."""
+    raw = obj.get("interests") if isinstance(obj, dict) else None
+    raw = [raw] if isinstance(raw, str) else raw if isinstance(raw, list) else []
+    return [" ".join(str(item).split()) for item in raw]
+
+
+def match_by_meaning(words, names):
+    """Words the model wrote in its own words, each placed on the one name in
+    `names` closest in meaning, by P1-A8's embedding model (P1-A9): {word: name},
+    such as {"Painting": "Art", "Tech": "Technology"}. A word is placed only if
+    its closest name is at least MEANING_MIN similar and leads the next one by
+    MEANING_LEAD; a word near no name, or near two, is left out. Whatever is
+    placed is a value from the list. Never raises: without the embedding model,
+    nothing is placed, and names are matched by spelling only, as in P1-A6."""
+    words = list(dict.fromkeys(word for word in words if word))[:2 * MAX_INTERESTS]
+    if not words or not names or not settings.AI_EMBED_ENABLED:
+        return {}
+    placed = {}
+    try:
+        for word, row in zip(words, embed_similarities(words, names), strict=True):
+            ranked = sorted(zip(map(float, row), names, strict=True), reverse=True) + [(-1.0, None)]
+            (best, name), (second, _) = ranked[:2]
+            if best >= MEANING_MIN and best - second >= MEANING_LEAD:
+                placed[word] = name
+    except ModelUnavailable as error:
+        logger.warning("Embedding model unavailable: %s", error)
+        return {}
+    except Exception:  # an extra, or an answer of the wrong shape: neither may cost the search
+        logger.exception("Embedding model failed")
+        return {}
+    return placed
+
+
+def clean_filters(obj, interests, colleges, by_meaning=None):
     """The allow-list: keep only known keys, keep a name only if it matches the
-    database lists (match_name), drop every other value, at most four interests."""
+    database lists (match_name) or `by_meaning` placed it (match_by_meaning),
+    drop every other value, at most four interests."""
     if not isinstance(obj, dict):
         return {}
     filters = {}
-    raw = obj.get("interests")
-    raw = [raw] if isinstance(raw, str) else raw if isinstance(raw, list) else []
     picked = []
-    for item in raw:
-        name = match_name(item, interests)
+    for item in interest_words(obj):
+        name = match_name(item, interests) or (by_meaning or {}).get(item)
         if name and name not in picked:
             picked.append(name)
     if picked:
@@ -442,26 +483,84 @@ def generate_reply(messages):
     return _model.generate(messages)
 
 
+class Embedder:
+    """P1-A8's embedding model, run by sentence-transformers: loaded on first
+    use and shared by every request, like LocalModel, with the vectors of the
+    names it last compared against. It is small (33M parameters) and runs on the
+    CPU, as in P1-A8: a few words take milliseconds."""
+
+    def __init__(self, name):
+        self.name = name
+        self.lock = threading.Lock()
+        self.model = None
+        self.names = self.vectors = None
+        self.retry_load_at = 0.0  # after a failed load, not before this (time.monotonic())
+
+    def _load(self):
+        if time.monotonic() < self.retry_load_at:
+            raise ModelUnavailable(f"{self.name} failed to load recently; not retrying yet.")
+        self.retry_load_at = time.monotonic() + RETRY_LOAD_SECONDS  # cleared below once loaded
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as error:
+            raise ModelUnavailable("sentence-transformers is not installed (pip install -r requirements.txt).") \
+                from error
+        started = time.perf_counter()
+        try:
+            self.model = SentenceTransformer(self.name, device="cpu")
+        except Exception as error:  # offline, unknown model id: both mean "not available"
+            raise ModelUnavailable(f"Could not load {self.name}: {error}") from error
+        self.retry_load_at = 0.0
+        logger.info("%s ready in %.1f s", self.name, time.perf_counter() - started)
+
+    def similarities(self, words, names):
+        """The cosine similarity of each word to each name: one row per word."""
+        if not self.lock.acquire(timeout=LOCK_WAIT_SECONDS):
+            raise ModelBusy("The embedding model is busy with another search.")
+        try:
+            if self.model is None:
+                self._load()
+            if names != self.names:  # the lists in the database changed
+                self.vectors = self.model.encode(names, normalize_embeddings=True)
+                self.names = list(names)
+            return self.model.encode(words, normalize_embeddings=True) @ self.vectors.T
+        finally:
+            self.lock.release()
+
+
+_embedder = None
+
+
+def embed_similarities(words, names):
+    """The one place that touches the embedding model (the tests replace this function)."""
+    global _embedder
+    with _model_guard:
+        if _embedder is None or _embedder.name != settings.AI_EMBED_MODEL:
+            _embedder = Embedder(settings.AI_EMBED_MODEL)
+    return _embedder.similarities(words, names)
+
+
 # --- 6. Putting it together -------------------------------------------------------------
 
 def understand(raw_text, user=None):
     """A request -> allow-listed filters, and how they were found. Never raises.
     A cached answer is reused; a user over the rate limit gets the keyword parser.
 
-    {"filters": {"interests": ["Gaming"], "day": "SATURDAY", "time": "14-16"},
+    {"filters": {"interests": ["Gaming", "Art"], "day": "SATURDAY", "time": "14-16"},
      "source": "model" | "keywords", "model": "Qwen/...", "seconds": 2.4,
-     "flagged": False, "note": "", "cached": False}
+     "by_meaning": {"Painting": "Art"}, "flagged": False, "note": "", "cached": False}
     """
     text = clean_request(raw_text)
     interests, colleges = vocabulary()
+    embed_model = settings.AI_EMBED_MODEL if settings.AI_EMBED_ENABLED else ""
     key = "ai-search:" + hashlib.sha256(
-        json.dumps([settings.AI_LOCAL_MODEL, text, interests, colleges]).encode()).hexdigest()
+        json.dumps([settings.AI_LOCAL_MODEL, embed_model, text, interests, colleges]).encode()).hexdigest()
     answer = cache.get(key)
     if answer is not None:
         return {**answer, "cached": True}
 
     started = time.perf_counter()
-    answer = {"filters": {}, "source": "keywords", "model": settings.AI_LOCAL_MODEL,
+    answer = {"filters": {}, "source": "keywords", "model": settings.AI_LOCAL_MODEL, "by_meaning": {},
               "flagged": looks_like_injection(text), "note": "", "cached": False}
     if answer["flagged"]:
         logger.warning("Search request that tries to instruct the model: %.120r", text)
@@ -492,8 +591,13 @@ def understand(raw_text, user=None):
         answer["note"] = "Too many AI searches in the last minute."
 
     if obj is not None:
-        filters = clean_filters(obj, interests, colleges)
-        answer.update(filters=check_against_request(filters, text, interests, colleges), source="model")
+        unplaced = [word for word in interest_words(obj) if not match_name(word, interests)]
+        meaning = match_by_meaning(unplaced, interests)
+        filters = check_against_request(clean_filters(obj, interests, colleges, by_meaning=meaning),
+                                        text, interests, colleges)
+        kept = filters.get("interests", [])  # past MAX_INTERESTS, a placed name may not be
+        answer.update(filters=filters, source="model",
+                      by_meaning={word: name for word, name in meaning.items() if name in kept})
     else:
         answer["filters"] = keyword_filters(text, interests, colleges)
     answer["seconds"] = round(time.perf_counter() - started, 1)
@@ -604,7 +708,7 @@ def student_ask(request):
     like /search/; the answer is cached, so a reload does not run the model."""
     form = AskForm(request.GET or None)
     context = {"form": form, "samples": SAMPLES, "model_name": settings.AI_LOCAL_MODEL,
-               "model_on": settings.AI_LOCAL_ENABLED}
+               "model_on": settings.AI_LOCAL_ENABLED, "embed_model": settings.AI_EMBED_MODEL}
     if form.is_bound and form.is_valid():
         answer = understand(form.cleaned_data["q"], user=request.user)
         students = find_students(answer["filters"]) if answer["filters"] else StudentProfile.objects.none()

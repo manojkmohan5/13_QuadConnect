@@ -148,7 +148,9 @@ class ParsingTests(SimpleTestCase):
 
 # The model is "on" unless a test switches it off, wherever the tests run (CI sets
 # AI_LOCAL_ENABLED=0); generate_reply is replaced, so nothing is ever loaded.
-@override_settings(AI_LOCAL_ENABLED=True)
+# Matching by meaning (P1-A9) is off: these tests are of P1-A6's spelling-only
+# allow-list, and tests_a9.py tests the embedding step with a stand-in.
+@override_settings(AI_LOCAL_ENABLED=True, AI_EMBED_ENABLED=False)
 class SeededTestCase(TestCase):
 
     @classmethod
