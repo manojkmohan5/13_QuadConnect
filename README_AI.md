@@ -563,7 +563,11 @@ models we run ourselves cannot meet the need. The venue check is both:
   * filters nobody asked for (T13, T10 and T12 before the change; also N1, N4 and N5 in the new cases);
   * missing interests in the model's interpreted filters (T08, T10, T12, N1 and N3).
 
-  The improvement in 3.4 targets the first two, but it does not recover missing interests.
+  The first improvement in 3.4 targets the first two. The second, added in Part 1, recovers two of the five
+  missing interests.
+* **Since Part 1:** with A8's embedding model placing interests by meaning, the same 20 requests give **17 of
+  20** exactly right (T08 and T10 fixed), still with no unasked filter and the same median time. This was
+  re-measured on a second machine, an Apple M5, through the same page ([3.4](#34-improvement)).
 
 ### 3.1 Test inputs
 
@@ -711,8 +715,10 @@ The model replies quoted below are from A6's notebook, which used the same promp
 * The model wrote near-names that match nothing on the list: "Painting" (T08) and "Tech" (T10). It also left
   out the Pre-Med Society (T12).
 * **Why.** The allow-list matches names by spelling. "Painting" is not close to "Art", so it is dropped.
-* **Effect.** The search becomes broader than asked, which is the safer direction. The next step, from A8, is
-  matching these words by meaning (see 2.3).
+* **Effect.** The search becomes broader than asked, which is the safer direction.
+* **Fixed for T08 and T10 in Part 1.** A8's embedding model now places *"Painting"* on Art and *"Tech"* on
+  Technology (3.4, second improvement). T12 is a different failure: the model wrote no interest at all, so there
+  is nothing to place.
 
 **Handled correctly by the app: the injection attempt (T14).**
 * The model "obeyed" by inventing records: `{"student_data": [{"NetID": "abc123", ...`. It has no student data
@@ -721,6 +727,11 @@ The model replies quoted below are from A6's notebook, which used the same promp
   ignored.
 
 ### 3.4 Improvement
+
+Two improvements: the check against the request, measured in the app for Part 3, and matching interests by
+meaning, added in Part 1.
+
+#### First improvement: the check against the request
 
 **Before.** The app's results in 3.2, run before the change. The model's allowed-but-wrong values (failures 1
 and 2) go straight into the database query.
@@ -781,7 +792,41 @@ def check_against_request(filters, text, interests, colleges):
 **Its limits.**
 * It trusts the keyword lists. A time written in a way they don't know (*"this weekend"*) is removed, which
   makes the search broader, not wrong.
-* It does not recover interests the allow-list dropped (failure 3).
+* It does not recover interests the allow-list dropped (failure 3). The second improvement does, for two of
+  them.
+
+#### Second improvement (Part 1): interests placed by meaning
+
+**Before.** After the first improvement, 15 of 20 requests were exactly right, and all five misses were a
+missing interest (failure 3). In T08 and T10 the model wrote the right interest in other words, *"Painting"*
+and *"Tech"*, and the allow-list, which matches by spelling, dropped them.
+
+**What changed.** `match_by_meaning()` in [`connect/ai_search.py`](connect/ai_search.py), between
+`first_json_object()` and `clean_filters()`. A8's embedding model, `BAAI/bge-small-en-v1.5`, places such a word on
+the closest interest, but only at a cosine similarity of at least 0.78 and a lead of at least 0.08 over the next
+one. The limits were chosen on 70 calibration words and then checked on 45 new ones
+([1.2](#12-reuse-of-a6-a7-and-a8)). The page names every word it placed.
+
+**After.** The 20 requests through `/search/ask/` with both real models, once with the step off and once with
+it on ([`docs/a9_part1/`](docs/a9_part1/); Apple M5, CPU):
+
+| | Step off | Step on |
+|---|---:|---:|
+| Exactly right (of 20) | 15/20 (75%) | **17/20 (85%)** |
+| Requests missing an interest | 5 | 3 |
+| Requests with a filter nobody asked for | 0 | 0 |
+| Median time on the page | 2.35 s | 2.35 s |
+
+With the step off, all 20 results matched Part 3's *after* run, which was made on the other machine.
+
+**Why it helped.** Both misses were the right interest written in other words. An embedding compares meanings,
+not spellings, and the two limits keep it from guessing: none of the 36 calibration words that should not be
+placed was placed.
+
+**Its limits.**
+* It cannot recover an interest the model never wrote: in T12, N1 and N3 the raw reply has no interest at all.
+* It misses some words it should place (*Coding*, *Premed*), and among the 25 held-out words that should not be
+  placed it placed one (*lunch* on Food). Every placement shows on the page, so the student can rephrase.
 
 ---
 
