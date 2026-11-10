@@ -819,11 +819,11 @@ be extended on the Web tab once a month.
 
 ## Continuous integration
 
-Every push to `feature/p1-a6`, the branch P1-A6 is built on, runs one GitHub
-Actions check, **Deploy / test (push)**, defined in
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Its single job
-runs, in order (with `AI_LOCAL_ENABLED=0` and `AI_EMBED_ENABLED=0`, so CI never downloads a model; the
-tests replace both):
+Every push to the branch the current assignment is built on (for P1-A9,
+`feature/p1-a9-part1`) runs one GitHub Actions check, **Deploy / test (push)**,
+defined in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Its
+single job runs, in order (with `AI_LOCAL_ENABLED=0` and `AI_EMBED_ENABLED=0`,
+so CI never downloads a model; the tests replace both):
 
 1. `pip install -r requirements.txt` with the CPU build of `torch`, then a check
    that the web app's packages stay under 400 MB, so the site fits a 512 MB
