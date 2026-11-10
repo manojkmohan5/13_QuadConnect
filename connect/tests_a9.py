@@ -5,7 +5,8 @@ Tests for P1-A9:
   (connect.ai_search.check_against_request), run on every model answer before
   the database query.
 * Part 1: P1-A8's embedding model placing an interest the model wrote in its own
-  words on the list (match_by_meaning).
+  words on the list (match_by_meaning), and the time limit on the model
+  (ModelTimeout).
 
     python manage.py test connect.tests_a9
 
@@ -16,6 +17,7 @@ are the evaluation requests in README_AI.md (Part 3).
 """
 
 import sys
+import time
 from io import StringIO
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -254,6 +256,51 @@ class UnderstandPlacesByMeaningTests(SimpleTestCase):
             with override_settings(AI_EMBED_ENABLED=False):
                 self.assertEqual(ai_search.understand("painters")["filters"], {})
         self.assertEqual(model.call_count, 2)
+
+
+# --- Part 1: the time limit on the model ---------------------------------------------------------
+
+class Batch(dict):
+    """A tokenizer's output, as LocalModel.generate() uses it."""
+
+    def to(self, device):
+        return self
+
+
+class TimeLimitTests(SimpleTestCase):
+
+    def model(self, seconds, reply='{"day": "SUNDAY"}'):
+        """A LocalModel whose generation takes `seconds`; nothing is loaded."""
+        model = ai_search.LocalModel("nobody/no-such-model")
+        model.tokenizer, model.model = MagicMock(pad_token_id=0), MagicMock()
+        model.tokenizer.apply_chat_template.return_value = Batch(input_ids=MagicMock(shape=(1, 3)))
+        model.tokenizer.decode.return_value = reply
+        model.model.generate.side_effect = lambda **kwargs: time.sleep(seconds) or [[1, 2, 3, 4]]
+        return model
+
+    @override_settings(AI_LOCAL_MAX_SECONDS=0.05)
+    def test_a_generation_stopped_by_the_limit_is_a_timeout(self):
+        model = self.model(0.06)
+        with patch.object(model, "_shared_start", return_value=None), self.assertRaises(ai_search.ModelTimeout):
+            model.generate([])
+
+    @override_settings(AI_LOCAL_MAX_SECONDS=5)
+    def test_a_generation_within_the_limit_is_returned(self):
+        model = self.model(0)
+        with patch.object(model, "_shared_start", return_value=None):
+            self.assertEqual(model.generate([]), '{"day": "SUNDAY"}')
+        self.assertEqual(model.model.generate.call_args.kwargs["max_time"], 5)
+
+    @override_settings(AI_LOCAL_ENABLED=True)
+    def test_a_timeout_is_not_retried_and_the_keyword_parser_answers(self):
+        cache.clear()
+        with patch("connect.ai_search.vocabulary", return_value=(NAMES, COLLEGES)), \
+                patch("connect.ai_search.generate_reply", side_effect=ai_search.ModelTimeout("60 s")) as model:
+            answer = ai_search.understand("gamers free saturday afternoon")
+        self.assertEqual(model.call_count, 1)
+        self.assertEqual(answer["source"], "keywords")
+        self.assertEqual(answer["filters"], {"interests": ["Gaming"], "day": "SATURDAY", "time": "14-16"})
+        self.assertEqual(answer["note"], "The language model took too long to answer.")
 
 
 # --- Part 1: the page, the download command and the setup -----------------------------------

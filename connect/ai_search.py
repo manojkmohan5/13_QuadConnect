@@ -379,6 +379,11 @@ class ModelBusy(ModelUnavailable):
     """Another search has been using the model for longer than LOCK_WAIT_SECONDS."""
 
 
+class ModelTimeout(ModelUnavailable):
+    """The model was stopped at AI_LOCAL_MAX_SECONDS, before it closed its JSON
+    object (it stops at the first "}"). Asking again would double the wait."""
+
+
 class LocalModel:
     """One Hugging Face model, loaded on first use and shared by every request.
     A lock makes requests take turns: one model in memory, one answer at a time.
@@ -458,11 +463,15 @@ class LocalModel:
             prompt_tokens = batch["input_ids"].shape[1]
             pad = self.tokenizer.pad_token_id
             with torch.inference_mode():
+                start = self._shared_start(messages, batch["input_ids"])
+                started = time.perf_counter()
                 output = self.model.generate(
-                    **batch, past_key_values=self._shared_start(messages, batch["input_ids"]),
+                    **batch, past_key_values=start,
                     max_new_tokens=MAX_NEW_TOKENS, do_sample=False, stop_strings=["}"],
                     tokenizer=self.tokenizer, max_time=settings.AI_LOCAL_MAX_SECONDS,
                     pad_token_id=self.tokenizer.eos_token_id if pad is None else pad)
+            if time.perf_counter() - started >= settings.AI_LOCAL_MAX_SECONDS:
+                raise ModelTimeout(f"No answer within AI_LOCAL_MAX_SECONDS={settings.AI_LOCAL_MAX_SECONDS:g}.")
             return self.tokenizer.decode(output[0][prompt_tokens:], skip_special_tokens=True)
         finally:
             self.lock.release()
@@ -580,6 +589,9 @@ def understand(raw_text, user=None):
                 answer["note"] = "The language model did not give a usable answer."
         except ModelBusy as error:
             answer["note"] = str(error)
+        except ModelTimeout as error:  # no retry: it would wait as long again
+            answer["note"] = "The language model took too long to answer."
+            logger.warning("Local model timed out: %s", error)
         except ModelUnavailable as error:  # the detail (paths, errors) goes to the log, not the page
             answer["note"] = ("The language model is switched off on this server." if not settings.AI_LOCAL_ENABLED
                               else "The language model is not available on this server right now.")
