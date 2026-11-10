@@ -517,9 +517,15 @@ models, and search by cosine similarity.
     here separates what the model got wrong from what the allow-list and the database did.
   * **Choose the smallest model that works.** In A8, the 384-dimension BGE model put 49 of 54 key facts in its
     retrieved context, against 48 for the 1,024-dimension one.
-* **Where A8 fits next.** Embedding similarity could match a word the model writes to the interest list, such
-  as *"Painting"* to Art or *"Tech"* to Technology. Part 3 shows the allow-list dropping exactly such words.
-  A8's small BGE model would do it in about 31 ms per query on our CPU.
+* **Where A8 fits: the embedding model, added in Part 1.** Embedding similarity matches a word the model
+  writes to the interest list, such as *"Painting"* to Art or *"Tech"* to Technology. Part 3 shows the
+  allow-list dropping exactly such words.
+  * **The model:** `BAAI/bge-small-en-v1.5`, A8's smallest BGE model, for the lesson just above: in A8 it
+    retrieved as well as the 1,024-dimension model (49 against 48 of 54 key facts).
+  * **Why it fits next to the language model:** 33M parameters, about 130 MB, and fast on a CPU: about 31 ms
+    per query in A8, and a median of 4.1 ms per word in the app.
+  * **What it changed:** on Part 3's 20 requests, exactly right rose from 15 to 17, with no filter nobody asked
+    for ([1.2](#12-reuse-of-a6-a7-and-a8), [3.4](#34-improvement)).
 
 **Why the venue check uses an API.** A9 allows an API only as a secondary or optional feature, used when open
 models we run ourselves cannot meet the need. The venue check is both:
