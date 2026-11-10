@@ -1,7 +1,7 @@
 # CI for QuadConnect.
 #
-# One workflow with one job, triggered only by a push to feature/p1-a9-part2-3
-# (the branch P1-A9 Parts 2 and 3 are built on), so every commit gets exactly one check:
+# One workflow with one job, triggered only by a push to feature/p1-a9-part1
+# (the branch P1-A9 Part 1 is built on), so every commit gets exactly one check:
 # "Deploy / test (push)". Every CI step lives inside that job: install
 # size, lint, Django checks, migrations, the committed database,
 # constraints, the test suite, the production deploy checks, the
@@ -14,7 +14,7 @@ name: Deploy
 
 on:
   push:
-    branches: [feature/p1-a9-part2-3]
+    branches: [feature/p1-a9-part1]
 
 permissions:
   contents: read
@@ -31,6 +31,8 @@ jobs:
       # P1-A6: CI never downloads the local model (several GB). The tests
       # replace it, and the smoke test exercises the keyword fallback.
       AI_LOCAL_ENABLED: "0"
+      # P1-A9: nor the embedding model; the tests replace it too.
+      AI_EMBED_ENABLED: "0"
 
     steps:
       - name: Check out the code
