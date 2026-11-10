@@ -1,0 +1,48 @@
+{
+  "language_model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "meaning_min": 0.78,
+  "meaning_lead": 0.08,
+  "calibration": {
+    "should_place": 34,
+    "placed_right": 21,
+    "left_out": 13,
+    "should_not": 36,
+    "placed_wrong": 0
+  },
+  "held_out": {
+    "should_place": 20,
+    "placed_right": 11,
+    "left_out": 9,
+    "should_not": 25,
+    "placed_wrong": 1
+  },
+  "requests_off": {
+    "exact": 15,
+    "missing_interest": 5,
+    "extra_or_wrong": 0,
+    "read_by_model": 20,
+    "placed_by_meaning": 0,
+    "median_app_seconds": 2.35,
+    "median_wall_seconds": 2.335
+  },
+  "requests_on": {
+    "exact": 17,
+    "missing_interest": 3,
+    "extra_or_wrong": 0,
+    "read_by_model": 20,
+    "placed_by_meaning": 2,
+    "median_app_seconds": 2.35,
+    "median_wall_seconds": 2.343
+  },
+  "first_request_with_model_loads_seconds": 9.5,
+  "match_by_meaning_one_word_ms": {
+    "median": 4.1,
+    "max": 5.2
+  },
+  "machine": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "processor": "arm",
+    "python": "3.14.8"
+  }
+}
