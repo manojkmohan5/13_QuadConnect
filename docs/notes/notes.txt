@@ -23,6 +23,26 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  P1-A9 Part 1 on feature/p1-a9-part1  [Kritika]
+--------------------------------------------------------------------------------
+P1-A9 Part 1 (the AI integrated into the Django app), on feature/p1-a9-part1,
+cut from feature/p1-a9-part2-3.
+  - README_AI.md Part 1: one section per rubric step (the feature, the reuse
+    of A6/A7/A8, where the models run, the flow in the app, 18 guardrails
+    each with its test).
+  - A8 in the app: match_by_meaning() in connect/ai_search.py. BGE-small
+    (sentence-transformers) places an interest the model wrote in its own
+    words ("Painting" -> Art, "Tech" -> Technology). Similarity >= 0.78 and a
+    lead >= 0.08 over the next interest. Calibration: 21/34 placed, 0/36 wrong;
+    held out: 11/20 placed, 1/25 wrong (lunch -> Food). Part 3's 20 requests:
+    exactly right 15 -> 17, nothing unasked added, median 2.35 s both times.
+  - Timeout: a generation stopped at AI_LOCAL_MAX_SECONDS is not retried; the
+    keyword parser answers and the page says so.
+  - connect/tests_a9.py: 29 new tests (210 in all). Evidence and the script
+    that measured it: docs/a9_part1/.
+Next: one PR with Parts 2 and 3, the Canvas file and the in-person demo.
+
+--------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A9 Parts 2 and 3 on feature/p1-a9-part2-3
                              [Prathamesh, Manojkumar]
 --------------------------------------------------------------------------------
