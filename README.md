@@ -50,15 +50,28 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>, and log in as `tester` (see [Admin](#admin))
-or sign up. Run the test suite with `python manage.py test connect` (173
+or sign up. Run the test suite with `python manage.py test connect` (210
 tests).
 
 Since P1-A6, `requirements.txt` also installs `torch` and `transformers` for the
-local language model (about 1 GB). On Linux, add
+local language model, and since P1-A9 `sentence-transformers` for the embedding
+model (about 1 GB in all, mostly `torch`). On Linux, add
 `--extra-index-url https://download.pytorch.org/whl/cpu` to get the CPU build
-instead of the much larger CUDA one. The model's own weights download by
-themselves on the first "Ask in plain English" search; see
-[`README_AI.md`](README_AI.md).
+instead of the much larger CUDA one.
+
+**The AI feature** is **Search → ask in plain English**
+(<http://127.0.0.1:8000/search/ask/>, signed in). The two models' weights
+(`Qwen/Qwen2.5-1.5B-Instruct`, about 3.1 GB, and `BAAI/bge-small-en-v1.5`, about
+130 MB) download by themselves into the Hugging Face cache
+(`~/.cache/huggingface`) on the first search, never into this repository. To
+fetch them ahead of time, so the first search does not wait, run:
+
+```bash
+python manage.py download_ai_model
+```
+
+`AI_LOCAL_ENABLED=0` in `.env` runs the page without any model (keyword parser
+only). See [`README_AI.md`](README_AI.md).
 
 The first command after installing pauses for a while (up to a minute on
 Windows) while Matplotlib builds its font cache. That happens once.
@@ -84,6 +97,48 @@ The seed data also ships two superusers, both with password `uiuc12345`:
 exist.)
 
 ---
+
+## P1-A9: the AI feature, integrated, designed and evaluated
+
+Parts 2 and 3 were built on `feature/p1-a9-part2-3`, cut from `main` after
+P1-A8. Prathamesh Mulay built the improvement and ran the evaluation. Part 1 was
+built on `feature/p1-a9-part1`, cut from `feature/p1-a9-part2-3`. The write-up is
+[`README_AI.md`](README_AI.md):
+
+- **Part 1:** "Ask in plain English", checked against each rubric step:
+  - the feature;
+  - the reuse of A6, A7 and A8;
+  - where the models run;
+  - the flow in the app, with a diagram;
+  - a table of 18 guardrails, each with its test.
+
+  Part 1 adds two things to
+  [`connect/ai_search.py`](connect/ai_search.py):
+  - **A8's embedding model** (`BAAI/bge-small-en-v1.5`, `sentence-transformers`)
+    places an interest the language model wrote in its own words on the list by
+    meaning: "Painting" becomes Art and "Tech" becomes Technology. On Part 3's 20
+    requests, exactly right went from 15 to 17, with no filter added that nobody
+    asked for, and the same median time.
+  - **A time limit that ends the wait.** A generation stopped at
+    `AI_LOCAL_MAX_SECONDS` is not asked again, and the keyword parser answers.
+
+  The measurements are in [`docs/a9_part1/`](docs/a9_part1/). The 29 Part 1 tests
+  in [`connect/tests_a9.py`](connect/tests_a9.py) replace both models with
+  stand-ins.
+- **Part 2:** how "Ask in plain English" and the venue-suggestion check work,
+  with two architecture diagrams, and why Qwen2.5-1.5B-Instruct runs the
+  search, tied to A6, A7 and A8.
+- **Part 3:** the same 20 requests through the live page, before and after one
+  improvement. Exactly right went from 11 to 15 of 20, and filters nobody
+  asked for from 6 requests to none, at the same median time (3.6 s). The raw
+  results are in [`docs/a9_evaluation/`](docs/a9_evaluation/).
+- **The improvement:** `check_against_request()` in
+  [`connect/ai_search.py`](connect/ai_search.py) checks the model's day, time,
+  connection type and college against the request's own words.
+  [`connect/tests_a9.py`](connect/tests_a9.py) tests it without loading a model.
+
+The P1-A6 write-up that `README_AI.md` replaced is kept at
+[`docs/README_AI_P1-A6.md`](docs/README_AI_P1-A6.md).
 
 ## P1-A8: semantic relationships and retrieval
 
@@ -173,7 +228,8 @@ jupyter nbconvert --to notebook --execute --inplace multi_model_system.ipynb
 ## P1-A6 features
 
 Built on `feature/p1-a6`, cut from `main` after P1-A5. The AI features are
-written up in [`README_AI.md`](README_AI.md) (Part 2). The model lab is
+written up in [`docs/README_AI_P1-A6.md`](docs/README_AI_P1-A6.md) (Part 2; `README_AI.md`
+until P1-A9). The model lab is
 [`llm-test/ai_prototype.ipynb`](llm-test/ai_prototype.ipynb) (Part 1), and the
 production reflection is section 3 of
 [`docs/notes/notes.txt`](docs/notes/notes.txt) (Part 3). Tests are in
@@ -763,11 +819,11 @@ be extended on the Web tab once a month.
 
 ## Continuous integration
 
-Every push to `feature/p1-a6`, the branch P1-A6 is built on, runs one GitHub
-Actions check, **Deploy / test (push)**, defined in
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Its single job
-runs, in order (with `AI_LOCAL_ENABLED=0`, so CI never downloads a model; the
-tests replace it):
+Every push to the branch the current assignment is built on (for P1-A9,
+`feature/p1-a9-part1`) runs one GitHub Actions check, **Deploy / test (push)**,
+defined in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Its
+single job runs, in order (with `AI_LOCAL_ENABLED=0` and `AI_EMBED_ENABLED=0`,
+so CI never downloads a model; the tests replace both):
 
 1. `pip install -r requirements.txt` with the CPU build of `torch`, then a check
    that the web app's packages stay under 400 MB, so the site fits a 512 MB
@@ -796,10 +852,10 @@ secret is needed.
 
 `main` receives code only by merging the assignment's branch through a pull
 request, after the branch head has passed the check. P1-A3 reached `main` this
-way in PR #6 (2026-09-28), from `feature/p1-a3`, P1-A4 in PR #9
-(2026-10-05), from `feature/p1-a4`, and P1-A5 in PR #10 (2026-10-12), from
-`feature/p1-a5`. The
-workflow does not run on `main` itself, so `main`'s merge commits show no check
+way in PR #6 (2026-09-28), P1-A4 in PR #9 (2026-10-05), P1-A5 in PR #10
+(2026-10-12), P1-A6 in PR #11 (2026-10-19), P1-A7 in PRs #12 to #14
+(2026-10-26 and 2026-11-03), P1-A8 in PR #15 (2026-11-08) and P1-A9 in PR #16
+(2026-11-09), each from its assignment's branch. The workflow does not run on `main` itself, so `main`'s merge commits show no check
 of their own; to run it there too, add `main` to its `on: push: branches:` line.
 
 ---
@@ -820,7 +876,9 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | `MAPS_API_KEY` | Placeholder for the Screen 8 campus map. Dummy value. |
 | `AI_LOCAL_ENABLED` | `1` (default) runs the local model for "Ask in plain English"; `0` uses only its keyword parser. |
 | `AI_LOCAL_MODEL` | Hugging Face id of that model, downloaded on first use. Default `Qwen/Qwen2.5-1.5B-Instruct`. |
-| `AI_LOCAL_MAX_SECONDS` | Longest a model answer may take, in seconds. Default `60`. |
+| `AI_LOCAL_MAX_SECONDS` | Longest a model answer may take, in seconds. Default `60`. Past it, the keyword parser answers. |
+| `AI_EMBED_ENABLED` | `1` (default) places an interest the model wrote in its own words on the list by meaning (P1-A9); `0` matches by spelling only. |
+| `AI_EMBED_MODEL` | Hugging Face id of that embedding model, downloaded on first use. Default `BAAI/bge-small-en-v1.5`. |
 | `AI_API_PROVIDER` | The venue check's API: `groq` (default), `openrouter`, `gemini` or `huggingface`. |
 | `GROQ_API_KEY` | Key for that provider (or `OPENROUTER_API_KEY`, `GEMINI_API_KEY`, `HF_TOKEN`, or `AI_API_KEY` for any). Without one, nothing is sent. |
 | `AI_API_MODEL` | Optional: another model of that provider. |
@@ -882,8 +940,8 @@ own login, for staff.
 ```
 13_QuadConnect/
 ├── manage.py                     defaults to development settings
-├── requirements.txt              pip freeze: 61 pinned packages, torch and transformers included
-├── README_AI.md                  P1-A6: the AI features, their data, preprocessing and guardrails
+├── requirements.txt              pip freeze: 68 pinned packages, torch, transformers and sentence-transformers included
+├── README_AI.md                  P1-A9 Parts 1-3: the integration, workflow, architecture, model choice and evaluation
 ├── llm-test/                     P1-A6 model lab: ai_prototype.ipynb, its extra requirements, results/
 ├── multi-model/                  P1-A7 (not Django): multi_model_system.ipynb, system_design.md, requirements, results/
 ├── rag/                          P1-A8 (not Django): rag_system.ipynb, rag_analysis.md, README, requirements, data/, results/
@@ -907,6 +965,9 @@ own login, for staff.
 │   ├── build_tasks/              per-developer build instructions (A2)
 │   ├── screenshots/              A2 evidence; p1-a3/, p1-a4/ and p1-a5/
 │   ├── a5/                       the public API's chart and its three other uses
+│   ├── a9_part1/                 P1-A9 Part 1: measurements of the embedding step, and measure.py
+│   ├── a9_evaluation/            P1-A9 Part 3: the raw before and after results
+│   ├── README_AI_P1-A6.md        the P1-A6 AI write-up: setup, guardrails, measurements
 │   ├── er_diagram.pdf
 │   └── data_model_notes.md       why each model and on_delete exists
 ├── quadconnect/
@@ -926,19 +987,20 @@ own login, for staff.
     ├── specs/                    the two Vega-Lite specs (.vl.json)
     ├── icebreakers.py            Open Trivia DB questions for a match
     ├── reports.py                reports page, CSV and JSON exports
-    ├── ai_search.py              "Ask in plain English": the local model and its guardrails
+    ├── ai_search.py              "Ask in plain English": the local models and their guardrails
     ├── ai_venues.py              the external API that checks venue suggestions
     ├── tests.py                  45 tests, one class per P1-A3 section
     ├── tests_a4.py               42 tests, one class per P1-A4 part
     ├── tests_a5.py               25 tests: access, navigation, accounts, Google
     ├── tests_a6.py               61 tests: the local model's pipeline, the API check, hygiene
+    ├── tests_a9.py               37 tests: the embedding step, the time limit and the page (Part 1); the request check (Part 3)
     ├── urls.py                   all routes named
     ├── admin.py                  all 8 models registered, with inlines
     ├── templates/connect/        base.html, shared entity_list.html, pages
     └── management/commands/
         ├── seed_demo_data.py     idempotent sample data
         ├── verify_constraints.py proves constraints and on_delete rules
-        └── download_ai_model.py  fetches the local model ahead of the first search
+        └── download_ai_model.py  fetches both local models ahead of the first search
 ```
 
 ---

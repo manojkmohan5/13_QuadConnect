@@ -23,6 +23,48 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  P1-A9 Part 1 on feature/p1-a9-part1  [Kritika]
+--------------------------------------------------------------------------------
+P1-A9 Part 1 (the AI integrated into the Django app), on feature/p1-a9-part1,
+cut from feature/p1-a9-part2-3.
+  - README_AI.md Part 1: one section per rubric step (the feature, the reuse
+    of A6/A7/A8, where the models run, the flow in the app, 18 guardrails
+    each with its test).
+  - A8 in the app: match_by_meaning() in connect/ai_search.py. BGE-small
+    (sentence-transformers) places an interest the model wrote in its own
+    words ("Painting" -> Art, "Tech" -> Technology). Similarity >= 0.78 and a
+    lead >= 0.08 over the next interest. Calibration: 21/34 placed, 0/36 wrong;
+    held out: 11/20 placed, 1/25 wrong (lunch -> Food). Part 3's 20 requests:
+    exactly right 15 -> 17, nothing unasked added, median 2.35 s both times.
+  - Timeout: a generation stopped at AI_LOCAL_MAX_SECONDS is not retried; the
+    keyword parser answers and the page says so.
+  - connect/tests_a9.py: 29 new tests (210 in all). Evidence and the script
+    that measured it: docs/a9_part1/.
+  Audit [Manojkumar], 2026-11-09: every rubric step checked. The evidence
+    re-run on a second machine (115 similarities within 0.0005; all 40
+    request results recomputed), 210 tests pass, 197 links resolve.
+    README_AI.md Parts 2-3 updated for the final pipeline; .gitignore also
+    covers model cache folders. PR #16 merged into main on 2026-11-09.
+Next: the Canvas file, and the demo on Thu 2026-11-12, 11:30 AM, EDUC 339.
+
+--------------------------------------------------------------------------------
+WEEK 11 (w/c 2026-11-02)  -  P1-A9 Parts 2 and 3 on feature/p1-a9-part2-3
+                             [Prathamesh, Manojkumar]
+--------------------------------------------------------------------------------
+P1-A9 Parts 2 and 3 (the AI system design, and the evaluation of the
+integrated feature), on feature/p1-a9-part2-3, cut from main after P1-A8
+merged (PR #15).
+  - README_AI.md is now the P1-A9 write-up; the P1-A6 one moved to
+    docs/README_AI_P1-A6.md.
+  - Improvement: check_against_request() in connect/ai_search.py. A day,
+    time or connection type the request does not name is removed; a college
+    it names wins. 20 requests through the live page: exactly right 11 -> 15
+    of 20, unasked filters 6 -> 0, median 3.6 s both times.
+  - connect/tests_a9.py: 8 tests (181 in all). Raw results:
+    docs/a9_evaluation/.
+Next: a PR into main, the Canvas file and the in-person demo.
+
+--------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A8 Parts 1 to 4 on feature/p1-a8  [Manojkumar]
 --------------------------------------------------------------------------------
 P1-A8 (Semantic Relationships and Retrieval, 300 pts, due Mon 2026-11-09) is
@@ -165,7 +207,8 @@ Done, by assignment part:
       loaded by transformers inside Django, turns a request into allow-listed
       search filters; the ORM does the search. The automatic check of venue
       suggestions (/locations/): an external API (Groq by default) advises
-      staff, who still approve every venue. Written up in README_AI.md.
+      staff, who still approve every venue. Written up in README_AI.md (moved to
+      docs/README_AI_P1-A6.md in P1-A9).
   P3  Section 3 below.
 
 Verified:

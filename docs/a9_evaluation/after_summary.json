@@ -1,0 +1,34 @@
+{
+  "phase": "after",
+  "base_url": "http://127.0.0.1:8000",
+  "requested_cases": 20,
+  "completed_cases": 20,
+  "model_reader_count": 21,
+  "keyword_reader_count": 0,
+  "median_app_reported_seconds": 3.6,
+  "min_app_reported_seconds": 1.5,
+  "max_app_reported_seconds": 19.3,
+  "cache_repeat": {
+    "id": "T01_REPEAT",
+    "request": "Who likes basketball?",
+    "expected_filters": {
+      "interests": [
+        "Basketball"
+      ]
+    },
+    "observed_chips": [
+      "Interest: Basketball"
+    ],
+    "reader": "model",
+    "app_reported_seconds": 19.3,
+    "browser_wall_seconds": 0.037,
+    "students_found": 2,
+    "cached": true,
+    "injection_notice": false,
+    "no_filter_message": false,
+    "http_status": 200,
+    "page_url": "http://127.0.0.1:8000/search/ask/?q=Who+likes+basketball%3F",
+    "raw_note": "Read by Qwen/Qwen2.5-1.5B-Instruct in 19.3 s, an earlier answer to the same request. Students with more of the interests come first."
+  },
+  "note": "Observed chips must be compared with expected_filters; result counts alone are not accuracy."
+}

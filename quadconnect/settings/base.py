@@ -218,6 +218,12 @@ if env("GOOGLE_CLIENT_ID"):
 AI_LOCAL_MODEL = env("AI_LOCAL_MODEL", default="Qwen/Qwen2.5-1.5B-Instruct")
 AI_LOCAL_ENABLED = env("AI_LOCAL_ENABLED", default="1") == "1"
 AI_LOCAL_MAX_SECONDS = float(env("AI_LOCAL_MAX_SECONDS", default="60"))
+# P1-A9: P1-A8's embedding model places an interest the model wrote in its own
+# words ("Painting") on the list by meaning (Art). sentence-transformers
+# downloads it on first use, into the same cache. AI_EMBED_ENABLED=0 switches
+# it off; names are then matched by spelling only, as in P1-A6.
+AI_EMBED_MODEL = env("AI_EMBED_MODEL", default="BAAI/bge-small-en-v1.5")
+AI_EMBED_ENABLED = env("AI_EMBED_ENABLED", default="1") == "1"
 
 # An external API checks venue suggestions (connect/ai_venues.py): any
 # OpenAI-compatible chat API. The key comes from .env only; without one, a

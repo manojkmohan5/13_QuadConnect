@@ -25,10 +25,10 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | **P1-A8** — Semantic Relationships and Retrieval (300 pts, due Mon 2026-11-09): all four parts done on `feature/p1-a8` (the RAG pipeline, the experiments, failure analysis and improvement, and the system design) — in `rag/`, not part of the Django app. **P1-A7** — Multi-Model AI Systems (250 pts, group) — is complete in `multi-model/` (not part of the Django app): Part 1 benchmarking (PR #12), Part 2 cost at six traffic levels (PR #13), Part 3 routing strategy (PR #14). Part 1 alone was submitted on Canvas on 2026-10-26. |
-| **Last completed** | P1-A7 Part 3 — multi-model routing strategy — merged into `main` (PR #14, 2026-11-03) |
-| **`main` status** | Has P1-A2 to P1-A6 and all three parts of P1-A7 (PRs #12, #13, #14). |
-| **What remains** | P1-A8: a PR into `main` and the Canvas submission (a single ZIP of `rag/`) (§9, §12). |
+| **Assignment in flight** | **P1-A9** — Integrated AI Application Deployment (300 pts; GitHub and an in-person demo): Parts 2 and 3 done on `feature/p1-a9-part2-3` — `README_AI.md` (the AI system design and the evaluation of the integrated feature), the request check in `connect/ai_search.py`, `connect/tests_a9.py` and the raw results in `docs/a9_evaluation/`; Part 1 on `feature/p1-a9-part1`, cut from it — A8's embedding model in the search, the time limit, `README_AI.md` Part 1 and `docs/a9_part1/`. Audited on 2026-11-09 and merged into `main` in PR #16 (§9). |
+| **Last completed** | P1-A8 — Semantic Relationships and Retrieval — merged into `main` (PR #15, 2026-11-08) |
+| **`main` status** | Has P1-A2 to P1-A9 (P1-A8 in PR #15, P1-A9 in PR #16). |
+| **What remains** | P1-A9: the Canvas file (the repository link, a summary of the AI feature and the demo time) and the in-person demo on Thursday 2026-11-12, 11:30 AM, EDUC 339 (§9). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -57,7 +57,9 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A5) | `feature/p1-a5` | Parts 1–4 | `/accounts/...`, every route behind a login, `/api/summary/` public | ✅ DONE — merged to `main` in PR #10 (2026-10-12); deployed 2026-10-09; see §9 |
 | Manojkumar Mohankumar (P1-A6) | `feature/p1-a6` | Parts 1–3 | `/search/ask/`, the venue check on `/locations/`, `llm-test/` | ✅ DONE — merged to `main` in PR #11 (2026-10-19); see §9 |
 | Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
-| Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | BUILDING — all four parts done 2026-11-04; PR and ZIP next; see §9 |
+| Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | ✅ DONE — merged to `main` in PR #15 (2026-11-08); see §9 |
+| Prathamesh Mulay, Manojkumar Mohankumar (P1-A9) | `feature/p1-a9-part2-3` | Parts 2–3 | `README_AI.md`, the request check in `connect/ai_search.py`, `docs/a9_evaluation/` | ✅ DONE — Parts 2 and 3 done 2026-11-08; merged to `main` in PR #16 (2026-11-09), through `feature/p1-a9-part1`; see §9 |
+| Kritika Agrawal (P1-A9) | `feature/p1-a9-part1` | Part 1 | `README_AI.md` Part 1, `match_by_meaning()` and `ModelTimeout` in `connect/ai_search.py`, `docs/a9_part1/` | ✅ DONE — Part 1 done and audited 2026-11-09; merged to `main` in PR #16 (2026-11-09); the demo is on 2026-11-12; see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -214,7 +216,7 @@ the same models as a foundation.
 ├── .env                           IGNORED — never committed
 ├── .env.example                   committed, placeholders only
 ├── requirements.txt               pip freeze, 61 pins (A6): Django, django-allauth, whitenoise, matplotlib, requests, vl-convert-python, torch, transformers, ...
-├── README_AI.md                   (A6) the AI features: data input, preprocessing, guardrails
+├── README_AI.md                   (A9) Parts 2-3: AI workflow, architecture, model choice, evaluation
 ├── llm-test/                      (A6) ai_prototype.ipynb (the model lab), requirements.txt (its extras), results/runs.jsonl
 ├── manage.py                      -> quadconnect.settings.development
 ├── db.sqlite3                     COMMITTED since A4 — seed data only
@@ -231,6 +233,9 @@ the same models as a foundation.
 │   ├── build_tasks/               one spec per developer + shared rules
 │   ├── screenshots/               README.md manifest, A2 captures, p1-a3/ (19), p1-a4/ (19), p1-a5/
 │   ├── a5/                        (A5) the public API's Vega-Lite spec, its three uses, README
+│   ├── a9_part1/                  (A9) Part 1's measurements of the embedding step, and measure.py
+│   ├── a9_evaluation/             (A9) the raw before and after results of the Part 3 runs
+│   ├── README_AI_P1-A6.md         (A6) the AI write-up, README_AI.md until A9
 │   ├── er_diagram.pdf
 │   └── data_model_notes.md        why each model and on_delete exists
 ├── quadconnect/
@@ -251,12 +256,14 @@ the same models as a foundation.
     ├── specs/                     (A4) chart1_bar.vl.json, chart2_line.vl.json
     ├── icebreakers.py             (A4) Open Trivia DB questions for a match
     ├── reports.py                 (A4) /reports/ and the CSV/JSON exports
-    ├── ai_search.py               (A6) "Ask in plain English": the local model, its prompt and guardrails, the view
+    ├── ai_search.py               (A6) "Ask in plain English": the local model, its prompt and guardrails, the view;
+    │                              (A9) check_against_request(); Part 1: match_by_meaning() and Embedder, ModelTimeout
     ├── ai_venues.py               (A6) the external API that checks venue suggestions
     ├── tests.py                   (A3) 45 tests, one class per A3 section
     ├── tests_a4.py                (A4) 42 tests, one class per A4 part
     ├── tests_a5.py                (A5) 25 tests: access, navigation, accounts, Google
     ├── tests_a6.py                (A6) 61 tests: no model is loaded and no API called
+    ├── tests_a9.py                (A9) 37 tests: Part 1's embedding step, time limit and page, the request check; no model is loaded
     ├── urls.py                    every route named, namespace "connect"
     ├── admin.py                   all 8 registered, with inlines
     ├── migrations/                0001_initial.py; 0002 (A6) adds CampusLocation's ai_* fields
@@ -267,7 +274,7 @@ the same models as a foundation.
     └── management/commands/
         ├── seed_demo_data.py      idempotent
         ├── verify_constraints.py  11 checks, all rolled back
-        └── download_ai_model.py   (A6) fetches the local model before the first search
+        └── download_ai_model.py   (A6) fetches the local model before the first search; (A9) the embedding model too
 ```
 
 ### Naming rationale
@@ -320,6 +327,7 @@ names, `immutable` caching, gzip. **Production needs
 | `GOOGLE_CLIENT_SECRET` | That client's secret. Required when the ID is set. Never in the database. |
 | `DJANGO_DB_PATH` | Optional SQLite path. The live site's database lives outside the repository. |
 | `AI_LOCAL_ENABLED`, `AI_LOCAL_MODEL`, `AI_LOCAL_MAX_SECONDS` | (A6) The local model for "Ask in plain English": on/off, its Hugging Face id, its time limit. |
+| `AI_EMBED_ENABLED`, `AI_EMBED_MODEL` | (A9) The embedding model that places an interest the model wrote in its own words on the list: on/off, its Hugging Face id. |
 | `AI_API_PROVIDER`, `AI_API_MODEL` | (A6) The venue check's API (`groq`, `openrouter`, `gemini`, `huggingface`) and an optional model. |
 | `GROQ_API_KEY` (or `OPENROUTER_API_KEY`, `GEMINI_API_KEY`, `AI_API_KEY`) | (A6) That provider's key. Without one, suggestions are saved "not checked" and nothing is sent. |
 | `HF_TOKEN` | (A6) Optional Hugging Face token: faster downloads, and the key for `AI_API_PROVIDER=huggingface`. |
@@ -564,8 +572,8 @@ python manage.py migrate
 python manage.py seed_demo_data      # idempotent
 python manage.py verify_constraints  # 11/11 pass
 python manage.py check
-python manage.py test connect        # 173 tests (45 A3, 42 A4, 25 A5, 61 A6)
-python manage.py download_ai_model   # A6: fetch the local model before the first search
+python manage.py test connect        # 210 tests (45 A3, 42 A4, 25 A5, 61 A6, 37 A9)
+python manage.py download_ai_model   # A6, A9: fetch both local models before the first search
 ruff check .                         # rules in ruff.toml; CI runs the same
 
 DJANGO_SETTINGS_MODULE=quadconnect.settings.production \
@@ -604,9 +612,80 @@ that property when adding checks.
 
 The running history of what has actually been built. Newest at the top.
 
-### BUILDING `feature/p1-a8` - Manojkumar Mohankumar - 2026-11-03
-**Shipped so far:** P1-A8 Parts 1 to 4 (the RAG pipeline, the
-experiments, failure analysis and improvement, and the system design), on a branch cut from `main` at `e36b97e`. The assignment is
+### DONE `feature/p1-a9-part1` - Kritika Agrawal - 2026-11-09
+**Shipped so far:** P1-A9 Part 1, on a branch cut from `feature/p1-a9-part2-3` at `461e03e`.
+- `README_AI.md`: a new Part 1 section, with one subsection per rubric step: the feature, the reuse of A6, A7
+  and A8, where the models run, the flow in the app (with a diagram), and the guardrails (18, each with its test).
+- `connect/ai_search.py`:
+  - `match_by_meaning()`, `Embedder` and `embed_similarities()`. P1-A8's `BAAI/bge-small-en-v1.5` (via
+    `sentence-transformers`) places an interest the model wrote in its own words, if `match_name()` could not
+    place it by spelling. A word is placed only at a cosine similarity of at least 0.78 and a lead of at least
+    0.08 over the next interest. On Part 3's 20 requests, exactly right went from 15 to 17 (T08 and T10), with
+    no unasked filter and the same median time.
+  - `ModelTimeout`: a generation stopped at `AI_LOCAL_MAX_SECONDS` is not retried. The keyword parser answers,
+    and the page says the model took too long.
+- `student_ask.html`: a *Matched by meaning* note lists each placement.
+- `download_ai_model`: fetches and tests the embedding model too.
+- `connect/tests_a9.py`: 29 new tests (210 in all). Both models are stand-ins.
+- `docs/a9_part1/`: `measure.py`, and its results with the real models: the calibration words, and the
+  20 requests with the step off and on.
+
+**Files changed:** `requirements.txt` (`sentence-transformers` and its 6 dependencies), `.env.example` and
+`settings/base.py` (`AI_EMBED_ENABLED`, `AI_EMBED_MODEL`), `connect/tests_a6.py` (its seeded tests run with the
+embedding step off, so they test A6's spelling-only allow-list), the CI workflow (runs on
+`feature/p1-a9-part1`, with `AI_EMBED_ENABLED=0`), `README.md`, this file, notes.txt.
+
+**Gotchas:**
+- `README_AI.md` Parts 2 and 3 were written before Part 1 changed the pipeline. The audit below brought Part 2
+  up to date (2.1, the 2.2 diagram and 2.3). Part 3 keeps its measured tables, and 3.4 adds Part 1's re-run as a
+  second improvement.
+- `MEANING_MIN` and `MEANING_LEAD` fit `bge-small-en-v1.5`. Another `AI_EMBED_MODEL` needs its own limits:
+  re-run `docs/a9_part1/measure.py`.
+- In the held-out words, *lunch* was placed on Food. A wrong placement always shows on the page.
+- Measured on an Apple M5 (24 GB, CPU): a median of 2.35 s per search, and 9.5 s for the first search after a
+  start, while both models load from the cache.
+
+**Audit (Manojkumar Mohankumar, 2026-11-09):** every rubric step and deliverable checked on the branch.
+- The evidence was re-run on a second machine (Windows, CPU): all 115 embedding similarities in
+  `calibration.csv` agree within 0.0005, with the same placements, and all 40 rows of `requests.json` recompute
+  from their recorded model replies (filters, chips, students found, verdicts). 210 tests pass, and the 197
+  relative links in the Markdown files resolve.
+- Fixed: `README_AI.md` 2.1, the 2.2 diagram and 2.3 now describe the embedding step and the time limit;
+  Part 3's summary, failure 3 and 3.4 record the embedding step as a second improvement; the README's CI
+  section named `feature/p1-a6`; `.gitignore` now also ignores a model cache folder inside the repository.
+- **Merged into `main` in PR #16 on 2026-11-09**, with Parts 2 and 3, after a final check of P1-A8 and P1-A9
+  against their briefs. P1-A8's `rag/` is unchanged by it. Integration note: Parts 2 and 3 were written before
+  Part 1 changed the pipeline, and the audit above brought them up to date.
+
+### DONE `feature/p1-a9-part2-3` - Prathamesh Mulay, Manojkumar Mohankumar - 2026-11-08
+**Shipped so far:** P1-A9 Parts 2 and 3, on a branch cut from `main` at
+`5c24c9b`, after P1-A8 merged.
+- `README_AI.md`: the P1-A9 write-up. Part 2: the AI workflow, two
+  architecture diagrams, and the model choice tied to A6, A7 and A8. Part 3:
+  20 requests (A6's 15 and 5 new ones) through the live `/search/ask/` page,
+  before and after the improvement, with the failure analysis.
+- `connect/ai_search.py`: `check_against_request()`, run on every model answer
+  after `clean_filters()`. A day, time or connection type the request does not
+  name is removed, and a college it names wins. Exactly right went from 11 to
+  15 of 20, and unasked filters from 6 requests to none.
+- `connect/tests_a9.py`: 8 tests, no model loaded (181 tests in all).
+- `docs/a9_evaluation/`: the raw results of both runs, as collected.
+- `docs/README_AI_P1-A6.md`: the P1-A6 write-up, moved from `README_AI.md`.
+
+**Files changed:** `README.md` (P1-A9 section, layout, test count),
+`.gitattributes` (the evaluation evidence kept as collected), the CI workflow
+(now runs on `feature/p1-a9-part2-3`), this file, notes.txt.
+
+**Gotchas:**
+- The evaluation ran on Prathamesh's MacBook Air (Apple M4, 16 GB), on the
+  CPU: a median of 3.6 s per search, against 10 s on our A6 laptop.
+- The first search after a restart, or after `runserver` reloads a changed
+  file, loads the model again (about 20 s there).
+
+### DONE `feature/p1-a8` - Manojkumar Mohankumar - 2026-11-03
+**Shipped:** P1-A8 Parts 1 to 4 (the RAG pipeline, the
+experiments, failure analysis and improvement, and the system design), on a branch cut from `main` at `e36b97e`,
+merged into `main` in PR #15. The assignment is
 independent of the Django app, so everything is in `rag/`.
 - `data/handbook.md`: the knowledge base, QuadConnect's student handbook
   (13 sections, 44 paragraphs, 4,875 words), written from the app's code,
@@ -773,12 +852,12 @@ machine must download a pre-trained model by itself.
   Qwen3.8-27B, gpt-oss-120b), which came out after the leaderboard closed.
 - Part 2: "Ask in plain English" (`/search/ask/`, a local model in a Django
   view) and the automatic check of venue suggestions (an external API, Groq by
-  default), written up in `README_AI.md`. The model is Qwen2.5-1.5B-Instruct
+  default), written up in `README_AI.md` (now `docs/README_AI_P1-A6.md`). The model is Qwen2.5-1.5B-Instruct
   with the many-shot prompt (notebook Step 7): the smallest model that clears
   0.85 after the allow-list (0.92).
 - Part 3: the production reflection, section 3 of `docs/notes/notes.txt`.
 
-**Files added:** `README_AI.md`, `llm-test/` (notebook, requirements,
+**Files added:** `README_AI.md` (moved to `docs/README_AI_P1-A6.md` in A9), `llm-test/` (notebook, requirements,
 results), `connect/ai_search.py`, `connect/ai_venues.py`,
 `connect/tests_a6.py`, `connect/templates/connect/student_ask.html`,
 `connect/management/commands/download_ai_model.py`,
@@ -1376,7 +1455,7 @@ was added on 2026-10-13.
 ### P1-A6 — Text Intelligence (100 pts) — building
 Built on `feature/p1-a6` (§9). Due Mon 2026-10-19. Submission: the GitHub URL
 with the Django code and `llm-test/ai_prototype.ipynb` (Route A, so no
-fine-tuning notebook). Part 2 is `README_AI.md`; Part 3 is section 3 of
+fine-tuning notebook). Part 2 is `README_AI.md` (now `docs/README_AI_P1-A6.md`); Part 3 is section 3 of
 `docs/notes/notes.txt`.
 
 ### Next

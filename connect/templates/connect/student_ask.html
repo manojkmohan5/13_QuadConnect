@@ -1,10 +1,11 @@
 {% extends "connect/base.html" %}
 {% comment %}
 "Ask in plain English" (P1-A6 Part 2). A local language model turns the request
-into the filters shown under "Understood as" (connect/ai_search.py); the
-database does the searching. The request and the model's answer are not saved
-in the database (the filters are cached in memory for an hour), and the model
-never sees a student record.
+into the filters shown under "Understood as" (connect/ai_search.py); since
+P1-A9, an interest it wrote in its own words is placed on the list by meaning,
+and the page says which. The database does the searching. The request and the
+model's answer are not saved in the database (the filters are cached in memory
+for an hour), and the model never sees a student record.
 {% endcomment %}
 
 {% block title %}{% if form.errors %}Error: {% endif %}Ask in plain English - QuadConnect{% endblock %}
@@ -64,6 +65,13 @@ never sees a student record.
       </p>
     {% endif %}
 
+    {% if answer.by_meaning %}
+      <p class="note">
+        Matched by meaning with <code>{{ embed_model }}</code>, because the model used words
+        that are not on the list of interests:
+        {% for word, name in answer.by_meaning.items %}"{{ word }}" &rarr; {{ name }}{% if not forloop.last %}; {% endif %}{% endfor %}.
+      </p>
+    {% endif %}
     {% if answer.flagged %}
       <p class="message message-info" role="status">
         Your request contained instructions aimed at the AI. They were ignored: it can
