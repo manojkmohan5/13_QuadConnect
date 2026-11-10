@@ -285,7 +285,11 @@ class StaticFilesTests(QuadConnectData):
             self.assertIsNotNone(finders.find(path), path)
 
     def test_production_hashes_static_filenames(self):
-        with mock.patch.dict(os.environ, {"DJANGO_ALLOWED_HOSTS": "example.com"}):
+        # Production settings also refuse to start without a Google client
+        # (P1-A5). This test never talks to Google, so a placeholder does, as in
+        # CI; it no longer depends on the developer's .env.
+        with mock.patch.dict(os.environ, {"DJANGO_ALLOWED_HOSTS": "example.com",
+                                          "GOOGLE_CLIENT_ID": "test-placeholder.apps.googleusercontent.com"}):
             prod = importlib.reload(importlib.import_module("quadconnect.settings.production"))
         self.assertEqual(prod.STORAGES["staticfiles"]["BACKEND"],
                          "whitenoise.storage.CompressedManifestStaticFilesStorage")
