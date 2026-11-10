@@ -173,7 +173,8 @@ Both models are open models from Hugging Face. They run inside the Django proces
 * Both models download into the Hugging Face cache (`~/.cache/huggingface`) on first use.
 * `python manage.py download_ai_model` fetches both ahead of time. It then runs one test of each, to show
   they work.
-* `.gitignore` excludes `*.bin`, `*.safetensors`, `*.pt`, `*.pth`, `*.ckpt`, `*.gguf` and `*.onnx`.
+* `.gitignore` excludes `*.bin`, `*.safetensors`, `*.pt`, `*.pth`, `*.ckpt`, `*.gguf` and `*.onnx`, and a model
+  cache folder placed inside the repository (`.cache/`, `hf_cache/`, `huggingface/`).
 * CI sets `AI_LOCAL_ENABLED=0` and `AI_EMBED_ENABLED=0`, so it never downloads a model. The tests replace both
   models with stand-ins.
 
@@ -287,7 +288,8 @@ The feature takes text only, so there is no file upload to validate.
 * `Qwen/Qwen2.5-1.5B-Instruct` (setting `AI_LOCAL_MODEL`), an open model from Hugging Face.
 * It runs inside the Django process with `transformers` and PyTorch, in float32 on a CPU (bfloat16 on a CUDA GPU).
 * The weights (3.1 GB) download into the Hugging Face cache on first use, never into the repository.
-  `.gitignore` excludes `*.bin`, `*.safetensors`, `*.pt` and `*.pth`.
+  `.gitignore` excludes the weight files (`*.bin`, `*.safetensors`, `*.pt`, `*.pth` and others) and a model
+  cache folder placed inside the repository.
 * One copy is loaded per server process. A lock makes requests take turns.
 * The rules and worked examples are the same for every request. The model reads them once, keeps its state
   (the key/value cache) and reuses it, so each request only reads its own few tokens. This is why a search in

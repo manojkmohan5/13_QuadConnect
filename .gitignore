@@ -43,6 +43,11 @@ ENV/
 *.ckpt
 *.gguf
 *.onnx
+# A Hugging Face or sentence-transformers cache pointed inside the repository
+# (HF_HOME, SENTENCE_TRANSFORMERS_HOME) is never committed either.
+.cache/
+hf_cache/
+huggingface/
 .ipynb_checkpoints/
 
 # --- Editors / OS ----------------------------------------------------------
