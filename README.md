@@ -852,10 +852,10 @@ secret is needed.
 
 `main` receives code only by merging the assignment's branch through a pull
 request, after the branch head has passed the check. P1-A3 reached `main` this
-way in PR #6 (2026-09-28), from `feature/p1-a3`, P1-A4 in PR #9
-(2026-10-05), from `feature/p1-a4`, and P1-A5 in PR #10 (2026-10-12), from
-`feature/p1-a5`. The
-workflow does not run on `main` itself, so `main`'s merge commits show no check
+way in PR #6 (2026-09-28), P1-A4 in PR #9 (2026-10-05), P1-A5 in PR #10
+(2026-10-12), P1-A6 in PR #11 (2026-10-19), P1-A7 in PRs #12 to #14
+(2026-10-26 and 2026-11-03), P1-A8 in PR #15 (2026-11-08) and P1-A9 in PR #16
+(2026-11-09), each from its assignment's branch. The workflow does not run on `main` itself, so `main`'s merge commits show no check
 of their own; to run it there too, add `main` to its `on: push: branches:` line.
 
 ---

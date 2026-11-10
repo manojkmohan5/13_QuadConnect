@@ -25,10 +25,10 @@ what we chose not to build, and where the shortcuts are.
 | | |
 |---|---|
 | **Repo** | `13_QuadConnect` |
-| **Assignment in flight** | **P1-A9** — Integrated AI Application Deployment (300 pts; GitHub and an in-person demo): Parts 2 and 3 done on `feature/p1-a9-part2-3` — `README_AI.md` (the AI system design and the evaluation of the integrated feature), the request check in `connect/ai_search.py`, `connect/tests_a9.py` and the raw results in `docs/a9_evaluation/`; Part 1 on `feature/p1-a9-part1`, cut from it — A8's embedding model in the search, the time limit, `README_AI.md` Part 1 and `docs/a9_part1/`. Audited on 2026-11-09 and opened as PR #16 into `main`, not merged yet (§9). |
+| **Assignment in flight** | **P1-A9** — Integrated AI Application Deployment (300 pts; GitHub and an in-person demo): Parts 2 and 3 done on `feature/p1-a9-part2-3` — `README_AI.md` (the AI system design and the evaluation of the integrated feature), the request check in `connect/ai_search.py`, `connect/tests_a9.py` and the raw results in `docs/a9_evaluation/`; Part 1 on `feature/p1-a9-part1`, cut from it — A8's embedding model in the search, the time limit, `README_AI.md` Part 1 and `docs/a9_part1/`. Audited on 2026-11-09 and merged into `main` in PR #16 (§9). |
 | **Last completed** | P1-A8 — Semantic Relationships and Retrieval — merged into `main` (PR #15, 2026-11-08) |
-| **`main` status** | Has P1-A2 to P1-A8 (P1-A8 in PR #15). |
-| **What remains** | P1-A9: merging PR #16 into `main`, the Canvas file (the repository link, a summary of the AI feature and the demo time) and the in-person demo on Thursday 2026-11-12, 11:30 AM, EDUC 339 (§9). |
+| **`main` status** | Has P1-A2 to P1-A9 (P1-A8 in PR #15, P1-A9 in PR #16). |
+| **What remains** | P1-A9: the Canvas file (the repository link, a summary of the AI feature and the demo time) and the in-person demo on Thursday 2026-11-12, 11:30 AM, EDUC 339 (§9). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -58,8 +58,8 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A6) | `feature/p1-a6` | Parts 1–3 | `/search/ask/`, the venue check on `/locations/`, `llm-test/` | ✅ DONE — merged to `main` in PR #11 (2026-10-19); see §9 |
 | Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
 | Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | ✅ DONE — merged to `main` in PR #15 (2026-11-08); see §9 |
-| Prathamesh Mulay, Manojkumar Mohankumar (P1-A9) | `feature/p1-a9-part2-3` | Parts 2–3 | `README_AI.md`, the request check in `connect/ai_search.py`, `docs/a9_evaluation/` | DONE — Parts 2 and 3 done 2026-11-08; in PR #16 through `feature/p1-a9-part1`, which contains them; see §9 |
-| Kritika Agrawal (P1-A9) | `feature/p1-a9-part1` | Part 1 | `README_AI.md` Part 1, `match_by_meaning()` and `ModelTimeout` in `connect/ai_search.py`, `docs/a9_part1/` | BUILDING — Part 1 done and audited 2026-11-09; PR #16 into `main` open, not merged; see §9 |
+| Prathamesh Mulay, Manojkumar Mohankumar (P1-A9) | `feature/p1-a9-part2-3` | Parts 2–3 | `README_AI.md`, the request check in `connect/ai_search.py`, `docs/a9_evaluation/` | ✅ DONE — Parts 2 and 3 done 2026-11-08; merged to `main` in PR #16 (2026-11-09), through `feature/p1-a9-part1`; see §9 |
+| Kritika Agrawal (P1-A9) | `feature/p1-a9-part1` | Part 1 | `README_AI.md` Part 1, `match_by_meaning()` and `ModelTimeout` in `connect/ai_search.py`, `docs/a9_part1/` | ✅ DONE — Part 1 done and audited 2026-11-09; merged to `main` in PR #16 (2026-11-09); the demo is on 2026-11-12; see §9 |
 
 **Whoever completes a branch:** updating this file is
 **Step 7 of that developer's build task** and a box on their Done
@@ -612,7 +612,7 @@ that property when adding checks.
 
 The running history of what has actually been built. Newest at the top.
 
-### BUILDING `feature/p1-a9-part1` - Kritika Agrawal - 2026-11-09
+### DONE `feature/p1-a9-part1` - Kritika Agrawal - 2026-11-09
 **Shipped so far:** P1-A9 Part 1, on a branch cut from `feature/p1-a9-part2-3` at `461e03e`.
 - `README_AI.md`: a new Part 1 section, with one subsection per rubric step: the feature, the reuse of A6, A7
   and A8, where the models run, the flow in the app (with a diagram), and the guardrails (18, each with its test).
@@ -653,9 +653,11 @@ embedding step off, so they test A6's spelling-only allow-list), the CI workflow
 - Fixed: `README_AI.md` 2.1, the 2.2 diagram and 2.3 now describe the embedding step and the time limit;
   Part 3's summary, failure 3 and 3.4 record the embedding step as a second improvement; the README's CI
   section named `feature/p1-a6`; `.gitignore` now also ignores a model cache folder inside the repository.
-- PR #16 into `main` opened; it stays unmerged until the team decides.
+- **Merged into `main` in PR #16 on 2026-11-09**, with Parts 2 and 3, after a final check of P1-A8 and P1-A9
+  against their briefs. P1-A8's `rag/` is unchanged by it. Integration note: Parts 2 and 3 were written before
+  Part 1 changed the pipeline, and the audit above brought them up to date.
 
-### BUILDING `feature/p1-a9-part2-3` - Prathamesh Mulay, Manojkumar Mohankumar - 2026-11-08
+### DONE `feature/p1-a9-part2-3` - Prathamesh Mulay, Manojkumar Mohankumar - 2026-11-08
 **Shipped so far:** P1-A9 Parts 2 and 3, on a branch cut from `main` at
 `5c24c9b`, after P1-A8 merged.
 - `README_AI.md`: the P1-A9 write-up. Part 2: the AI workflow, two

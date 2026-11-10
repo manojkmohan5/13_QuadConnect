@@ -44,9 +44,8 @@ cut from feature/p1-a9-part2-3.
     re-run on a second machine (115 similarities within 0.0005; all 40
     request results recomputed), 210 tests pass, 197 links resolve.
     README_AI.md Parts 2-3 updated for the final pipeline; .gitignore also
-    covers model cache folders. PR #16 into main opened, not merged.
-Next: merge PR #16 when the team agrees, the Canvas file, and the demo on
-Thu 2026-11-12, 11:30 AM, EDUC 339.
+    covers model cache folders. PR #16 merged into main on 2026-11-09.
+Next: the Canvas file, and the demo on Thu 2026-11-12, 11:30 AM, EDUC 339.
 
 --------------------------------------------------------------------------------
 WEEK 11 (w/c 2026-11-02)  -  P1-A9 Parts 2 and 3 on feature/p1-a9-part2-3
