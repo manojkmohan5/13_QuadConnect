@@ -41,7 +41,7 @@ Blocks for child templates: filters (above the list), after_list (below it).
 
   {% block filters %}{% endblock %}
 
-  <ul class="list" role="list">
+  <ul class="list" role="list" data-enter-list>
   {% for item in items %}
     <li class="card{% if item.url %} linked{% endif %}{% if item.kind %} with-tile k-{{ item.kind }}{% endif %}">
       {% if item.kind %}<span class="tile" aria-hidden="true"><span class="icon"></span></span>{% endif %}

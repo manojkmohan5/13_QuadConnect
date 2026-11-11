@@ -5,74 +5,82 @@ signed in see what QuadConnect is and how to join, and no student data: the
 match beside the headline is a made-up example, and its caption says so.
 Signed-in users also see the counts and recent matches, a jumping-off point
 to each section.
+
+The headline stands on the campus photograph (the "scene" in the
+stylesheet), always over a solid enough layer of Illini blue to read.
 {% endcomment %}
 
 {% block title %}QuadConnect - Home{% endblock %}
+{% block main_class %} class="wide"{% endblock %}
 
 {# Replaces base.html's plain <h1> header with the landing-page hero. #}
 {% block page_header %}
-  <section class="hero{% if user.is_authenticated %} hero-quiet{% endif %}" aria-labelledby="hero-title">
-    <div>
-      <h1 id="hero-title">Meet a fellow Illini this weekend</h1>
-      <p class="lead">
-        QuadConnect matches verified Illinois students into weekend meetups,
-        one-on-one or in small squads, at approved campus locations, based on
-        shared interests and when they are free.
-      </p>
-      <div class="actions">
-        {% if user.is_authenticated %}
-          <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
-          <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
-        {% else %}
-          <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign up</a>
-          <a class="btn btn-secondary" href="{% url 'account_login' %}">Log in</a>
-        {% endif %}
-      </div>
-    </div>
-
-    {% if not user.is_authenticated %}
-      {# What a student gets each week, drawn with the app's own pieces. #}
-      <figure class="preview">
-        <div class="plan">
-          <div class="plan-top">
-            <span class="badge">Friend Connect (1-on-1)</span>
-            <p class="when">Saturday, 2 &ndash; 4 PM</p>
-            <p class="where">Coffee at the Illini Union</p>
-          </div>
-          <div class="plan-body">
-            <div class="pair">
-              <div class="faces" aria-hidden="true">
-                <span class="face k-friend">MR</span><span class="face">You</span>
-              </div>
-              <div>
-                <div class="title">Maya and you</div>
-                <div class="subtitle">You are both free then</div>
-              </div>
-              <div class="weekend" role="img" aria-label="Saturday 2 to 4 PM, marked on the weekend grid">
-                <span></span><span class="h">10</span><span class="h">12</span><span class="h">2</span><span class="h">4</span>
-                <span class="d">Sat</span><span class="c"></span><span class="c"></span><span class="c on"></span><span class="c"></span>
-                <span class="d">Sun</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span>
-              </div>
-            </div>
-            <ul class="chips" role="list" aria-label="What you both like">
-              <li class="chip chip-match">Music</li>
-              <li class="chip chip-match">Food</li>
-              <li class="chip chip-match">Photography</li>
-            </ul>
-          </div>
+  <section class="hero scene{% if user.is_authenticated %} hero-quiet{% endif %}" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="hero-text">
+        <h1 id="hero-title" data-enter>Meet a fellow Illini this weekend</h1>
+        <p class="lead" data-enter>
+          QuadConnect matches verified Illinois students into weekend meetups,
+          one-on-one or in small squads, at approved campus locations, based on
+          shared interests and when they are free.
+        </p>
+        <div class="actions" data-enter>
+          {% if user.is_authenticated %}
+            <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
+            <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
+          {% else %}
+            <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign up</a>
+            <a class="btn btn-secondary" href="{% url 'account_login' %}">Log in</a>
+          {% endif %}
         </div>
-        <figcaption>An example of the match a student gets each week.</figcaption>
-      </figure>
-    {% endif %}
+        <p class="credit">{% include "connect/_photo_credit.html" %}</p>
+      </div>
+
+      {% if not user.is_authenticated %}
+        {# What a student gets each week, drawn with the app's own pieces. #}
+        <figure class="preview" data-enter>
+          <div class="plan">
+            <div class="plan-top">
+              <span class="badge">Friend Connect (1-on-1)</span>
+              <p class="when">Saturday, 2 &ndash; 4 PM</p>
+              <p class="where">Coffee at the Illini Union</p>
+            </div>
+            <div class="plan-body">
+              <div class="pair">
+                <div class="faces" aria-hidden="true">
+                  <span class="face k-friend">MR</span><span class="face">You</span>
+                </div>
+                <div>
+                  <div class="title">Maya and you</div>
+                  <div class="subtitle">You are both free then</div>
+                </div>
+                <div class="weekend" role="img" aria-label="Saturday 2 to 4 PM, marked on the weekend grid">
+                  <span></span><span class="h">10</span><span class="h">12</span><span class="h">2</span><span class="h">4</span>
+                  <span class="d">Sat</span><span class="c"></span><span class="c"></span><span class="c on"></span><span class="c"></span>
+                  <span class="d">Sun</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span>
+                </div>
+              </div>
+              <ul class="chips" role="list" aria-label="What you both like">
+                <li class="chip chip-match">Music</li>
+                <li class="chip chip-match">Food</li>
+                <li class="chip chip-match">Photography</li>
+              </ul>
+            </div>
+          </div>
+          <figcaption>An example of the match a student gets each week.</figcaption>
+        </figure>
+      {% endif %}
+    </div>
   </section>
 {% endblock %}
 
 {% block content %}
+<div class="wrap home-body">
 
 {% if not user.is_authenticated %}
 
   <h2 class="section">How it works</h2>
-  <ol class="grid steps" role="list">
+  <ol class="grid steps" role="list" data-enter-list>
     <li class="card">
       <h3 class="card-title">Sign in</h3>
       <p>With your Google account, or a username and password.</p>
@@ -101,7 +109,7 @@ to each section.
   </div>
 
   <h2 class="section">Recent matches</h2>
-  <ul class="list" role="list">
+  <ul class="list" role="list" data-enter-list>
   {% for match in recent_matches %}
     <li class="card linked with-tile k-{{ match.connection_type|lower }}">
       <span class="tile" aria-hidden="true"><span class="icon"></span></span>
@@ -136,4 +144,5 @@ to each section.
 
 {% endif %}
 
+</div>
 {% endblock %}

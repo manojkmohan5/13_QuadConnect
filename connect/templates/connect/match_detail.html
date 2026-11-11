@@ -18,7 +18,7 @@ and is never loaded here.
     <a href="{% url 'connect:match-list' %}">Matches</a> /
     <span aria-current="page">Match {{ match.check_in_code }}</span>
   </nav>
-  <div class="banner k-{{ match.connection_type|lower }}">
+  <div class="banner k-{{ match.connection_type|lower }}" data-enter>
     <div>
       <h1 class="page">{{ match.get_connection_type_display }}</h1>
       <p class="sub">

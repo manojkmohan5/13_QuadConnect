@@ -1,0 +1,18 @@
+Images in this folder
+
+logo.svg
+    The QuadConnect mark, drawn for this project.
+
+illini-union-quad-1600.webp, illini-union-quad-960.webp
+    "UIUC Illini Union and Main Quad" by Daniel Schwen, 17 November 2007.
+    Source:  https://commons.wikimedia.org/wiki/File:UIUC_Illini_Union_and_Main_Quad.jpg
+    Licence: Creative Commons Attribution-ShareAlike 4.0 International
+             https://creativecommons.org/licenses/by-sa/4.0/
+    Changes: cropped to the left 72% of the panorama (so the Union stands
+             right of centre), resized from the 3840 px rendition to
+             1600 px and 960 px wide, and saved as WebP. The colours are
+             untouched; the darkening on the site is drawn over the
+             photograph by the stylesheet.
+    These two files are shared under the same licence, CC BY-SA 4.0.
+    The photograph is credited on every page that shows it
+    (connect/templates/connect/_photo_credit.html).

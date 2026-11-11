@@ -19,7 +19,7 @@ deliberately absent.
     <a href="{% url 'connect:student-list' %}">Students</a> /
     <span aria-current="page">{{ student.full_name }}</span>
   </nav>
-  <div class="banner k-{{ student.preferred_connection|lower }}">
+  <div class="banner k-{{ student.preferred_connection|lower }}" data-enter>
     <span class="avatar" aria-hidden="true">{{ student.initials }}</span>
     <div>
       <h1 class="page">{{ student.full_name }}</h1>

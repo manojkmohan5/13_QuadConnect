@@ -229,7 +229,9 @@ class VegaLiteTests(SeededTestCase):
         for name in ["chart1", "chart2"]:
             self.assertContains(response, f'data-vega-spec="{reverse("connect:vega-spec", args=[name])}"')
         self.assertContains(response, "vendor/vega/vega-embed")
-        self.assertContains(response, "<noscript>", count=2)
+        # Each chart's <noscript> holds its server-drawn image. (base.html has one
+        # more <noscript>: the rule that shows the page's entrance without scripts.)
+        self.assertEqual(len(re.findall(r"<noscript>\s*<img ", response.content.decode())), 2)
         self.assertContains(response, 'alt="Bar chart of 22 interests by how many verified students')
         self.assertContains(response, 'alt="Line chart of matches scheduled each week from 2026-07-13 to 2026-09-07')
 

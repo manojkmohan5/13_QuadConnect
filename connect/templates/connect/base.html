@@ -9,8 +9,12 @@ filename (cache busting - see docs/notes/notes.txt).
 
 Blocks available to children:
     title        text inside <title>
-    main_class   optional class on <main>: "narrow" (sign-in pages) or
-                 "reading" (long text)
+    main_class   optional class on <main>: "narrow" (sign-in pages),
+                 "reading" (long text) or "wide" (the home page, whose
+                 sections centre themselves)
+    body_class   optional extra class on <body>: " scene-page" puts the
+                 campus photo behind the page (sign-in pages)
+    footer_extra optional last line of the footer (the photo's credit)
     page_header  the whole page header; override to replace it (home does)
       heading    the <h1> text, inside page_header
       subtitle   optional line under the heading, inside page_header
@@ -31,6 +35,10 @@ Insights, Reports, API) sit behind "More", a <details>, so it opens without
 JavaScript. On a small screen the navigation is a tab bar along the bottom
 (body.has-tabs). Logging out is a POST form, so a link or a prefetch can
 never sign anyone out.
+
+Elements marked data-enter (or the first six items of a data-enter-list)
+fade in once, drawn by static/js/site.js with Motion. The stylesheet hides
+them first; the <noscript> rule below shows them when there is no script.
 {% endcomment %}
 <!doctype html>
 <html lang="en">
@@ -44,9 +52,10 @@ never sign anyone out.
   <link rel="preload" href="{% static 'fonts/bricolage-grotesque-latin-wght-normal.woff2' %}"
         as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/quadconnect.css' %}">
+  <noscript><style>[data-enter], [data-enter-list] > * { opacity: 1 !important; animation: none !important; }</style></noscript>
   {% block extra_css %}{% endblock %}
 </head>
-<body{% if user.is_authenticated %} class="has-tabs"{% endif %}>
+<body class="{% if user.is_authenticated %}has-tabs{% endif %}{% block body_class %}{% endblock %}">
 
 <a class="skip-link" href="#main">Skip to main content</a>
 
@@ -127,8 +136,10 @@ never sign anyone out.
   University of Illinois Urbana-Champaign &middot;
   <a href="{% url 'connect:privacy' %}">Privacy</a>
   {% if user.is_staff %}&middot; <a href="{% url 'admin:index' %}">Admin</a>{% endif %}
+  {% block footer_extra %}{% endblock %}
 </footer>
 
+<script src="{% static 'vendor/motion/motion.js' %}" defer></script>
 <script src="{% static 'js/site.js' %}" defer></script>
 {% block scripts %}{% endblock %}
 </body>

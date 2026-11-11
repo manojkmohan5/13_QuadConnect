@@ -87,7 +87,7 @@ aggregates over the same set. Every loop has an {% empty %} branch.
     {% endif %}
   </h2>
 
-  <ul class="people" role="list">
+  <ul class="people" role="list" data-enter-list>
   {% for student in students %}
     {% include "connect/_person.html" with match_q=q %}
   {% empty %}

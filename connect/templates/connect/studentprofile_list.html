@@ -43,7 +43,7 @@ Each student is a profile card (_person.html), shared with the search pages.
     {% endif %}
   </form>
 
-  <ul class="people" role="list">
+  <ul class="people" role="list" data-enter-list>
   {% for student in students %}
     {% include "connect/_person.html" %}
   {% empty %}

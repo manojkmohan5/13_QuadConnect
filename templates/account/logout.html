@@ -3,15 +3,19 @@
 Log out (P1-A5). Shown only when someone opens /accounts/logout/ directly:
 the header's Log out button posts straight to it. Logging out needs a POST,
 so following a link can never sign anyone out.
+
+One card over the campus photograph, like the other sign-in pages.
 {% endcomment %}
 
 {% block title %}Log out - QuadConnect{% endblock %}
+{% block body_class %} scene-page{% endblock %}
 {% block main_class %} class="narrow"{% endblock %}
-{% block heading %}Log out{% endblock %}
+{% block page_header %}{% endblock %}
 
 {% block content %}
-  <section class="card auth" aria-label="Log out">
-    <p>Do you want to log out of QuadConnect?</p>
+  <section class="card auth" aria-labelledby="auth-title" data-enter>
+    <h1 class="page" id="auth-title">Log out</h1>
+    <p class="sub">Do you want to log out of QuadConnect?</p>
     <form class="form" method="post" action="{% url 'account_logout' %}">
       {% csrf_token %}
       {{ redirect_field }}
@@ -21,3 +25,5 @@ so following a link can never sign anyone out.
     </form>
   </section>
 {% endblock %}
+
+{% block footer_extra %}<br>{% include "connect/_photo_credit.html" %}{% endblock %}

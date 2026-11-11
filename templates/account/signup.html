@@ -5,18 +5,21 @@ email and password twice, checked by Django's password validators, in the
 site's own layout, with "Continue with Google" above. allauth's SignupView
 creates the account and logs the new user in; no confirmation email is
 sent (ACCOUNT_EMAIL_VERIFICATION = "none").
+
+The page is one card over the campus photograph (body.scene-page). The
+heading is inside the card, so no text sits on the photograph.
 {% endcomment %}
 
 {% block title %}{% if form.errors %}Error: {% endif %}Sign up - QuadConnect{% endblock %}
+{% block body_class %} scene-page{% endblock %}
 {% block main_class %} class="narrow"{% endblock %}
-{% block heading %}Create an account{% endblock %}
-
-{% block subtitle %}
-  <p class="sub">Already have one? <a href="{{ login_url }}">Log in</a>.</p>
-{% endblock %}
+{% block page_header %}{% endblock %}
 
 {% block content %}
-  <section class="card auth" aria-label="Create an account">
+  <section class="card auth" aria-labelledby="auth-title" data-enter>
+    <h1 class="page" id="auth-title">Create an account</h1>
+    <p class="sub">Already have one? <a href="{{ login_url }}">Log in</a>.</p>
+
     {% include "account/snippets/google_button.html" %}
 
     {% if form.errors %}
@@ -46,3 +49,5 @@ sent (ACCOUNT_EMAIL_VERIFICATION = "none").
     </form>
   </section>
 {% endblock %}
+
+{% block footer_extra %}<br>{% include "connect/_photo_credit.html" %}{% endblock %}

@@ -93,7 +93,7 @@ found are profile cards (_person.html), as on the roster.
 
     {% if understood %}
       <h2 class="section">{{ students|length }} student{{ students|length|pluralize }} found</h2>
-      <ul class="people" role="list">
+      <ul class="people" role="list" data-enter-list>
       {% for student in students %}
         {% include "connect/_person.html" with match_names=interest_names %}
       {% empty %}

@@ -18,6 +18,10 @@
  *
  * Colour never says anything alone: every tone sits next to its label.
  *
+ * One photograph, the Illini Union across the Main Quad in autumn, sits
+ * behind the home page's headline and the sign-in pages (see "Scene").
+ * Every other page stays plain, so the students are what you look at.
+ *
  * Every text/background pair below was measured against WCAG 2.1 AA:
  * 4.5:1 for text, 3:1 for UI boundaries and graphics. Re-measure any new
  * colour before committing it - several "looks fine" greys have failed.
@@ -321,6 +325,10 @@ main {
 }
 main.narrow { max-width: 512px; }
 main.reading { max-width: 768px; }
+/* The home page runs edge to edge: its sections centre themselves (.wrap). */
+main.wide { max-width: none; padding: 0 0 80px; }
+main.wide > .messages { max-width: var(--container); margin: 16px auto; padding: 0 24px; }
+.wrap { max-width: var(--container); margin: 0 auto; padding: 0 24px; }
 
 h1.page {
   font: 600 32px/1.15 var(--display);
@@ -624,29 +632,67 @@ table.avail td { color: var(--muted); }
 .fit { height: 4px; width: 120px; max-width: 100%; margin-top: 8px; border-radius: 999px; background: var(--raised); }
 .fit i { display: block; height: 4px; border-radius: 999px; background: var(--tone); }
 
+/* --- Scene ----------------------------------------------------------------
+   The photograph: the Illini Union across the Main Quad in autumn, by
+   Daniel Schwen, CC BY-SA 4.0 (static/img/CREDITS.txt). Its orange trees
+   and blue sky are the palette.
+
+   Text never sits on the bare photo. Behind text there is always Illini
+   blue at 92% or more, so even over the photo's brightest pixel white text
+   keeps 6.9:1 and --on-scene 5.1:1. The photo shows where there is no text. */
+:root { --on-scene: #d6dde9; --scene: 19, 41, 75; }
+.scene {
+  position: relative;
+  color: #ffffff;
+  background-color: var(--ink);
+  background-image:
+    linear-gradient(90deg,
+      rgba(var(--scene), 0.95) 0,
+      rgba(var(--scene), 0.92) calc(50% - 24px),
+      rgba(var(--scene), 0.35) calc(50% + 320px),
+      rgba(var(--scene), 0.2) 100%),
+    url("../img/illini-union-quad-1600.webp");
+  background-size: cover;
+  background-position: center 35%;
+}
+.scene .credit { margin: 32px 0 0; font-size: 12px; color: var(--on-scene); }
+.scene .credit a { color: var(--on-scene); }
+.scene .credit a:hover { color: #ffffff; }
+.scene a:focus-visible,
+.scene-page footer.site a:focus-visible { outline-color: #ffffff; }
+
 /* --- Hero (home page) ---------------------------------------------------
-   Text on the left, the product on the right: one example of the match a
-   student gets each week. */
-.hero {
+   Text on the left over the calm side of the scene; on the right, one
+   example of the match a student gets each week, standing on the bottom
+   edge and running past it. */
+.hero .wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 48px;
-  align-items: center;
-  padding: 32px 0 16px;
+  align-items: end;
 }
+.hero-text { padding: 88px 0 72px; }
 .hero h1 {
   font: 600 56px/1.04 var(--display);
   letter-spacing: -0.03em;
   margin: 0 0 16px;
   max-width: 12ch;
 }
-.hero p.lead { color: var(--ink-2); font-size: 18px; line-height: 1.55; margin: 0 0 24px; max-width: 34rem; }
+.hero p.lead { color: #ffffff; font-size: 18px; line-height: 1.55; margin: 0 0 24px; max-width: 34rem; }
 .hero .actions .btn { min-height: 48px; padding: 8px 24px; font-size: 16px; }
-.hero-quiet { grid-template-columns: minmax(0, 1fr); padding: 0 0 8px; }
+.hero .btn-secondary { border-color: #ffffff; }
+/* Signed in: the same scene, shorter, with no example beside it. */
+.hero-quiet .wrap { grid-template-columns: minmax(0, 1fr); }
+/* Half the width, so every line stays on the solid side of the scene. */
+.hero-quiet .hero-text { padding: 56px 0 40px; max-width: calc(50% - 24px); }
 .hero-quiet h1 { font-size: 40px; letter-spacing: -0.02em; max-width: none; }
+.hero-quiet .credit { margin-top: 24px; }
+.home-body { padding-top: 48px; }
+.home-body > h2.section:first-child { margin-top: 0; }
+.hero:not(.hero-quiet) + .home-body { padding-top: 112px; }
 
 /* The example match: two cards, the one behind peeking out, like a deck. */
-.preview { margin: 0; padding: 0 0 0 24px; isolation: isolate; }
+.preview { margin: 0 0 -64px; padding: 0 0 0 24px; isolation: isolate; color: var(--ink); }
 .preview .plan {
   position: relative;
   background: var(--card);
@@ -680,7 +726,7 @@ table.avail td { color: var(--muted); }
 .preview .faces .face:last-child { background: var(--orange); color: var(--ink); }
 .preview .plan-body .weekend { margin-left: auto; color: var(--ink-2); }
 .preview .plan-body .weekend .c.on { color: var(--green); }
-.preview figcaption { margin-top: 40px; font-size: 14px; color: var(--muted); }
+.preview figcaption { position: absolute; margin: 32px 0 0; font-size: 14px; color: var(--muted); }
 
 /* How it works: three numbered steps. */
 ol.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
@@ -707,7 +753,7 @@ ol.steps p { margin: 4px 0 0; color: var(--ink-2); }
 .bars { list-style: none; margin: 0; padding: 8px 20px; }
 .bars li {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 112px;
+  grid-template-columns: 72px minmax(0, 1fr) 176px;
   gap: 16px;
   align-items: center;
   padding: 12px 0;
@@ -773,14 +819,19 @@ ol.steps p { margin: 4px 0 0; color: var(--ink-2); }
 .form.ask { max-width: none; }
 .form .field { display: flex; flex-direction: column; gap: 4px; }
 .form .field-inline { flex-direction: row; align-items: center; gap: 8px; }
-/* Checkbox: Django renders label, help, errors, then the box; keep the box
-   its natural size instead of stretching it across the column. */
+/* Checkbox: Django renders label, help, errors, then the box. The box is
+   moved in front of its label, where a checkbox is expected, and the help
+   and errors take the line below. The order in the page is unchanged. */
+.form .field-check { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .form .field-check input[type="checkbox"] {
-  align-self: flex-start;
+  order: -1;
+  flex: none;
   width: 20px; height: 20px;
-  margin: 4px 0 0;
+  margin: 0;
   accent-color: var(--ink);
 }
+.form .field-check .helptext,
+.form .field-check .errorlist { flex-basis: 100%; }
 .form label { font-weight: 600; font-size: 15px; }
 /* .helptext is the class Django's own field template gives help text. */
 .form .help, .form .helptext { font-size: 14px; color: var(--muted); margin: 0; }
@@ -822,6 +873,24 @@ ol.steps p { margin: 4px 0 0; color: var(--ink-2); }
 .or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; margin: 16px 0; }
 .or::before, .or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
 .auth .form button { width: 100%; }
+.auth { padding: 32px; }
+.auth h1.page { font-size: 28px; }
+.auth p.sub { margin-bottom: 20px; }
+/* Behind the card, the scene, dimmed evenly. All text is on the card,
+   except the footer, which gets its own solid band. */
+.scene-page {
+  background-color: var(--ink);
+  background-image:
+    linear-gradient(rgba(var(--scene), 0.6), rgba(var(--scene), 0.6)),
+    url("../img/illini-union-quad-1600.webp");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+.scene-page main { padding-top: 56px; }
+.scene-page .messages .message { box-shadow: var(--shadow-float); }
+.scene-page footer.site { background: var(--ink); border-top: 0; color: var(--on-scene); }
+.scene-page footer.site a { color: #ffffff; }
 
 /* --- Flash messages ------------------------------------------------------ */
 .messages { margin: 0 0 20px; display: flex; flex-direction: column; gap: 8px; }
@@ -925,13 +994,18 @@ footer.site {
 footer.site a { color: var(--ink-2); }
 
 /* --- Responsive ----------------------------------------------------------
-   Under 880px the navigation leaves the header and becomes a tab bar along
+   Under 1100px the header has no room for "Signed in as": it stays in the
+   page for a screen reader, and the Log out button is still there. */
+@media (max-width: 1099px) {
+  .account .who { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+}
+
+/* Under 960px the navigation leaves the header and becomes a tab bar along
    the bottom, as in a phone app. Home is the logo; the tab bar holds the
    four sections and More. */
-@media (max-width: 879px) {
+@media (max-width: 959px) {
   .bar { padding: 0 16px; min-height: 56px; }
   main { padding: 24px 16px 64px; }
-  .account .who { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
   nav.site { display: none; }
   body.has-tabs { padding-bottom: calc(var(--tabs) + env(safe-area-inset-bottom, 0px)); }
@@ -953,6 +1027,7 @@ footer.site a { color: var(--ink-2); }
   body.has-tabs nav.site > a[data-icon="house"] { display: none; }
   body.has-tabs nav.site > a,
   body.has-tabs nav.site summary {
+    width: 100%;
     flex-direction: column;
     justify-content: center;
     gap: 2px;
@@ -967,10 +1042,27 @@ footer.site a { color: var(--ink-2); }
   body.has-tabs nav.site .menu { top: auto; bottom: calc(100% + 12px); right: 4px; }
   body.has-tabs nav.site .menu a { height: 44px; font-size: 15px; }
 
-  .hero { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 8px 0 16px; }
+  .wrap { padding: 0 16px; }
+  /* Stacked: the text is over the whole scene, so the whole scene is dimmed. */
+  .scene {
+    background-image:
+      linear-gradient(rgba(var(--scene), 0.92), rgba(var(--scene), 0.92)),
+      url("../img/illini-union-quad-960.webp");
+  }
+  .scene-page {
+    background-image:
+      linear-gradient(rgba(var(--scene), 0.6), rgba(var(--scene), 0.6)),
+      url("../img/illini-union-quad-960.webp");
+    background-attachment: scroll;
+  }
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .hero-text { padding: 48px 0 40px; }
+  .hero-quiet .hero-text { padding: 40px 0 32px; max-width: none; }
   .hero h1 { font-size: 40px; letter-spacing: -0.02em; }
   .hero-quiet h1 { font-size: 32px; letter-spacing: -0.01em; }
   .preview { padding-left: 12px; }
+  .auth { padding: 24px 20px; }
+  .scene-page main { padding-top: 32px; }
   h1.page { font-size: 28px; }
   .banner { padding: 20px; gap: 16px; }
   .banner .avatar { width: 80px; height: 80px; border-radius: 20px; font-size: 36px; }
@@ -981,6 +1073,23 @@ footer.site a { color: var(--ink-2); }
   .row { flex-direction: column; gap: 8px; }
   .bars li { grid-template-columns: 56px minmax(0, 1fr); }
   .bars .meta { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
+/* --- The entrance ----------------------------------------------------------
+   What is marked data-enter starts hidden and is brought in by
+   static/js/site.js (fade and rise, once). Only for people who have not
+   asked for reduced motion. The delayed animation is the safety net: if the
+   script never runs, everything shows by itself after 1.2 s. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-enter],
+  [data-enter-list] > :nth-child(-n+6) {
+    opacity: 0;
+    animation: enter-anyway 1ms linear 1200ms forwards;
+  }
+}
+@keyframes enter-anyway { to { opacity: 1; } }
+@media print {
+  [data-enter], [data-enter-list] > * { opacity: 1 !important; animation: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

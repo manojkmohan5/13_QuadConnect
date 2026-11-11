@@ -4,18 +4,21 @@ Log in (P1-A5). Replaces django-allauth's account/login.html: the same form
 (username or email, password, remember me) in the site's own layout, with
 "Continue with Google" above it. allauth's LoginView handles the POST and,
 on success, returns the user to ?next= or to the home page.
+
+The page is one card over the campus photograph (body.scene-page). The
+heading is inside the card, so no text sits on the photograph.
 {% endcomment %}
 
 {% block title %}{% if form.errors %}Error: {% endif %}Log in - QuadConnect{% endblock %}
+{% block body_class %} scene-page{% endblock %}
 {% block main_class %} class="narrow"{% endblock %}
-{% block heading %}Log in{% endblock %}
-
-{% block subtitle %}
-  <p class="sub">New to QuadConnect? <a href="{{ signup_url }}">Sign up</a>.</p>
-{% endblock %}
+{% block page_header %}{% endblock %}
 
 {% block content %}
-  <section class="card auth" aria-label="Log in">
+  <section class="card auth" aria-labelledby="auth-title" data-enter>
+    <h1 class="page" id="auth-title">Log in</h1>
+    <p class="sub">New to QuadConnect? <a href="{{ signup_url }}">Sign up</a>.</p>
+
     {% include "account/snippets/google_button.html" %}
 
     {% if form.errors %}
@@ -45,3 +48,5 @@ on success, returns the user to ?next= or to the home page.
     </form>
   </section>
 {% endblock %}
+
+{% block footer_extra %}<br>{% include "connect/_photo_credit.html" %}{% endblock %}
