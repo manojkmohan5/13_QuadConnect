@@ -95,6 +95,7 @@ them first; the <noscript> rule below shows them when there is no script.
     </nav>
     <div class="account">
       {% if user.is_authenticated %}
+        <span class="face" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>
         <span class="who">Signed in as <strong>{{ user.get_username }}</strong></span>
         <form method="post" action="{% url 'account_logout' %}">
           {% csrf_token %}

@@ -2,9 +2,15 @@
 One student as a profile card, a list item of <ul class="people">. Shared by
 the roster, the search results and "Ask in plain English".
 
-There are no photos, so the colour top holds what the app does know: the
-connection the student wants (its tone and the badge), their initials, and
-the weekend grid of when they are free.
+It is laid out as a profile is in any meetup app: a tall block of colour
+where the photo would be, the name over it, and the interests below. There
+are no photos, so the block holds what the app does know: the connection
+the student wants (blue for Friend Connect, purple for Squad Connect, and
+the badge says it) and their initials, large.
+
+The name is the card's one link, stretched over the whole card by the
+stylesheet, so the initials, the round arrow and the rest are not links of
+their own (and are hidden from a screen reader where they only repeat).
 
 Context
 -------
@@ -19,17 +25,21 @@ A marked chip is orange and bold, and says why in words for a screen reader.
 {% endcomment %}
 <li class="person k-{{ student.preferred_connection|lower }}">
   <div class="person-top">
-    <span class="badge">{{ student.get_preferred_connection_display }}</span>
-    <span class="avatar" aria-hidden="true">{{ student.initials }}</span>
-    {% include "connect/_weekend.html" %}
+    <span class="mono" aria-hidden="true">{{ student.initials }}</span>
+    <div class="over">
+      <span class="badge">{{ student.get_preferred_connection_display }}</span>
+      <div class="name">
+        <div class="title">
+          <a href="{{ student.get_absolute_url }}">{{ student.full_name }}</a>{% if student.is_sso_verified %}<span class="icon i-badge-check" aria-hidden="true"></span><span class="visually-hidden"> (verified)</span>{% endif %}
+        </div>
+        <div class="subtitle">
+          {{ student.college }}{% if student.department %} &middot; {{ student.department }}{% endif %}
+        </div>
+      </div>
+    </div>
+    <span class="go" aria-hidden="true"><span class="icon i-arrow-right"></span></span>
   </div>
   <div class="person-body">
-    <div class="title">
-      <a href="{{ student.get_absolute_url }}">{{ student.full_name }}</a>
-    </div>
-    <div class="subtitle">
-      {{ student.college }}{% if student.department %} &middot; {{ student.department }}{% endif %}
-    </div>
     <ul class="chips" aria-label="Interests">
       {% for link in student.interest_links.all %}
         {% if match_q and match_q in link.interest.name|lower %}
@@ -43,11 +53,14 @@ A marked chip is orange and bold, and says why in words for a screen reader.
         <li class="chip">No interests yet</li>
       {% endfor %}
     </ul>
-    <div class="meta">
-      <span>{{ student.net_id }}</span>
-      <span>{{ student.get_social_energy_display }}</span>
-      <span>{{ student.get_conversation_style_display }}</span>
-      {% if match_names %}<span>{{ student.shared }} of {{ match_names|length }} interest{{ match_names|length|pluralize }}</span>{% endif %}
+    <div class="person-foot">
+      <div class="meta">
+        <span>{{ student.net_id }}</span>
+        <span>{{ student.get_social_energy_display }}</span>
+        <span>{{ student.get_conversation_style_display }}</span>
+        {% if match_names %}<span>{{ student.shared }} of {{ match_names|length }} interest{{ match_names|length|pluralize }}</span>{% endif %}
+      </div>
+      {% include "connect/_weekend.html" %}
     </div>
   </div>
 </li>

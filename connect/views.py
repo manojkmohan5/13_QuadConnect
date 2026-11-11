@@ -187,7 +187,8 @@ def _match_rows(matches):
     is what lets the same template serve this page and the campus-location
     page from two different view styles.
 
-    Expects the queryset to be annotated with `headcount`.
+    Expects the queryset to be annotated with `headcount`, and its
+    participants and their profiles to be prefetched.
     """
     rows = []
     for match in matches:
@@ -211,9 +212,13 @@ def _match_rows(matches):
             ],
             "badge": match.get_status_display(),
             "url": match.get_absolute_url(),
-            # For the tile and the badge's dot: "friend"/"squad", and the status.
+            # For the row's tone and the badge's dot: "friend"/"squad", and the status.
             "kind": match.connection_type.lower(),
             "state": match.status.lower(),
+            # The tile shows the day over the month; the faces are the initials
+            # of who is in the match. Both repeat what the row says in words.
+            "date": [str(when.day), when.strftime("%b")],
+            "faces": [p.profile.initials for p in match.participants.all()],
         })
     return rows
 
@@ -238,6 +243,7 @@ def match_list(request):
     matches = (
         Match.objects
         .select_related("location", "suggested_activity")
+        .prefetch_related("participants__profile")  # each row's faces: two queries in all
         .annotate(headcount=Count("participants"))
         # annotate() drops Meta.ordering (GROUP BY), so order here.
         .order_by("-week_start", "-scheduled_for", "-pk")

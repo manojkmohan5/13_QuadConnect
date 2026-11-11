@@ -48,7 +48,7 @@ Each match row links to that match through Match.get_absolute_url().
   <ul class="list" role="list">
   {% for match in matches %}
     <li class="card linked with-tile k-{{ match.connection_type|lower }}">
-      <span class="tile" aria-hidden="true"><span class="icon"></span></span>
+      <span class="tile date" aria-hidden="true"><b>{{ match.scheduled_for|date:"j" }}</b>{{ match.scheduled_for|date:"M" }}</span>
       <div class="row">
         <div>
           <div class="title">

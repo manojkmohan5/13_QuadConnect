@@ -20,6 +20,10 @@ items          list  of dicts, each with:
                        kind      str            optional: gives the row a tile,
                                                 with the icon and tone the
                                                 stylesheet has for .k-<kind>
+                       date      [day, month]   optional, with kind: the tile
+                                                shows this date, not an icon
+                       faces     list[str]      optional: initials of the people
+                                                in the row, under the badge
                        state     str            optional: gives the badge the
                                                 dot the stylesheet has for
                                                 .s-<state>
@@ -44,7 +48,9 @@ Blocks for child templates: filters (above the list), after_list (below it).
   <ul class="list" role="list" data-enter-list>
   {% for item in items %}
     <li class="card{% if item.url %} linked{% endif %}{% if item.kind %} with-tile k-{{ item.kind }}{% endif %}">
-      {% if item.kind %}<span class="tile" aria-hidden="true"><span class="icon"></span></span>{% endif %}
+      {# The tile repeats what the row says in words, so it is hidden from a screen reader. #}
+      {% if item.date %}<span class="tile date" aria-hidden="true"><b>{{ item.date.0 }}</b>{{ item.date.1 }}</span>
+      {% elif item.kind %}<span class="tile" aria-hidden="true"><span class="icon"></span></span>{% endif %}
       <div class="row">
         <div>
           <div class="title">
@@ -60,7 +66,15 @@ Blocks for child templates: filters (above the list), after_list (below it).
             </div>
           {% endif %}
         </div>
-        {% if item.badge %}<span class="badge{% if item.state %} s-{{ item.state }}{% endif %}">{{ item.badge }}</span>{% endif %}
+        <div class="side">
+          {% if item.badge %}<span class="badge{% if item.state %} s-{{ item.state }}{% endif %}">{{ item.badge }}</span>{% endif %}
+          {% if item.faces %}
+            <div class="faces" aria-hidden="true">
+              {% for face in item.faces|slice:":5" %}<span class="face">{{ face }}</span>{% endfor %}
+              {% if item.faces|length > 5 %}<span class="face more">+{{ item.faces|length|add:"-5" }}</span>{% endif %}
+            </div>
+          {% endif %}
+        </div>
       </div>
     </li>
   {% empty %}

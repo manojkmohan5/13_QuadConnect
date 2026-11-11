@@ -8,6 +8,9 @@
  * header. See docs/notes/notes.txt, "Static files" and "Cache busting".
  *
  * The look: a campus meetup app. Warm paper, Illini-blue ink, quiet chrome.
+ * Signed in, it is laid out as one: the navigation is a column on the left
+ * of a wide screen and a tab bar along the bottom of a small one, and a
+ * student is a card with their name over a block of colour.
  * Colour is kept for the things a student looks at, and each one has a job:
  *
  *   orange  the brand and the one accent: the main action, the current page,
@@ -98,6 +101,7 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --container: 1120px;
   --tabs: 64px;              /* height of the tab bar on small screens */
+  --side: 256px;             /* width of the side navigation on wide screens */
 
   /* The tone of a thing: set by the classes under "Tones" below. */
   --tone: var(--ink-2);
@@ -290,6 +294,7 @@ nav.site .menu a { border-radius: 8px; }
 /* Account links, right of the navigation (P1-A5). */
 .account { display: flex; align-items: center; gap: 12px; margin-left: auto; font-size: 14px; }
 .account .who { color: var(--muted); overflow-wrap: anywhere; }
+.account .face { width: 36px; height: 36px; font-size: 14px; background: var(--ink); }
 .account .who strong { color: var(--ink); font-weight: 600; }
 .account form { margin: 0; }
 .account a,
@@ -298,7 +303,7 @@ nav.site .menu a { border-radius: 8px; }
   align-items: center;
   height: 36px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: 999px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--ink-2);
@@ -347,7 +352,7 @@ h2.section {
 
 /* --- Buttons ------------------------------------------------------------
    Two kinds. Orange (.btn-primary) is the page's main action; ink is every
-   other submit. Both share the control radius. */
+   other submit. Buttons and chips are pills; fields and cards are not. */
 .btn,
 .filter button,
 .form button {
@@ -357,7 +362,7 @@ h2.section {
   gap: 8px;
   min-height: 44px;
   padding: 8px 20px;
-  border-radius: var(--r-control);
+  border-radius: 999px;
   border: 1px solid transparent;
   font: 600 15px/1.3 var(--font);
   text-decoration: none;
@@ -443,6 +448,22 @@ ul.list, ol.list { list-style: none; margin: 0; padding: 0; }
   color: var(--tone-ink);
 }
 .tile .icon { width: 22px; height: 22px; }
+/* A match's tile is its date: the day, large, over the month. */
+.tile.date {
+  width: 56px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.tile.date b { font: 600 24px/1 var(--display); }
+/* Beside a row: its badge, and the people in it. */
+.side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 
 .badge {
   display: inline-flex;
@@ -502,74 +523,104 @@ ul.people > .empty { grid-column: 1 / -1; }
 .note { margin: 24px 0 0; font-size: 14px; color: var(--muted); }
 
 /* --- People --------------------------------------------------------------
-   A student is a card with a colour top, as a profile is in any meetup app.
-   There are no photos, so the top holds what the app does know: who they
-   want to meet (the tone and the badge), their initials, and the weekend
-   grid of when they are free. */
+   A student is a card, as a profile is in any meetup app: a tall block of
+   colour where the photo would be, the name over it, and what they are
+   into below. There are no photos, so the block holds what the app does
+   know: the connection the student wants (its colour, and the badge says
+   it) and their initials, large. The whole card opens the profile. */
 ul.people {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(min(288px, 100%), 1fr));
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
 }
 .person {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: var(--r-card);
+  border-radius: 24px;
   padding: 8px;
   box-shadow: var(--shadow);
   transition: box-shadow 150ms var(--ease), border-color 150ms var(--ease);
 }
 .person:hover { box-shadow: var(--shadow-float); border-color: rgba(19, 41, 75, 0.24); }
-.person-top {
-  position: relative;
-  min-height: 168px;
-  padding: 12px;
-  border-radius: var(--r-inner);
+/* The name's link is stretched over the whole card, so the card, not the
+   name, shows the focus ring. */
+.person .title a::after { content: ""; position: absolute; inset: 0; border-radius: 24px; }
+.person .title a:focus-visible { outline: none; }
+.person:focus-within { outline: 3px solid var(--ink); outline-offset: 2px; }
+.person-top,
+.portrait {
+  display: grid;
+  overflow: hidden;
   background: var(--tone);
   color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
 }
-.person-top .badge { background: #ffffff; color: var(--ink); }
-.person-top .weekend { position: absolute; right: 12px; bottom: 12px; }
-.avatar {
-  font: 600 64px/1 var(--display);
-  letter-spacing: -0.02em;
+.person-top { min-height: 232px; padding: 16px; border-radius: 16px; }  /* 24 - 8 */
+.person-top > *,
+.portrait > * { grid-area: 1 / 1; }
+/* The initials, where a face would be: large and faint, behind the name.
+   Decoration: the name is right there in words. */
+.mono {
+  justify-self: end;
+  align-self: start;
+  margin-top: 28px;
+  font: 600 128px/0.8 var(--display);
+  letter-spacing: -0.04em;
+  opacity: 0.22;
+  user-select: none;
 }
-.person-body { padding: 12px 8px 8px; display: flex; flex-direction: column; flex: 1; }
-.person-body .chips { margin-top: 12px; }
-.person-body .meta { margin-top: auto; padding-top: 12px; }
+.over { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
+.person-top .badge,
+.portrait .badge { background: #ffffff; color: var(--ink); }
+.person-top .name { padding-right: 52px; }
+.person-top .title { font: 600 24px/1.15 var(--display); }
+.person-top .title a,
+.person-top .title a:hover { color: #ffffff; text-decoration: none; }
+.person-top .subtitle { color: #ffffff; font-size: 14px; margin-top: 4px; }
+.title .icon { width: 18px; height: 18px; vertical-align: -2px; margin-left: 4px; }
+/* The round button of a profile card. It is part of the card's one link. */
+.go {
+  justify-self: end;
+  align-self: end;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  color: var(--ink);
+  transition: background-color 150ms var(--ease);
+}
+.person:hover .go { background: var(--orange); }
+.person-body { padding: 12px 8px 8px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.person-body .chips { margin: 0; }
+.person-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.person-foot .meta { margin: 0; }
 
 /* The weekend grid: Saturday and Sunday by the four two-hour blocks. A
-   filled square is a free block. It is drawn for the eye; role="img" and
+   green square is a free block. It is drawn for the eye; role="img" and
    its label give the same times in words. */
 .weekend {
+  flex: none;
   display: grid;
   grid-template-columns: auto repeat(4, 16px);
   gap: 4px;
   align-items: center;
   font-size: 12px;
   line-height: 16px;
+  color: var(--ink-2);
 }
 .weekend .h { text-align: center; }
 .weekend .d { padding-right: 4px; }
-.weekend .c {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid currentColor;
-  opacity: 0.5;
-}
-.weekend .c.on { background: currentColor; opacity: 1; }
+.weekend .c { width: 16px; height: 16px; border-radius: 4px; background: rgba(19, 41, 75, 0.1); }
+.weekend .c.on { background: var(--green); }
 
-/* A small round avatar, for a participant in a list. */
+/* A small round avatar: a participant in a list, the people in a match. */
 .face {
   flex: none;
   width: 44px;
@@ -581,8 +632,39 @@ ul.people {
   color: #ffffff;
   font: 600 16px/1 var(--display);
 }
+.faces { display: flex; }
+.faces .face { width: 36px; height: 36px; font-size: 12px; box-shadow: 0 0 0 2px var(--card); }
+.faces .face + .face { margin-left: -6px; }
+.faces .face.more { background: var(--raised); color: var(--ink-2); font-family: var(--font); }
 
-/* The top of a profile or a match: the same colour block, page-wide. */
+/* The profile page: the student's card stays put beside what they said. */
+.profile { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 32px; align-items: start; }
+.portrait { position: sticky; top: 24px; min-height: 420px; padding: 24px; border-radius: 28px; }
+.portrait .mono { font-size: 176px; margin-top: 48px; }
+.portrait h1.page { margin: 0 0 4px; color: #ffffff; }
+.portrait p.sub { margin: 0; color: #ffffff; font-size: 15px; }
+.profile-main > h2.section:first-child { margin-top: 0; }
+/* The plain facts, in a row, each behind its icon. */
+.vitals {
+  list-style: none;
+  margin: 0 0 32px;
+  padding: 8px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 28px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow);
+}
+.vitals li { display: inline-flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 15px; }
+.vitals .icon { color: var(--muted); }
+/* An answer from onboarding, as a prompt: the question small, the answer large. */
+.prompts { grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
+.prompts .fact { padding: 20px; }
+.prompts .fact .v { font: 500 22px/1.25 var(--display); margin-top: 8px; }
+
+/* The top of a match: its plan, in the colour of its kind, page-wide. */
 .banner {
   display: flex;
   gap: 24px;
@@ -590,23 +672,13 @@ ul.people {
   flex-wrap: wrap;
   padding: 24px;
   margin-bottom: 24px;
-  border-radius: var(--r-card);
+  border-radius: 24px;
   background: var(--tone);
   color: #ffffff;
 }
 .banner h1.page { margin: 0 0 4px; color: #ffffff; }
 .banner p.sub { color: #ffffff; margin: 0 0 12px; }
 .banner .badge { background: #ffffff; color: var(--ink); }
-.banner .avatar {
-  flex: none;
-  width: 112px;
-  height: 112px;
-  border-radius: 28px;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.16);
-  font-size: 48px;
-}
 .banner .aside { margin-left: auto; }
 .banner .code {
   padding: 12px 16px;
@@ -724,8 +796,7 @@ table.avail td { color: var(--muted); }
 .preview .faces { display: flex; }
 .preview .faces .face + .face { margin-left: -8px; box-shadow: 0 0 0 3px var(--card); }
 .preview .faces .face:last-child { background: var(--orange); color: var(--ink); }
-.preview .plan-body .weekend { margin-left: auto; color: var(--ink-2); }
-.preview .plan-body .weekend .c.on { color: var(--green); }
+.preview .plan-body .weekend { margin-left: auto; }
 .preview figcaption { position: absolute; margin: 32px 0 0; font-size: 14px; color: var(--muted); }
 
 /* How it works: three numbered steps. */
@@ -863,7 +934,7 @@ ol.steps p { margin: 4px 0 0; color: var(--ink-2); }
   background: #ffffff;
   color: #1f1f1f;
   border: 1px solid #747775;
-  border-radius: var(--r-control);
+  border-radius: 999px;
   font: 600 15px var(--font);
   cursor: pointer;
   transition: background-color 150ms var(--ease);
@@ -993,19 +1064,72 @@ footer.site {
 }
 footer.site a { color: var(--ink-2); }
 
-/* --- Responsive ----------------------------------------------------------
-   Under 1100px the header has no room for "Signed in as": it stays in the
-   page for a screen reader, and the Log out button is still there. */
-@media (max-width: 1099px) {
-  .account .who { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+/* --- The app shell -------------------------------------------------------
+   Signed in, on a wide screen: the header becomes a column on the left, as
+   in the web version of a meetup app. The brand on top, the sections, the
+   pages about QuadConnect itself under "More" (which opens in place), and
+   the account at the bottom. Signed out, the header stays a bar. */
+@media (min-width: 960px) {
+  body.has-tabs { padding-left: var(--side); }
+  body.has-tabs header.site {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--side);
+    overflow-y: auto;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+  body.has-tabs .bar {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
+    max-width: none;
+    min-height: 100%;
+    padding: 24px 12px 16px;
+  }
+  body.has-tabs .brand { padding: 0 12px 28px; }
+  body.has-tabs nav.site { flex-direction: column; align-items: stretch; gap: 2px; }
+  body.has-tabs nav.site a,
+  body.has-tabs nav.site summary { height: 44px; gap: 12px; font-size: 16px; border-radius: 12px; }
+  body.has-tabs nav.site a::before,
+  body.has-tabs nav.site summary::before { width: 20px; height: 20px; }
+  body.has-tabs nav.site .menu {
+    position: static;
+    min-width: 0;
+    padding: 2px 0 0 16px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+  }
+  body.has-tabs nav.site .menu a { height: 40px; font-size: 15px; border-radius: 12px; }
+  body.has-tabs .account {
+    flex-wrap: wrap;
+    margin: auto 0 0;
+    padding: 16px 12px 0;
+    border-top: 1px solid var(--line);
+  }
+  body.has-tabs .account .who { flex: 1; min-width: 0; }
+  body.has-tabs .account form { flex-basis: 100%; }
+  body.has-tabs .account button { width: 100%; justify-content: center; }
 }
 
-/* Under 960px the navigation leaves the header and becomes a tab bar along
+/* --- Responsive ----------------------------------------------------------
+   Under 960px the navigation leaves the header and becomes a tab bar along
    the bottom, as in a phone app. Home is the logo; the tab bar holds the
-   four sections and More. */
+   four sections and More. The header keeps the logo and Log out; "Signed
+   in as" stays in the page for a screen reader. */
 @media (max-width: 959px) {
   .bar { padding: 0 16px; min-height: 56px; }
   main { padding: 24px 16px 64px; }
+  .account .who { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .account .face { display: none; }
+  .profile { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .portrait { position: static; min-height: 280px; }
+  .portrait .mono { font-size: 128px; margin-top: 24px; }
 
   nav.site { display: none; }
   body.has-tabs { padding-bottom: calc(var(--tabs) + env(safe-area-inset-bottom, 0px)); }
@@ -1065,12 +1189,12 @@ footer.site a { color: var(--ink-2); }
   .scene-page main { padding-top: 32px; }
   h1.page { font-size: 28px; }
   .banner { padding: 20px; gap: 16px; }
-  .banner .avatar { width: 80px; height: 80px; border-radius: 20px; font-size: 36px; }
   .banner .aside { margin-left: 0; }
 }
 
 @media (max-width: 640px) {
   .row { flex-direction: column; gap: 8px; }
+  .side { flex-direction: row; align-items: center; flex-wrap: wrap; }
   .bars li { grid-template-columns: 56px minmax(0, 1fr); }
   .bars .meta { grid-column: 1 / -1; justify-content: flex-start; }
 }
@@ -1122,6 +1246,11 @@ footer.site a { color: var(--ink-2); }
   --i-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --i-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
   --i-circle-help: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9 9.5a3 2.5 0 016 0c0 2-2 2-3 3.5'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+  --i-graduation-cap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/svg%3E");
+  --i-book-open: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v16'/%3E%3Cpath d='M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z'/%3E%3C/svg%3E");
+  --i-briefcase: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/%3E%3Crect width='20' height='14' x='2' y='6' rx='2'/%3E%3C/svg%3E");
+  --i-badge-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z'/%3E%3Cpath d='m16 9-5.5 5.5L8 12'/%3E%3C/svg%3E");
+  --i-id-card: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 19a4 4 0 00-8 0'/%3E%3Cpath d='M16 10h2'/%3E%3Cpath d='M16 14h2'/%3E%3Ccircle cx='9' cy='12' r='3'/%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3C/svg%3E");
 }
 .i-house, [data-icon="house"]::before { --i: var(--i-house); }
 .i-users, [data-icon="users"]::before { --i: var(--i-users); }
@@ -1145,3 +1274,8 @@ footer.site a { color: var(--ink-2); }
 .i-chevron-down, [data-icon="chevron-down"]::before { --i: var(--i-chevron-down); }
 .i-arrow-right, [data-icon="arrow-right"]::before { --i: var(--i-arrow-right); }
 .i-circle-help, [data-icon="circle-help"]::before { --i: var(--i-circle-help); }
+.i-graduation-cap, [data-icon="graduation-cap"]::before { --i: var(--i-graduation-cap); }
+.i-book-open, [data-icon="book-open"]::before { --i: var(--i-book-open); }
+.i-briefcase, [data-icon="briefcase"]::before { --i: var(--i-briefcase); }
+.i-badge-check, [data-icon="badge-check"]::before { --i: var(--i-badge-check); }
+.i-id-card, [data-icon="id-card"]::before { --i: var(--i-id-card); }

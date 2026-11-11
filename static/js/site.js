@@ -4,27 +4,36 @@
  */
 
 /*
- * 1. The "More" menu in the navigation is a <details>, so it opens and
- *    closes on its own summary. This adds what a menu is expected to do as
- *    well: close on Escape (focus goes back to "More"), and close when the
- *    click or the focus goes somewhere else.
+ * 1. "More" in the navigation is a <details>, so it opens and closes on its
+ *    own summary. How it should behave depends on how it is laid out:
+ *
+ *    - On a small screen it is a menu that pops up over the page (the
+ *      stylesheet positions it). A menu closes on Escape, with focus back
+ *      on "More", and when the click or the focus goes somewhere else.
+ *    - On a wide screen it opens in place, in the side navigation. There it
+ *      stays as the reader left it, and starts open on one of its own pages.
  */
 (function () {
   var more = document.querySelector("nav.site details");
   if (!more) { return; }
   var summary = more.querySelector("summary");
+  var menu = more.querySelector(".menu");
+
+  function popsUp() { return window.getComputedStyle(menu).position === "absolute"; }
+
+  if (!popsUp() && summary.classList.contains("active")) { more.open = true; }
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && more.open) {
+    if (event.key === "Escape" && more.open && popsUp()) {
       more.open = false;
       summary.focus();
     }
   });
   document.addEventListener("click", function (event) {
-    if (!more.contains(event.target)) { more.open = false; }
+    if (popsUp() && !more.contains(event.target)) { more.open = false; }
   });
   more.addEventListener("focusout", function (event) {
-    if (event.relatedTarget && !more.contains(event.relatedTarget)) { more.open = false; }
+    if (popsUp() && event.relatedTarget && !more.contains(event.relatedTarget)) { more.open = false; }
   });
 })();
 

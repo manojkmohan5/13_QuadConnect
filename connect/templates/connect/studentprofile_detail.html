@@ -3,9 +3,12 @@
 One student's profile. Named by DetailView's convention
 (<app>/<model>_detail.html) for the same reason as the list template.
 
-The top is the student's card, page-wide: the colour is the connection they
-want (blue for Friend Connect, purple for Squad Connect), and the badge says
-it in words.
+Laid out as a profile is in any meetup app. On the left, and staying put
+as the page scrolls, the student's card: a block of the colour of the
+connection they want (blue for Friend Connect, purple for Squad Connect;
+the badge says it) with their initials and name. On the right, what they
+said in onboarding, each answer as a prompt: the question small, the answer
+large. Then their interests, the weekend they are free, and their matches.
 
 Privacy note: this is an internal/admin-facing view of the roster. It shows a
 student's own onboarding answers and their match history - it never shows
@@ -19,128 +22,146 @@ deliberately absent.
     <a href="{% url 'connect:student-list' %}">Students</a> /
     <span aria-current="page">{{ student.full_name }}</span>
   </nav>
-  <div class="banner k-{{ student.preferred_connection|lower }}" data-enter>
-    <span class="avatar" aria-hidden="true">{{ student.initials }}</span>
-    <div>
-      <h1 class="page">{{ student.full_name }}</h1>
-      <p class="sub">
-        {{ student.net_id }} &middot; {{ student.college }}
-        {% if student.department %} &middot; {{ student.department }}{% endif %}
-      </p>
-      <span class="badge">{{ student.get_preferred_connection_display }}</span>
-    </div>
-  </div>
 {% endblock %}
 
 {% block content %}
+<div class="profile">
 
-  <h2 class="section">Matching preferences</h2>
-  <div class="grid">
-    <div class="card fact">
-      <div class="l">Connection type</div>
-      <div class="v">{{ student.get_preferred_connection_display }}</div>
-    </div>
-    <div class="card fact">
-      <div class="l">Social energy</div>
-      <div class="v">
-        {{ student.get_social_energy_display }}
-        {# Five dots, filled up to the answer; the words beside them say it. #}
-        <span class="meter" aria-hidden="true">{% for n in "12345" %}<i{% if forloop.counter <= student.social_energy %} class="on"{% endif %}></i>{% endfor %}</span>
-        <span class="visually-hidden">({{ student.social_energy }} of 5)</span>
+  <div class="portrait k-{{ student.preferred_connection|lower }}" data-enter>
+    <span class="mono" aria-hidden="true">{{ student.initials }}</span>
+    <div class="over">
+      <span class="badge">{{ student.get_preferred_connection_display }}</span>
+      <div>
+        <h1 class="page">{{ student.full_name }}</h1>
+        <p class="sub">{{ student.net_id }}</p>
       </div>
-    </div>
-    <div class="card fact">
-      <div class="l">Conversation style</div>
-      <div class="v">{{ student.get_conversation_style_display }}</div>
-    </div>
-    <div class="card fact">
-      <div class="l">Group preference</div>
-      <div class="v">{{ student.get_group_preference_display }}</div>
     </div>
   </div>
 
-  <h2 class="section">Interests</h2>
-  {% if interest_links %}
-    <div class="card">
-      <ul class="chips" role="list" aria-label="Interests, starred ones first">
-      {% for link in interest_links %}
-        <li class="chip{% if link.is_primary %} chip-match{% endif %}">
-          {% if link.is_primary %}<span class="icon i-star" aria-hidden="true"></span>{% endif %}
-          {{ link.interest.name }}
-          {% if link.is_primary %}<span class="visually-hidden"> (starred)</span>{% endif %}
-        </li>
-      {% endfor %}
-      </ul>
-      <p class="note">A starred interest counts for more when students are matched.</p>
-    </div>
-  {% else %}
-    <div class="empty">
-      <div class="big">No interests selected</div>
-      <p>This student has not completed the interests step of onboarding,
-         so they cannot be matched yet.</p>
-    </div>
-  {% endif %}
+  <div class="profile-main">
 
-  <h2 class="section" id="availability-title">Weekend availability</h2>
-  {% if slots %}
-    <div class="card scroll" tabindex="0" role="region" aria-labelledby="availability-title">
-      <table class="avail">
-        <thead>
-          <tr>
-            <td></td>
-            {% for label, free in student.weekend.0.1 %}<th scope="col">{{ label }}</th>{% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for day, blocks in student.weekend %}
-            <tr>
-              <th scope="row">{{ day }}</th>
-              {% for label, free in blocks %}
-                {% if free %}
-                  <td class="free"><span class="icon i-check" aria-hidden="true"></span>Free</td>
-                {% else %}
-                  <td><span aria-hidden="true">&ndash;</span><span class="visually-hidden">Not free</span></td>
-                {% endif %}
-              {% endfor %}
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}
-    <div class="empty">
-      <div class="big">No availability given</div>
-      <p>Availability is a hard constraint on matching. Without at least one
-         slot this student cannot be scheduled.</p>
-    </div>
-  {% endif %}
+    <ul class="vitals" role="list" aria-label="About {{ student.full_name }}">
+      {% if student.is_sso_verified %}
+        <li><span class="icon i-badge-check" aria-hidden="true"></span>Verified by UIUC sign-in</li>
+      {% endif %}
+      <li><span class="icon i-graduation-cap" aria-hidden="true"></span>{{ student.college }}</li>
+      {% if student.department %}
+        <li><span class="icon i-book-open" aria-hidden="true"></span>{{ student.department }}</li>
+      {% endif %}
+      {% if student.part_time_job %}
+        <li><span class="icon i-briefcase" aria-hidden="true"></span>{{ student.part_time_job }}</li>
+      {% endif %}
+    </ul>
 
-  <h2 class="section">Match history</h2>
-  <ul class="list" role="list">
-  {% for p in participations %}
-    <li class="card linked with-tile k-{{ p.match.connection_type|lower }}">
-      <span class="tile" aria-hidden="true"><span class="icon"></span></span>
-      <div class="row">
-        <div>
-          <div class="title">
-            <a href="{{ p.match.get_absolute_url }}">{{ p.match.get_connection_type_display }}</a>
-          </div>
-          <div class="subtitle">{{ p.match.location.name }}</div>
-          <div class="meta">
-            <span>{{ p.match.scheduled_for|date:"D j M Y, g:i A" }}</span>
-            <span>Fit {{ p.compatibility_score }}</span>
-            {% if p.match_reason %}<span>{{ p.match_reason }}</span>{% endif %}
-          </div>
-        </div>
-        <span class="badge s-{{ p.response|lower }}">{{ p.get_response_display }}</span>
+    <h2 class="section">Matching preferences</h2>
+    <div class="grid prompts">
+      <div class="card fact">
+        <div class="l">Connection type</div>
+        <div class="v">{{ student.get_preferred_connection_display }}</div>
       </div>
-    </li>
-  {% empty %}
-    <li class="empty">
-      <div class="big">No matches yet</div>
-      <p>This student has not been placed in a weekly matching cycle.</p>
-    </li>
-  {% endfor %}
-  </ul>
+      <div class="card fact">
+        <div class="l">Social energy</div>
+        <div class="v">
+          {{ student.get_social_energy_display }}
+          {# Five dots, filled up to the answer; the words beside them say it. #}
+          <span class="meter" aria-hidden="true">{% for n in "12345" %}<i{% if forloop.counter <= student.social_energy %} class="on"{% endif %}></i>{% endfor %}</span>
+          <span class="visually-hidden">({{ student.social_energy }} of 5)</span>
+        </div>
+      </div>
+      <div class="card fact">
+        <div class="l">Conversation style</div>
+        <div class="v">{{ student.get_conversation_style_display }}</div>
+      </div>
+      <div class="card fact">
+        <div class="l">Group preference</div>
+        <div class="v">{{ student.get_group_preference_display }}</div>
+      </div>
+    </div>
 
+    <h2 class="section">Interests</h2>
+    {% if interest_links %}
+      <div class="card">
+        <ul class="chips" role="list" aria-label="Interests, starred ones first">
+        {% for link in interest_links %}
+          <li class="chip{% if link.is_primary %} chip-match{% endif %}">
+            {% if link.is_primary %}<span class="icon i-star" aria-hidden="true"></span>{% endif %}
+            {{ link.interest.name }}
+            {% if link.is_primary %}<span class="visually-hidden"> (starred)</span>{% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+        <p class="note">A starred interest counts for more when students are matched.</p>
+      </div>
+    {% else %}
+      <div class="empty">
+        <div class="big">No interests selected</div>
+        <p>This student has not completed the interests step of onboarding,
+           so they cannot be matched yet.</p>
+      </div>
+    {% endif %}
+
+    <h2 class="section" id="availability-title">Weekend availability</h2>
+    {% if slots %}
+      <div class="card scroll" tabindex="0" role="region" aria-labelledby="availability-title">
+        <table class="avail">
+          <thead>
+            <tr>
+              <td></td>
+              {% for label, free in student.weekend.0.1 %}<th scope="col">{{ label }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for day, blocks in student.weekend %}
+              <tr>
+                <th scope="row">{{ day }}</th>
+                {% for label, free in blocks %}
+                  {% if free %}
+                    <td class="free"><span class="icon i-check" aria-hidden="true"></span>Free</td>
+                  {% else %}
+                    <td><span aria-hidden="true">&ndash;</span><span class="visually-hidden">Not free</span></td>
+                  {% endif %}
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">
+        <div class="big">No availability given</div>
+        <p>Availability is a hard constraint on matching. Without at least one
+           slot this student cannot be scheduled.</p>
+      </div>
+    {% endif %}
+
+    <h2 class="section">Match history</h2>
+    <ul class="list" role="list">
+    {% for p in participations %}
+      <li class="card linked with-tile k-{{ p.match.connection_type|lower }}">
+        <span class="tile date" aria-hidden="true"><b>{{ p.match.scheduled_for|date:"j" }}</b>{{ p.match.scheduled_for|date:"M" }}</span>
+        <div class="row">
+          <div>
+            <div class="title">
+              <a href="{{ p.match.get_absolute_url }}">{{ p.match.get_connection_type_display }}</a>
+            </div>
+            <div class="subtitle">{{ p.match.location.name }}</div>
+            <div class="meta">
+              <span>{{ p.match.scheduled_for|date:"D j M Y, g:i A" }}</span>
+              <span>Fit {{ p.compatibility_score }}</span>
+              {% if p.match_reason %}<span>{{ p.match_reason }}</span>{% endif %}
+            </div>
+          </div>
+          <span class="badge s-{{ p.response|lower }}">{{ p.get_response_display }}</span>
+        </div>
+      </li>
+    {% empty %}
+      <li class="empty">
+        <div class="big">No matches yet</div>
+        <p>This student has not been placed in a weekly matching cycle.</p>
+      </li>
+    {% endfor %}
+    </ul>
+
+  </div>
+</div>
 {% endblock %}
