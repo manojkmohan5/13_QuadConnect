@@ -98,6 +98,63 @@ exist.)
 
 ---
 
+## The interface, rebuilt
+
+Built on `feature/rebuild`, cut from `main` after P1-A9. No feature was added
+or removed: every page, route, form and API answers as before. What changed is
+how the app looks and is laid out, so that it reads as the campus meetup app
+it is.
+
+- **The look.** A light wash of colour behind every page, from a warm orange
+  tint to a cool blue one, with Illini-blue ink and white cards. Colour has
+  four jobs, and each always sits next to its label:
+  - orange is the brand and the main action;
+  - blue is Friend Connect;
+  - purple is Squad Connect;
+  - green is free time and "yes" (confirmed, accepted).
+- **The logo.** A Q whose bowl is a quad, with a tail where two people meet
+  ([`static/img/logo.svg`](static/img/logo.svg)).
+- **The shell.** Signed in, the navigation is a column on the left of a wide
+  screen and a tab bar along the bottom of a small one. Feedback, Insights,
+  Reports and API sit under **More**. Signed out, the header is a bar.
+- **Students are cards.** A block of colour where a photo would be (the app
+  has no photos), with the name over it and the initials large behind it, a
+  check for a verified student, their interests, and a grid of the eight
+  weekend blocks with the free ones in green. The roster, the search and "Ask
+  in plain English" share the card
+  ([`_person.html`](connect/templates/connect/_person.html)).
+- **A profile** keeps the student's card on the left as the page scrolls. Their
+  onboarding answers are on the right as prompts: the question small, the
+  answer large.
+- **Matches** show their date as a tile and the initials of who is in them. A
+  match's page opens with its plan (what, when, where, status and check-in
+  code) in the colour of its kind.
+- **One photograph.** The Illini Union across the Main Quad in autumn sits
+  behind the home page's headline and the sign-in pages. It is by Daniel
+  Schwen, from Wikimedia Commons, under CC BY-SA 4.0. The credit is on every
+  page that shows it, and [`static/img/CREDITS.txt`](static/img/CREDITS.txt)
+  gives the source and what was changed. Text never sits on the bare photo.
+- **Type and icons.** Figtree for the interface and Bricolage Grotesque for
+  headings (both under the SIL Open Font License, self-hosted in
+  `static/fonts/`). The line icons are from lucide (ISC) and are written into
+  the stylesheet.
+- **Motion.** A page's main content fades in once. It is drawn with
+  [Motion](https://motion.dev) 14.12 (MIT), the plain-JavaScript build of the
+  Framer Motion library, self-hosted in `static/vendor/motion/`. Framer
+  Motion's own components need React, which this site does not use. People who
+  ask their system for reduced motion get none, and nothing is hidden when
+  JavaScript is off.
+- **Accessibility.** Every colour pair is measured against WCAG 2.1 AA and
+  listed in the stylesheet. Lighthouse scores accessibility 100 on the home
+  page, the roster, a profile and a match. Focus is always visible, every icon
+  sits next to its label, and the pages fit a 320 px screen without scrolling
+  sideways.
+
+The design is in [`static/css/quadconnect.css`](static/css/quadconnect.css),
+whose first comment explains it.
+
+---
+
 ## P1-A9: the AI feature, integrated, designed and evaluated
 
 Parts 2 and 3 were built on `feature/p1-a9-part2-3`, cut from `main` after
@@ -625,10 +682,11 @@ Screenshots: [04](docs/screenshots/p1-a3/04_search_get_results.png), [05](docs/s
 
 The design lives in [`static/css/quadconnect.css`](static/css/quadconnect.css),
 loaded in `base.html` with `{% load static %}` and `{% static %}`, alongside the
-logo (`static/img/logo.svg`) and the self-hosted Inter font (`static/fonts/`).
-**UI note:** a dark header with the four-quadrant logo, an orange accent used
-sparingly for actions and the current nav item, white cards on a warm grey
-page, and one type family throughout. Every colour pair meets WCAG 2.1 AA
+logo (`static/img/logo.svg`) and the self-hosted fonts (`static/fonts/`).
+**UI note:** as built for P1-A3, the design was a dark header with a
+four-quadrant logo, an orange accent used sparingly, white cards on a warm
+grey page, and Inter throughout. The stylesheet has since been rewritten; see
+[The interface, rebuilt](#the-interface-rebuilt). Every colour pair meets WCAG 2.1 AA
 contrast, focus is always visible, there is a skip link, and every page fits a
 375 px phone screen. WhiteNoise serves the files in development and
 production; in production they are stored under content-hashed names for
@@ -819,8 +877,8 @@ be extended on the Web tab once a month.
 
 ## Continuous integration
 
-Every push to the branch the current assignment is built on (for P1-A9,
-`feature/p1-a9-part1`) runs one GitHub Actions check, **Deploy / test (push)**,
+Every push to the branch the current work is built on (now
+`feature/rebuild`) runs one GitHub Actions check, **Deploy / test (push)**,
 defined in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Its
 single job runs, in order (with `AI_LOCAL_ENABLED=0` and `AI_EMBED_ENABLED=0`,
 so CI never downloads a model; the tests replace both):
@@ -953,11 +1011,12 @@ own login, for staff.
 ├── .github/workflows/deploy.yml  CI: the one "Deploy / test" check
 ├── .env.example                  committed; copy to .env
 ├── static/                       site-wide static files ({% static %})
-│   ├── css/quadconnect.css       the whole design
-│   ├── img/logo.svg              header logo and favicon
-│   ├── fonts/                    Inter (SIL Open Font License)
+│   ├── css/quadconnect.css       the whole design, and the icons as masks
+│   ├── img/                      logo.svg (header and favicon), the campus photo, CREDITS.txt
+│   ├── fonts/                    Figtree and Bricolage Grotesque (SIL Open Font License)
+│   ├── js/site.js                the "More" menu and each page's entrance
 │   ├── js/charts.js              draws the Vega-Lite charts (vega-embed)
-│   └── vendor/vega/              Vega, Vega-Lite, vega-embed (BSD-3-Clause)
+│   └── vendor/                   vega/ (BSD-3-Clause), motion/ (MIT), lucide/ (ISC licence of the icons)
 ├── docs/
 │   ├── wireframes/v1/            9 screens + flow, exported as PNG
 │   ├── branching_strategy/       diagram.png + branching.md
@@ -996,7 +1055,8 @@ own login, for staff.
     ├── tests_a9.py               37 tests: the embedding step, the time limit and the page (Part 1); the request check (Part 3)
     ├── urls.py                   all routes named
     ├── admin.py                  all 8 models registered, with inlines
-    ├── templates/connect/        base.html, shared entity_list.html, pages
+    ├── templates/connect/        base.html, shared entity_list.html, pages; _person.html (a student's card),
+    │                             _weekend.html (the free-time grid), _photo_credit.html
     └── management/commands/
         ├── seed_demo_data.py     idempotent sample data
         ├── verify_constraints.py proves constraints and on_delete rules

@@ -23,6 +23,31 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  The interface rebuilt on feature/rebuild
+                             [Manojkumar]
+--------------------------------------------------------------------------------
+The look and layout of every page, on feature/rebuild, cut from main after
+P1-A9. No feature, route, form or API changed.
+  - Look: a light wash behind every page (orange tint to blue), Illini-blue
+    ink, white cards. Orange = brand and main action, blue = Friend Connect,
+    purple = Squad Connect, green = free time and "yes". New logo. Figtree and
+    Bricolage Grotesque replace Inter. lucide icons in the stylesheet.
+  - Shell: signed in, navigation is a column on the left (wide screens) or a
+    tab bar along the bottom (small screens); "More" holds Feedback, Insights,
+    Reports and API.
+  - Students are cards (_person.html) with the weekend grid (_weekend.html);
+    the profile keeps the card beside the answers. Matches show a date tile
+    and who is in them.
+  - One photo (Illini Union and Main Quad, Daniel Schwen, CC BY-SA 4.0) behind
+    the home headline and the sign-in pages; credited where shown.
+  - One entrance per page, with Motion 14.12 (plain-JS build of Framer
+    Motion), self-hosted. Off for reduced motion; nothing hidden without JS.
+  - Checked: 210 tests pass; Lighthouse accessibility 100 on the home page,
+    the roster, a profile and a match; no sideways scroll at 320 px;
+    collectstatic builds with production settings.
+Next: push the branch (CI runs on it), then a PR into main.
+
+--------------------------------------------------------------------------------
 WEEK 12 (w/c 2026-11-09)  -  P1-A9 Part 1 on feature/p1-a9-part1  [Kritika]
 --------------------------------------------------------------------------------
 P1-A9 Part 1 (the AI integrated into the Django app), on feature/p1-a9-part1,

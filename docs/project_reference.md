@@ -29,6 +29,7 @@ what we chose not to build, and where the shortcuts are.
 | **Last completed** | P1-A8 — Semantic Relationships and Retrieval — merged into `main` (PR #15, 2026-11-08) |
 | **`main` status** | Has P1-A2 to P1-A9 (P1-A8 in PR #15, P1-A9 in PR #16). |
 | **What remains** | P1-A9: the Canvas file (the repository link, a summary of the AI feature and the demo time) and the in-person demo on Thursday 2026-11-12, 11:30 AM, EDUC 339 (§9). |
+| **Also in flight** | The interface rebuilt on `feature/rebuild` (2026-11-11), cut from `main` after P1-A9: a new look and layout, no feature added or removed. Not pushed and not in `main` yet (§9). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -59,6 +60,7 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
 | Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | ✅ DONE — merged to `main` in PR #15 (2026-11-08); see §9 |
 | Prathamesh Mulay, Manojkumar Mohankumar (P1-A9) | `feature/p1-a9-part2-3` | Parts 2–3 | `README_AI.md`, the request check in `connect/ai_search.py`, `docs/a9_evaluation/` | ✅ DONE — Parts 2 and 3 done 2026-11-08; merged to `main` in PR #16 (2026-11-09), through `feature/p1-a9-part1`; see §9 |
+| Manojkumar Mohankumar (interface) | `feature/rebuild` | the look and layout of every page | `static/`, `connect/templates/`, `templates/account/` | BUILDING — rebuilt 2026-11-11; not pushed; see §9 |
 | Kritika Agrawal (P1-A9) | `feature/p1-a9-part1` | Part 1 | `README_AI.md` Part 1, `match_by_meaning()` and `ModelTimeout` in `connect/ai_search.py`, `docs/a9_part1/` | ✅ DONE — Part 1 done and audited 2026-11-09; merged to `main` in PR #16 (2026-11-09); the demo is on 2026-11-12; see §9 |
 
 **Whoever completes a branch:** updating this file is
@@ -220,7 +222,8 @@ the same models as a foundation.
 ├── llm-test/                      (A6) ai_prototype.ipynb (the model lab), requirements.txt (its extras), results/runs.jsonl
 ├── manage.py                      -> quadconnect.settings.development
 ├── db.sqlite3                     COMMITTED since A4 — seed data only
-├── static/                        (A3) css/quadconnect.css, img/logo.svg, fonts/; (A4) js/charts.js, vendor/vega/
+├── static/                        (A3) css/quadconnect.css, img/logo.svg, fonts/; (A4) js/charts.js, vendor/vega/;
+│                                  (rebuild) js/site.js, img/ campus photo + CREDITS.txt, vendor/motion/, vendor/lucide/
 ├── templates/                     (A5) account/ (login, sign-up, logout pages), allauth/ (layout)
 ├── staticfiles/                   IGNORED — collectstatic output (production)
 ├── docs/
@@ -270,6 +273,7 @@ the same models as a foundation.
     ├── templates/connect/
     │   ├── base.html              site shell; A3 moved its CSS to static/
     │   ├── entity_list.html       SHARED — model-agnostic list
+    │   ├── _person.html           (rebuild) a student's card; with _weekend.html and _photo_credit.html
     │   └── home.html, *_detail.html, student_search.html, insights.html, api_docs.html, icebreakers.html, reports.html, ...
     └── management/commands/
         ├── seed_demo_data.py      idempotent
@@ -611,6 +615,44 @@ that property when adding checks.
 ## 9. Work log
 
 The running history of what has actually been built. Newest at the top.
+
+### BUILDING `feature/rebuild` - Manojkumar Mohankumar - 2026-11-11
+**Shipped so far:** the interface rebuilt, on a branch cut from `main` at `0c20516` (after P1-A9). No feature,
+route, form or API changed; every page was restyled and several were laid out again.
+- **Look:** a light wash behind every page (warm orange tint to cool blue), Illini-blue ink, white cards.
+  Orange is the brand and the main action, blue is Friend Connect, purple is Squad Connect, green is free time
+  and "yes". A new logo (a Q whose bowl is a quad). Figtree and Bricolage Grotesque replace Inter. 27 lucide
+  icons, written into the stylesheet as masks.
+- **Shell:** signed in, a column of navigation on the left of a wide screen and a tab bar along the bottom of a
+  small one, from the same markup. Feedback, Insights, Reports and API are under "More", a `<details>`.
+- **Students:** `_person.html`, one card shared by the roster, the search and "Ask in plain English", with
+  `_weekend.html`, the grid of free weekend blocks. The profile page keeps the card beside the answers.
+  `StudentProfile` gained `initials`, `weekend()`, `free_times()` and `objects.for_cards()` (no migration).
+- **Matches and venues:** rows have a tile (a match's date, a venue's kind) and a dot on the badge for the
+  state. The Matches page shows the initials of who is in each match.
+- **Photo:** the Illini Union across the Main Quad (Daniel Schwen, CC BY-SA 4.0) behind the home page's
+  headline and the sign-in pages; credited on those pages and in `static/img/CREDITS.txt`.
+- **Motion:** one entrance per page, drawn with Motion 14.12 (the plain-JavaScript build of Framer Motion),
+  self-hosted in `static/vendor/motion/`.
+- **Charts:** the Matplotlib and Vega-Lite charts use the same palette.
+
+**Files changed:** `static/` (stylesheet, logo, fonts, photo, `js/site.js`, `vendor/motion/`,
+`vendor/lucide/`), every template in `connect/templates/connect/` and `templates/account/`, `connect/models.py`,
+`connect/views.py`, `connect/ai_search.py` (the card's prefetch), `connect/charts.py`, `connect/specs/`,
+three tests, the CI workflow (runs on `feature/rebuild`), `README.md`, this file, notes.txt.
+
+**Gotchas:**
+- **A nav link's text must stay its whole content.** Tests match `aria-current="page">Reports</a>`, so the
+  icons are drawn by the stylesheet from `data-icon`, not put inside the link.
+- **Text on the photo.** Never put text on the bare photograph: the stylesheet keeps 92% Illini blue behind
+  the hero's text, and the sign-in pages keep all text on the card.
+- **A new colour needs measuring.** Text colours were re-measured against the darkest point of the page's wash
+  (`--bg-cool`), not only against white. The figures are beside each token.
+- **The entrance never blocks a page.** Elements marked `data-enter` start hidden only when reduced motion is
+  not requested, and the stylesheet shows them after 1.2 s if `site.js` or Motion fails to load.
+- **The ask page runs 7 queries**, one more than before, for the free slots on each card.
+- **Not pushed.** CI runs on `feature/rebuild` once it is pushed; the production build (`collectstatic`) was
+  run locally.
 
 ### DONE `feature/p1-a9-part1` - Kritika Agrawal - 2026-11-09
 **Shipped so far:** P1-A9 Part 1, on a branch cut from `feature/p1-a9-part2-3` at `461e03e`.
