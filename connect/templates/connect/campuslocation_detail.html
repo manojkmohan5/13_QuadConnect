@@ -30,9 +30,9 @@ Each match row links to that match through Match.get_absolute_url().
   {% endif %}
 
   <div class="grid">
-    <div class="card stat">
-      <div class="n">{% if location.is_indoor %}Indoor{% else %}Outdoor{% endif %}</div>
+    <div class="card fact">
       <div class="l">Setting</div>
+      <div class="v">{% if location.is_indoor %}Indoor{% else %}Outdoor{% endif %}</div>
     </div>
     <div class="card stat">
       <div class="n">{{ location.capacity }}</div>
@@ -47,7 +47,8 @@ Each match row links to that match through Match.get_absolute_url().
   <h2 class="section">Matches at this venue</h2>
   <ul class="list" role="list">
   {% for match in matches %}
-    <li class="card linked">
+    <li class="card linked with-tile k-{{ match.connection_type|lower }}">
+      <span class="tile" aria-hidden="true"><span class="icon"></span></span>
       <div class="row">
         <div>
           <div class="title">
@@ -59,7 +60,7 @@ Each match row links to that match through Match.get_absolute_url().
             {% if match.suggested_activity %}<span>{{ match.suggested_activity.name }}</span>{% endif %}
           </div>
         </div>
-        <span class="badge">{{ match.get_status_display }}</span>
+        <span class="badge s-{{ match.status|lower }}">{{ match.get_status_display }}</span>
       </div>
     </li>
   {% empty %}

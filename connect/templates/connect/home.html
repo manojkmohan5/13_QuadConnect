@@ -1,7 +1,8 @@
 {% extends "connect/base.html" %}
 {% comment %}
 Landing page, the one page open to everyone (P1-A5). Visitors who are not
-signed in see what QuadConnect is and how to join, and no student data.
+signed in see what QuadConnect is and how to join, and no student data: the
+match beside the headline is a made-up example, and its caption says so.
 Signed-in users also see the counts and recent matches, a jumping-off point
 to each section.
 {% endcomment %}
@@ -10,23 +11,59 @@ to each section.
 
 {# Replaces base.html's plain <h1> header with the landing-page hero. #}
 {% block page_header %}
-  <section class="hero" aria-labelledby="hero-title">
-    <p class="eyebrow">For UIUC students</p>
-    <h1 id="hero-title">Meet people. Build friendships. IRL.</h1>
-    <p class="lead">
-      QuadConnect matches verified Illinois students into weekend meetups,
-      one-on-one or in small squads, at approved campus locations, based on
-      shared interests and when they are free.
-    </p>
-    <div class="actions">
-      {% if user.is_authenticated %}
-        <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
-        <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
-      {% else %}
-        <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign up</a>
-        <a class="btn btn-secondary" href="{% url 'account_login' %}">Log in</a>
-      {% endif %}
+  <section class="hero{% if user.is_authenticated %} hero-quiet{% endif %}" aria-labelledby="hero-title">
+    <div>
+      <h1 id="hero-title">Meet a fellow Illini this weekend</h1>
+      <p class="lead">
+        QuadConnect matches verified Illinois students into weekend meetups,
+        one-on-one or in small squads, at approved campus locations, based on
+        shared interests and when they are free.
+      </p>
+      <div class="actions">
+        {% if user.is_authenticated %}
+          <a class="btn btn-primary" href="{% url 'connect:student-list' %}">Browse students</a>
+          <a class="btn btn-secondary" href="{% url 'connect:match-list' %}">See the matches</a>
+        {% else %}
+          <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign up</a>
+          <a class="btn btn-secondary" href="{% url 'account_login' %}">Log in</a>
+        {% endif %}
+      </div>
     </div>
+
+    {% if not user.is_authenticated %}
+      {# What a student gets each week, drawn with the app's own pieces. #}
+      <figure class="preview">
+        <div class="plan">
+          <div class="plan-top">
+            <span class="badge">Friend Connect (1-on-1)</span>
+            <p class="when">Saturday, 2 &ndash; 4 PM</p>
+            <p class="where">Coffee at the Illini Union</p>
+          </div>
+          <div class="plan-body">
+            <div class="pair">
+              <div class="faces" aria-hidden="true">
+                <span class="face k-friend">MR</span><span class="face">You</span>
+              </div>
+              <div>
+                <div class="title">Maya and you</div>
+                <div class="subtitle">You are both free then</div>
+              </div>
+              <div class="weekend" role="img" aria-label="Saturday 2 to 4 PM, marked on the weekend grid">
+                <span></span><span class="h">10</span><span class="h">12</span><span class="h">2</span><span class="h">4</span>
+                <span class="d">Sat</span><span class="c"></span><span class="c"></span><span class="c on"></span><span class="c"></span>
+                <span class="d">Sun</span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span>
+              </div>
+            </div>
+            <ul class="chips" role="list" aria-label="What you both like">
+              <li class="chip chip-match">Music</li>
+              <li class="chip chip-match">Food</li>
+              <li class="chip chip-match">Photography</li>
+            </ul>
+          </div>
+        </div>
+        <figcaption>An example of the match a student gets each week.</figcaption>
+      </figure>
+    {% endif %}
   </section>
 {% endblock %}
 
@@ -66,7 +103,8 @@ to each section.
   <h2 class="section">Recent matches</h2>
   <ul class="list" role="list">
   {% for match in recent_matches %}
-    <li class="card linked">
+    <li class="card linked with-tile k-{{ match.connection_type|lower }}">
+      <span class="tile" aria-hidden="true"><span class="icon"></span></span>
       <div class="row">
         <div>
           <div class="title">
@@ -79,7 +117,7 @@ to each section.
             <span>Code {{ match.check_in_code }}</span>
           </div>
         </div>
-        <span class="badge">{{ match.get_status_display }}</span>
+        <span class="badge s-{{ match.status|lower }}">{{ match.get_status_display }}</span>
       </div>
     </li>
   {% empty %}

@@ -17,6 +17,12 @@ items          list  of dicts, each with:
                        meta      list[str]      optional, rendered inline
                        badge     str            optional, pill on the right
                        url       str            optional, links the title
+                       kind      str            optional: gives the row a tile,
+                                                with the icon and tone the
+                                                stylesheet has for .k-<kind>
+                       state     str            optional: gives the badge the
+                                                dot the stylesheet has for
+                                                .s-<state>
 empty_title    str   headline shown when items is empty
 empty_message  str   explanatory line shown when items is empty
 filter_html    bool  set truthy by a view that renders its own filter block
@@ -37,7 +43,8 @@ Blocks for child templates: filters (above the list), after_list (below it).
 
   <ul class="list" role="list">
   {% for item in items %}
-    <li class="card{% if item.url %} linked{% endif %}">
+    <li class="card{% if item.url %} linked{% endif %}{% if item.kind %} with-tile k-{{ item.kind }}{% endif %}">
+      {% if item.kind %}<span class="tile" aria-hidden="true"><span class="icon"></span></span>{% endif %}
       <div class="row">
         <div>
           <div class="title">
@@ -53,7 +60,7 @@ Blocks for child templates: filters (above the list), after_list (below it).
             </div>
           {% endif %}
         </div>
-        {% if item.badge %}<span class="badge">{{ item.badge }}</span>{% endif %}
+        {% if item.badge %}<span class="badge{% if item.state %} s-{{ item.state }}{% endif %}">{{ item.badge }}</span>{% endif %}
       </div>
     </li>
   {% empty %}
