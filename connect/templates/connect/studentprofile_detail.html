@@ -28,7 +28,7 @@ deliberately absent.
 <div class="profile">
 
   <div class="portrait k-{{ student.preferred_connection|lower }}" data-enter>
-    <span class="mono" aria-hidden="true">{{ student.initials }}</span>
+    <span class="mono" aria-hidden="true" data-initials="{{ student.initials }}"></span>
     <div class="over">
       <span class="badge">{{ student.get_preferred_connection_display }}</span>
       <div>

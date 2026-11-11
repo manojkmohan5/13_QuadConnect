@@ -43,7 +43,7 @@
   "config": {
     "font": "Figtree, Segoe UI, Arial, sans-serif",
     "view": {"stroke": null},
-    "title": {"color": "#13294b", "subtitleColor": "#5e687d", "fontSize": 15},
-    "axis": {"labelColor": "#13294b", "titleColor": "#13294b", "gridColor": "#e6e3dd", "domainColor": "#7c8597"}
+    "title": {"color": "#13294b", "subtitleColor": "#566076", "fontSize": 15},
+    "axis": {"labelColor": "#13294b", "titleColor": "#13294b", "gridColor": "#e6e3dd", "domainColor": "#717a8d"}
   }
 }

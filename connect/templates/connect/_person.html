@@ -10,7 +10,9 @@ the badge says it) and their initials, large.
 
 The name is the card's one link, stretched over the whole card by the
 stylesheet, so the initials, the round arrow and the rest are not links of
-their own (and are hidden from a screen reader where they only repeat).
+their own. The initials and the arrow only repeat the name and the link, so
+they are hidden from a screen reader; the stylesheet draws the initials
+from data-initials.
 
 Context
 -------
@@ -25,7 +27,7 @@ A marked chip is orange and bold, and says why in words for a screen reader.
 {% endcomment %}
 <li class="person k-{{ student.preferred_connection|lower }}">
   <div class="person-top">
-    <span class="mono" aria-hidden="true">{{ student.initials }}</span>
+    <span class="mono" aria-hidden="true" data-initials="{{ student.initials }}"></span>
     <div class="over">
       <span class="badge">{{ student.get_preferred_connection_display }}</span>
       <div class="name">

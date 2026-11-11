@@ -7,7 +7,8 @@
  * (quadconnect.<hash>.css) and WhiteNoise serves it with a far-future cache
  * header. See docs/notes/notes.txt, "Static files" and "Cache busting".
  *
- * The look: a campus meetup app. Warm paper, Illini-blue ink, quiet chrome.
+ * The look: a campus meetup app. A light wash of colour behind every page,
+ * from a warm orange tint to a cool blue one, Illini-blue ink, white cards.
  * Signed in, it is laid out as one: the navigation is a column on the left
  * of a wide screen and a tab bar along the bottom of a small one, and a
  * student is a card with their name over a block of colour.
@@ -23,7 +24,8 @@
  *
  * One photograph, the Illini Union across the Main Quad in autumn, sits
  * behind the home page's headline and the sign-in pages (see "Scene").
- * Every other page stays plain, so the students are what you look at.
+ * Every other page has only the wash behind it, so the students are what
+ * you look at.
  *
  * Every text/background pair below was measured against WCAG 2.1 AA:
  * 4.5:1 for text, 3:1 for UI boundaries and graphics. Re-measure any new
@@ -55,20 +57,24 @@
 }
 
 :root {
-  /* Neutrals: warm paper and Illini-blue ink. */
-  --bg: #faf8f4;
+  /* The page: a wash from --bg-warm (top left) through --bg to --bg-cool
+     (bottom right). "On the page" below means on the darkest of the three,
+     so the figure holds anywhere on the wash. */
+  --bg-warm: #ffe9db;
+  --bg: #fbf7f2;
+  --bg-cool: #e3ecfb;
   --card: #ffffff;
   --raised: #f3f0ea;
-  --ink: #13294b;            /* 14.5:1 on --card, 13.7:1 on --bg */
-  --ink-2: #44506a;          /* 8.1:1 on --card, 7.6:1 on --bg, 7.1:1 on --raised */
-  --muted: #5e687d;          /* 5.6:1 on --card, 5.3:1 on --bg, 4.9:1 on --raised */
+  --ink: #13294b;            /* 14.5:1 on --card, 12.2:1 on the page */
+  --ink-2: #44506a;          /* 8.1:1 on --card, 6.8:1 on the page, 7.1:1 on --raised */
+  --muted: #566076;          /* 6.3:1 on --card, 5.3:1 on the page, 5.5:1 on --raised */
   --line: rgba(19, 41, 75, 0.12);
-  --field-border: #7c8597;   /* 3.7:1 on --card, 3.5:1 on --bg - WCAG 1.4.11 */
+  --field-border: #717a8d;   /* 4.3:1 on --card, 3.6:1 on the page - WCAG 1.4.11 */
 
   /* Orange: the brand. As a fill it carries --ink, never white (3.05:1). */
   --orange: #ff5f05;         /* --ink on it: 4.76:1 */
   --orange-hover: #ff7a2e;   /* --ink on it: 5.58:1 */
-  --orange-ink: #b93f0a;     /* as text: 5.6:1 on --card, 5.2:1 on --bg, 5.0:1 on --orange-soft */
+  --orange-ink: #ad3a08;     /* as text: 6.2:1 on --card, 5.2:1 on the page, 5.5:1 on --orange-soft */
   --orange-soft: #ffefe5;
 
   /* Blue, purple and green as fills carry white: 6.1:1, 6.7:1, 5.4:1.
@@ -123,6 +129,19 @@ body {
   flex-direction: column;
   min-height: 100vh;
 }
+/* The wash. It is fixed to the window, so a long page does not stretch it,
+   and it sits behind everything. Both ends are light: every text colour was
+   measured against the darker of them (see the palette above). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, var(--bg-warm) 0%, var(--bg) 45%, var(--bg-cool) 100%);
+}
+@media print {
+  body::before { display: none; }
+}
 
 h1, h2, h3 { line-height: 1.2; }
 p { margin: 0 0 12px; }
@@ -145,7 +164,7 @@ code {
 code, a { overflow-wrap: break-word; }
 
 /* WCAG 2.1 2.4.7 - focus is always visible, never removed. Ink, not
-   orange: 13.7:1 on the page, and still clear beside an orange button. */
+   orange: 12.2:1 on the page, and still clear beside an orange button. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -157,7 +176,7 @@ summary:focus-visible,
   outline-offset: 2px;
 }
 
-/* Placeholders at 5.6:1 on white (WCAG 1.4.3); browsers default to ~2.5:1. */
+/* Placeholders at 6.3:1 on white (WCAG 1.4.3); browsers default to ~2.5:1. */
 input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 
 /* WCAG 2.1 2.4.1 - let keyboard users skip the navigation. */
@@ -563,16 +582,29 @@ ul.people {
 .person-top { min-height: 232px; padding: 16px; border-radius: 16px; }  /* 24 - 8 */
 .person-top > *,
 .portrait > * { grid-area: 1 / 1; }
-/* The initials, where a face would be: large and faint, behind the name.
-   Decoration: the name is right there in words. */
+/* The initials, where a face would be: large outlined letters behind the
+   name. They are decoration (the name is right there in words), so the
+   stylesheet draws them from data-initials and they are not in the page's
+   text. The outline is white, 6:1 or more on either colour. */
 .mono {
   justify-self: end;
   align-self: start;
   margin-top: 28px;
   font: 600 128px/0.8 var(--display);
-  letter-spacing: -0.04em;
-  opacity: 0.22;
+  letter-spacing: -0.02em;
   user-select: none;
+}
+/* The stroke is painted first and the letter filled over it in the block's
+   own colour, which leaves a clean 2px outline: a variable font's letters
+   are built from overlapping shapes, and a bare stroke would show them. */
+.mono::before {
+  content: attr(data-initials);
+  color: var(--tone);
+  -webkit-text-stroke: 4px #ffffff;
+  paint-order: stroke fill;
+}
+@supports not (-webkit-text-stroke: 4px #ffffff) {
+  .mono::before { color: #ffffff; }
 }
 .over { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
 .person-top .badge,
@@ -710,8 +742,9 @@ table.avail td { color: var(--muted); }
    and blue sky are the palette.
 
    Text never sits on the bare photo. Behind text there is always Illini
-   blue at 92% or more, so even over the photo's brightest pixel white text
-   keeps 6.9:1 and --on-scene 5.1:1. The photo shows where there is no text. */
+   blue at 92% or more, so even over a pure white pixel of the photo (which
+   that layer turns into #263a59) white text keeps 11.4:1 and --on-scene
+   8.3:1. The photo shows where there is no text. */
 :root { --on-scene: #d6dde9; --scene: 19, 41, 75; }
 .scene {
   position: relative;
@@ -815,6 +848,7 @@ ol.steps > li::before {
   font: 600 16px/1 var(--display);
 }
 ol.steps p { margin: 4px 0 0; color: var(--ink-2); }
+ol.steps.grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
 
 .gap-top { margin-top: 16px; }
 .stack > * + * { margin-top: 16px; }
@@ -906,6 +940,7 @@ ol.steps p { margin: 4px 0 0; color: var(--ink-2); }
 .form label { font-weight: 600; font-size: 15px; }
 /* .helptext is the class Django's own field template gives help text. */
 .form .help, .form .helptext { font-size: 14px; color: var(--muted); margin: 0; }
+.form .helptext ul { margin: 4px 0; padding-left: 20px; }
 .form .field-error { font-size: 14px; color: var(--danger); font-weight: 600; margin: 0; }
 /* Element-qualified so it outranks ".form input[type=text]" above. */
 .form input[aria-invalid="true"],
@@ -958,6 +993,7 @@ ol.steps p { margin: 4px 0 0; color: var(--ink-2); }
   background-position: center;
   background-attachment: fixed;
 }
+.scene-page::before { display: none; }   /* the photograph is the backdrop here */
 .scene-page main { padding-top: 56px; }
 .scene-page .messages .message { box-shadow: var(--shadow-float); }
 .scene-page footer.site { background: var(--ink); border-top: 0; color: var(--on-scene); }
@@ -1193,8 +1229,12 @@ footer.site a { color: var(--ink-2); }
 }
 
 @media (max-width: 640px) {
+  /* The example match and its caption stand lower on a narrow screen. */
+  .hero:not(.hero-quiet) + .home-body { padding-top: 136px; }
   .row { flex-direction: column; gap: 8px; }
   .side { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  /* A long badge wraps instead of widening a 320px page (WCAG 1.4.10). */
+  .badge { white-space: normal; flex: 0 1 auto; }
   .bars li { grid-template-columns: 56px minmax(0, 1fr); }
   .bars .meta { grid-column: 1 / -1; justify-content: flex-start; }
 }
@@ -1214,6 +1254,15 @@ footer.site a { color: var(--ink-2); }
 @keyframes enter-anyway { to { opacity: 1; } }
 @media print {
   [data-enter], [data-enter-list] > * { opacity: 1 !important; animation: none !important; }
+}
+
+/* A phone: the logo, Log in and Sign up share one line. */
+@media (max-width: 479px) {
+  .brand { font-size: 18px; gap: 8px; }
+  .brand img { width: 28px; height: 28px; }
+  .account { gap: 4px; }
+  .account a { padding: 0 10px; }
+  .account a.signup { padding: 0 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

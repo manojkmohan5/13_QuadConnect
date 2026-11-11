@@ -35,7 +35,7 @@ from .models import ConnectionType, InterestCategory, ProfileInterest, StudentPr
 # The site's palette (static/css/quadconnect.css): Illini-blue ink, and the
 # same tones as the pages, blue for Friend Connect and purple for Squad Connect.
 INK = "#13294b"
-MUTED = "#5e687d"
+MUTED = "#566076"
 GRID = "#e6e3dd"
 
 # Every series has a colour AND a hatch pattern, so a chart still reads in
@@ -45,9 +45,9 @@ GRID = "#e6e3dd"
 FRIEND = {"color": "#1f5fbf", "hatch": ""}
 SQUAD = {"color": "#6b3fc4", "hatch": "//"}
 CATEGORY_STYLE = {
-    InterestCategory.HOBBY: {"color": "#b93f0a", "hatch": ""},
+    InterestCategory.HOBBY: {"color": "#ad3a08", "hatch": ""},
     InterestCategory.RSO: {"color": "#13294b", "hatch": "//"},
-    InterestCategory.ACTIVITY: {"color": "#5e687d", "hatch": ".."},
+    InterestCategory.ACTIVITY: {"color": "#566076", "hatch": ".."},
 }
 
 
