@@ -15,9 +15,9 @@
   "background": "white",
   "mark": {
     "type": "line",
-    "color": "#c0421c",
+    "color": "#ff5f05",
     "strokeWidth": 2.5,
-    "point": {"filled": true, "size": 70, "color": "#c0421c"}
+    "point": {"filled": true, "size": 70, "color": "#ff5f05"}
   },
   "encoding": {
     "x": {
@@ -41,9 +41,9 @@
     ]
   },
   "config": {
-    "font": "Inter, Segoe UI, Arial, sans-serif",
+    "font": "Figtree, Segoe UI, Arial, sans-serif",
     "view": {"stroke": null},
-    "title": {"color": "#1f2933", "subtitleColor": "#666e7b", "fontSize": 15},
-    "axis": {"labelColor": "#1f2933", "titleColor": "#1f2933", "gridColor": "#e3e3e0", "domainColor": "#8a929e"}
+    "title": {"color": "#13294b", "subtitleColor": "#5e687d", "fontSize": 15},
+    "axis": {"labelColor": "#13294b", "titleColor": "#13294b", "gridColor": "#e6e3dd", "domainColor": "#7c8597"}
   }
 }

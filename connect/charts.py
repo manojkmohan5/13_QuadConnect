@@ -32,19 +32,22 @@ from matplotlib.ticker import MaxNLocator
 from .api import interest_popularity, matches_per_week
 from .models import ConnectionType, InterestCategory, ProfileInterest, StudentProfile
 
-INK = "#1f2933"
-MUTED = "#666e7b"
-GRID = "#e3e3e0"
+# The site's palette (static/css/quadconnect.css): Illini-blue ink, and the
+# same tones as the pages, blue for Friend Connect and purple for Squad Connect.
+INK = "#13294b"
+MUTED = "#5e687d"
+GRID = "#e6e3dd"
 
 # Every series has a colour AND a hatch pattern, so a chart still reads in
 # greyscale or with colour blindness (WCAG 1.4.1). Each colour is at least
-# 3:1 against the white background (WCAG 1.4.11).
-FRIEND = {"color": "#c0421c", "hatch": ""}
-SQUAD = {"color": "#323f4b", "hatch": "//"}
+# 3:1 against the white background (WCAG 1.4.11), and carries its white
+# label at 4.5:1 or more.
+FRIEND = {"color": "#1f5fbf", "hatch": ""}
+SQUAD = {"color": "#6b3fc4", "hatch": "//"}
 CATEGORY_STYLE = {
-    InterestCategory.HOBBY: {"color": "#c0421c", "hatch": ""},
-    InterestCategory.RSO: {"color": "#323f4b", "hatch": "//"},
-    InterestCategory.ACTIVITY: {"color": "#1f6f8b", "hatch": ".."},
+    InterestCategory.HOBBY: {"color": "#b93f0a", "hatch": ""},
+    InterestCategory.RSO: {"color": "#13294b", "hatch": "//"},
+    InterestCategory.ACTIVITY: {"color": "#5e687d", "hatch": ".."},
 }
 
 
