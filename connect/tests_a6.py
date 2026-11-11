@@ -376,7 +376,10 @@ class AskPageTests(SeededTestCase):
         cache.clear()
         with reply('{"interests": ["Gaming", "Music", "Movies", "Food"]}'):
             self.client.get(self.url, {"q": "warm up the cache"})
-            with self.assertNumQueries(6):
+            # 7, whatever it finds: the session and its user, the two lists the
+            # request is read against, the students, and each card's interests
+            # and free weekend slots (one query each, not one per student).
+            with self.assertNumQueries(7):
                 self.client.get(self.url, {"q": "warm up the cache"})
 
     def test_the_search_page_links_here_and_the_menu_marks_search(self):

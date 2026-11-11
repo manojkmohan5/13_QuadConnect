@@ -5,7 +5,8 @@ into the filters shown under "Understood as" (connect/ai_search.py); since
 P1-A9, an interest it wrote in its own words is placed on the list by meaning,
 and the page says which. The database does the searching. The request and the
 model's answer are not saved in the database (the filters are cached in memory
-for an hour), and the model never sees a student record.
+for an hour), and the model never sees a student record. The students
+found are profile cards (_person.html), as on the roster.
 {% endcomment %}
 
 {% block title %}{% if form.errors %}Error: {% endif %}Ask in plain English - QuadConnect{% endblock %}
@@ -28,17 +29,17 @@ for an hour), and the model never sees a student record.
   <section class="card" aria-labelledby="ask-title">
     <h2 class="card-title" id="ask-title">Your request</h2>
     {# novalidate: the server's messages say how to fix the request. #}
-    <form class="form" method="get" action="{% url 'connect:student-ask' %}" role="search"
+    <form class="form ask" method="get" action="{% url 'connect:student-ask' %}" role="search"
           aria-label="Ask in plain English" novalidate>
       <div class="field">{{ form.q.as_field_group }}</div>
       <div class="actions">
         <button type="submit">Search</button>
       </div>
     </form>
-    <p class="form-note">
+    <p class="samples">
       Try:
       {% url 'connect:student-ask' as ask_url %}
-      {% for sample in samples %}<a href="{{ ask_url }}?q={{ sample|urlencode }}">{{ sample }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}
+      {% for sample in samples %}<a class="chip" href="{{ ask_url }}?q={{ sample|urlencode }}">{{ sample }}</a>{% endfor %}
     </p>
     <p class="form-note">
       {% if model_on %}
@@ -92,37 +93,9 @@ for an hour), and the model never sees a student record.
 
     {% if understood %}
       <h2 class="section">{{ students|length }} student{{ students|length|pluralize }} found</h2>
-      <ul class="list" role="list">
+      <ul class="people" role="list">
       {% for student in students %}
-        <li class="card linked">
-          <div class="row">
-            <div>
-              <div class="title">
-                <a href="{{ student.get_absolute_url }}">{{ student.full_name }}</a>
-              </div>
-              <div class="subtitle">
-                {{ student.college }}{% if student.department %} &middot; {{ student.department }}{% endif %}
-              </div>
-              <div class="meta">
-                <span>{{ student.net_id }}</span>
-                <span>{{ student.get_social_energy_display }}</span>
-                {% if interest_names %}<span>{{ student.shared }} of {{ interest_names|length }} interest{{ interest_names|length|pluralize }}</span>{% endif %}
-              </div>
-              <ul class="chips" aria-label="Interests">
-                {% for interest in student.interests.all %}
-                  {% if interest.name in interest_names %}
-                    <li class="chip chip-match">{{ interest.name }}<span class="visually-hidden"> (asked for)</span></li>
-                  {% else %}
-                    <li class="chip">{{ interest.name }}</li>
-                  {% endif %}
-                {% empty %}
-                  <li class="chip">No interests yet</li>
-                {% endfor %}
-              </ul>
-            </div>
-            <span class="badge">{{ student.get_preferred_connection_display }}</span>
-          </div>
-        </li>
+        {% include "connect/_person.html" with match_names=interest_names %}
       {% empty %}
         <li class="empty">
           <div class="big">No student matches all of these filters</div>

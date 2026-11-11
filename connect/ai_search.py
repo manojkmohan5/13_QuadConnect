@@ -644,7 +644,7 @@ def find_students(filters):
                     distinct=True) if names else Value(0))
     return (StudentProfile.objects.filter(pk__in=students.values("pk"))
             .annotate(shared=shared)
-            .prefetch_related("interests")
+            .for_cards()  # the interests and free slots each profile card shows
             .order_by("-shared", "full_name", "net_id"))
 
 

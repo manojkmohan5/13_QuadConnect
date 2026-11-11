@@ -3,6 +3,10 @@
 One student's profile. Named by DetailView's convention
 (<app>/<model>_detail.html) for the same reason as the list template.
 
+The top is the student's card, page-wide: the colour is the connection they
+want (blue for Friend Connect, purple for Squad Connect), and the badge says
+it in words.
+
 Privacy note: this is an internal/admin-facing view of the roster. It shows a
 student's own onboarding answers and their match history - it never shows
 another student's feedback about them. ExperienceFeedback.private_note is
@@ -15,79 +19,107 @@ deliberately absent.
     <a href="{% url 'connect:student-list' %}">Students</a> /
     <span aria-current="page">{{ student.full_name }}</span>
   </nav>
-  <h1 class="page">{{ student.full_name }}</h1>
-  <p class="sub">
-    {{ student.net_id }} &middot; {{ student.college }}
-    {% if student.department %} &middot; {{ student.department }}{% endif %}
-  </p>
+  <div class="banner k-{{ student.preferred_connection|lower }}">
+    <span class="avatar" aria-hidden="true">{{ student.initials }}</span>
+    <div>
+      <h1 class="page">{{ student.full_name }}</h1>
+      <p class="sub">
+        {{ student.net_id }} &middot; {{ student.college }}
+        {% if student.department %} &middot; {{ student.department }}{% endif %}
+      </p>
+      <span class="badge">{{ student.get_preferred_connection_display }}</span>
+    </div>
+  </div>
 {% endblock %}
 
 {% block content %}
 
   <h2 class="section">Matching preferences</h2>
   <div class="grid">
-    <div class="card stat">
-      <div class="n">{{ student.get_preferred_connection_display }}</div>
+    <div class="card fact">
       <div class="l">Connection type</div>
+      <div class="v">{{ student.get_preferred_connection_display }}</div>
     </div>
-    <div class="card stat">
-      <div class="n">{{ student.get_social_energy_display }}</div>
+    <div class="card fact">
       <div class="l">Social energy</div>
+      <div class="v">
+        {{ student.get_social_energy_display }}
+        {# Five dots, filled up to the answer; the words beside them say it. #}
+        <span class="meter" aria-hidden="true">{% for n in "12345" %}<i{% if forloop.counter <= student.social_energy %} class="on"{% endif %}></i>{% endfor %}</span>
+        <span class="visually-hidden">({{ student.social_energy }} of 5)</span>
+      </div>
     </div>
-    <div class="card stat">
-      <div class="n">{{ student.get_conversation_style_display }}</div>
+    <div class="card fact">
       <div class="l">Conversation style</div>
+      <div class="v">{{ student.get_conversation_style_display }}</div>
     </div>
-    <div class="card stat">
-      <div class="n">{{ student.get_group_preference_display }}</div>
+    <div class="card fact">
       <div class="l">Group preference</div>
+      <div class="v">{{ student.get_group_preference_display }}</div>
     </div>
   </div>
 
   <h2 class="section">Interests</h2>
-  <ul class="list" role="list">
-  {% for link in interest_links %}
-    <li class="card">
-      <div class="row">
-        <div>
-          <div class="title">{{ link.interest.name }}</div>
-          <div class="meta">
-            <span>{{ link.interest.get_category_display }}</span>
-          </div>
-        </div>
-        {% if link.is_primary %}<span class="badge">Starred</span>{% endif %}
-      </div>
-    </li>
-  {% empty %}
-    <li class="empty">
+  {% if interest_links %}
+    <div class="card">
+      <ul class="chips" role="list" aria-label="Interests, starred ones first">
+      {% for link in interest_links %}
+        <li class="chip{% if link.is_primary %} chip-match{% endif %}">
+          {% if link.is_primary %}<span class="icon i-star" aria-hidden="true"></span>{% endif %}
+          {{ link.interest.name }}
+          {% if link.is_primary %}<span class="visually-hidden"> (starred)</span>{% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+      <p class="note">A starred interest counts for more when students are matched.</p>
+    </div>
+  {% else %}
+    <div class="empty">
       <div class="big">No interests selected</div>
       <p>This student has not completed the interests step of onboarding,
          so they cannot be matched yet.</p>
-    </li>
-  {% endfor %}
-  </ul>
+    </div>
+  {% endif %}
 
-  <h2 class="section">Weekend availability</h2>
-  <ul class="list" role="list">
-  {% for slot in slots %}
-    <li class="card">
-      <div class="title">
-        {{ slot.get_weekday_display }} &middot; {{ slot.get_time_block_display }}
-      </div>
-    </li>
-  {% empty %}
-    <li class="empty">
+  <h2 class="section" id="availability-title">Weekend availability</h2>
+  {% if slots %}
+    <div class="card scroll" tabindex="0" role="region" aria-labelledby="availability-title">
+      <table class="avail">
+        <thead>
+          <tr>
+            <td></td>
+            {% for label, free in student.weekend.0.1 %}<th scope="col">{{ label }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for day, blocks in student.weekend %}
+            <tr>
+              <th scope="row">{{ day }}</th>
+              {% for label, free in blocks %}
+                {% if free %}
+                  <td class="free"><span class="icon i-check" aria-hidden="true"></span>Free</td>
+                {% else %}
+                  <td><span aria-hidden="true">&ndash;</span><span class="visually-hidden">Not free</span></td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">
       <div class="big">No availability given</div>
       <p>Availability is a hard constraint on matching. Without at least one
          slot this student cannot be scheduled.</p>
-    </li>
-  {% endfor %}
-  </ul>
+    </div>
+  {% endif %}
 
   <h2 class="section">Match history</h2>
   <ul class="list" role="list">
   {% for p in participations %}
-    <li class="card linked">
+    <li class="card linked with-tile k-{{ p.match.connection_type|lower }}">
+      <span class="tile" aria-hidden="true"><span class="icon"></span></span>
       <div class="row">
         <div>
           <div class="title">
@@ -100,7 +132,7 @@ deliberately absent.
             {% if p.match_reason %}<span>{{ p.match_reason }}</span>{% endif %}
           </div>
         </div>
-        <span class="badge">{{ p.get_response_display }}</span>
+        <span class="badge s-{{ p.response|lower }}">{{ p.get_response_display }}</span>
       </div>
     </li>
   {% empty %}

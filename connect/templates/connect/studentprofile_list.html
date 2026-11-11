@@ -7,6 +7,8 @@ The filename is not arbitrary: ListView looks for
 studentprofile_list.html is what lets the view omit `template_name` entirely.
 The matches and locations pages set their template explicitly instead, so the
 project demonstrates both conventions.
+
+Each student is a profile card (_person.html), shared with the search pages.
 {% endcomment %}
 
 {% block title %}Students - QuadConnect{% endblock %}
@@ -41,31 +43,9 @@ project demonstrates both conventions.
     {% endif %}
   </form>
 
-  <ul class="list" role="list">
+  <ul class="people" role="list">
   {% for student in students %}
-    <li class="card linked">
-      <div class="row">
-        <div>
-          <div class="title">
-            <a href="{{ student.get_absolute_url }}">
-              {{ student.full_name }}
-            </a>
-          </div>
-          <div class="subtitle">
-            {{ student.college }}{% if student.department %} &middot;
-            {{ student.department }}{% endif %}
-          </div>
-          <div class="meta">
-            <span>{{ student.net_id }}</span>
-            <span>{{ student.get_social_energy_display }}</span>
-            <span>{{ student.get_conversation_style_display }}</span>
-            <span>{{ student.interest_count }}
-              interest{{ student.interest_count|pluralize }}</span>
-          </div>
-        </div>
-        <span class="badge">{{ student.get_preferred_connection_display }}</span>
-      </div>
-    </li>
+    {% include "connect/_person.html" %}
   {% empty %}
     <li class="empty">
       {% if selected_college %}

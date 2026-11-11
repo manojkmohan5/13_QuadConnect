@@ -1,0 +1,53 @@
+{% comment %}
+One student as a profile card, a list item of <ul class="people">. Shared by
+the roster, the search results and "Ask in plain English".
+
+There are no photos, so the colour top holds what the app does know: the
+connection the student wants (its tone and the badge), their initials, and
+the weekend grid of when they are free.
+
+Context
+-------
+student      StudentProfile from StudentProfile.objects.for_cards()
+match_q      optional str, lower case: an interest containing it is marked
+             as matching the search
+match_names  optional set of interest names: these are marked as asked for,
+             and the card says how many of them the student shares
+             (student.shared, annotated by ai_search.find_students)
+
+A marked chip is orange and bold, and says why in words for a screen reader.
+{% endcomment %}
+<li class="person k-{{ student.preferred_connection|lower }}">
+  <div class="person-top">
+    <span class="badge">{{ student.get_preferred_connection_display }}</span>
+    <span class="avatar" aria-hidden="true">{{ student.initials }}</span>
+    {% include "connect/_weekend.html" %}
+  </div>
+  <div class="person-body">
+    <div class="title">
+      <a href="{{ student.get_absolute_url }}">{{ student.full_name }}</a>
+    </div>
+    <div class="subtitle">
+      {{ student.college }}{% if student.department %} &middot; {{ student.department }}{% endif %}
+    </div>
+    <ul class="chips" aria-label="Interests">
+      {% for link in student.interest_links.all %}
+        {% if match_q and match_q in link.interest.name|lower %}
+          <li class="chip chip-match">{{ link.interest.name }}<span class="visually-hidden"> (matches your search)</span></li>
+        {% elif link.interest.name in match_names %}
+          <li class="chip chip-match">{{ link.interest.name }}<span class="visually-hidden"> (asked for)</span></li>
+        {% else %}
+          <li class="chip">{{ link.interest.name }}</li>
+        {% endif %}
+      {% empty %}
+        <li class="chip">No interests yet</li>
+      {% endfor %}
+    </ul>
+    <div class="meta">
+      <span>{{ student.net_id }}</span>
+      <span>{{ student.get_social_energy_display }}</span>
+      <span>{{ student.get_conversation_style_display }}</span>
+      {% if match_names %}<span>{{ student.shared }} of {{ match_names|length }} interest{{ match_names|length|pluralize }}</span>{% endif %}
+    </div>
+  </div>
+</li>

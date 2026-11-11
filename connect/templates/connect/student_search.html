@@ -5,8 +5,8 @@ Student search (P1-A3 Section 2). One page, two forms:
   Search the roster   method="get"   filters live in the URL (shareable)
   Look up a NetID     method="post"  NetID stays in the body ({% csrf_token %})
 
-Below them: the matching students, then aggregates over the same set.
-Every loop has an {% empty %} branch.
+Below them: the matching students as profile cards (_person.html), then
+aggregates over the same set. Every loop has an {% empty %} branch.
 {% endcomment %}
 
 {% block title %}Search students - QuadConnect{% endblock %}
@@ -61,15 +61,18 @@ Every loop has an {% empty %} branch.
       {% if found %}
         <div class="lookup-result">
           <h3 class="card-title">Found</h3>
-          <div class="row">
-            <div>
-              <div class="title">
-                <a href="{{ found.get_absolute_url }}">{{ found.full_name }}</a>
+          <div class="with-tile k-{{ found.preferred_connection|lower }}">
+            <span class="face" aria-hidden="true">{{ found.initials }}</span>
+            <div class="row">
+              <div>
+                <div class="title">
+                  <a href="{{ found.get_absolute_url }}">{{ found.full_name }}</a>
+                </div>
+                <div class="subtitle">{{ found.college }}</div>
+                <div class="meta"><span>{{ found.net_id }}</span></div>
               </div>
-              <div class="subtitle">{{ found.college }}</div>
-              <div class="meta"><span>{{ found.net_id }}</span></div>
+              <span class="badge k-{{ found.preferred_connection|lower }}">{{ found.get_preferred_connection_display }}</span>
             </div>
-            <span class="badge">{{ found.get_preferred_connection_display }}</span>
           </div>
         </div>
       {% endif %}
@@ -84,37 +87,9 @@ Every loop has an {% empty %} branch.
     {% endif %}
   </h2>
 
-  <ul class="list" role="list">
+  <ul class="people" role="list">
   {% for student in students %}
-    <li class="card linked">
-      <div class="row">
-        <div>
-          <div class="title">
-            <a href="{{ student.get_absolute_url }}">{{ student.full_name }}</a>
-          </div>
-          <div class="subtitle">
-            {{ student.college }}{% if student.department %} &middot; {{ student.department }}{% endif %}
-          </div>
-          <div class="meta">
-            <span>{{ student.net_id }}</span>
-            <span>{{ student.get_social_energy_display }}</span>
-            <span>{{ student.interest_count }} interest{{ student.interest_count|pluralize }}</span>
-          </div>
-          <ul class="chips" aria-label="Interests">
-            {% for link in student.interest_links.all %}
-              {% if q and q in link.interest.name|lower %}
-                <li class="chip chip-match">{{ link.interest.name }}<span class="visually-hidden"> (matches your search)</span></li>
-              {% else %}
-                <li class="chip">{{ link.interest.name }}</li>
-              {% endif %}
-            {% empty %}
-              <li class="chip">No interests yet</li>
-            {% endfor %}
-          </ul>
-        </div>
-        <span class="badge">{{ student.get_preferred_connection_display }}</span>
-      </div>
-    </li>
+    {% include "connect/_person.html" with match_q=q %}
   {% empty %}
     <li class="empty">
       {% if search_form.errors %}

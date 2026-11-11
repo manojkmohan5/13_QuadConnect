@@ -25,7 +25,7 @@ from datetime import date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_not_required
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, Prefetch, Q
+from django.db.models import Avg, Count, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template import loader
@@ -42,7 +42,6 @@ from .models import (
     Interest,
     Match,
     MatchParticipant,
-    ProfileInterest,
     StudentProfile,
 )
 
@@ -212,6 +211,9 @@ def _match_rows(matches):
             ],
             "badge": match.get_status_display(),
             "url": match.get_absolute_url(),
+            # For the tile and the badge's dot: "friend"/"squad", and the status.
+            "kind": match.connection_type.lower(),
+            "state": match.status.lower(),
         })
     return rows
 
@@ -344,6 +346,7 @@ class CampusLocationListView(View):
                     "meta": meta,
                     "badge": setting,
                     "url": location.get_absolute_url(),
+                    "kind": setting.lower(),  # the tile's icon: indoor or outdoor
                 }
             )
 
@@ -539,15 +542,13 @@ class StudentProfileListView(ListView):
     def get_queryset(self):
         """Apply the optional ?college= filter on top of the default order.
 
-        The interest count is annotated rather than counted per row, so the
-        list costs the same number of queries whatever its length.
+        for_cards() prefetches what each profile card shows (the student's
+        interests and free weekend slots), so the list costs the same
+        number of queries whatever its length.
         """
-        # annotate() adds a GROUP BY, and Django drops Meta.ordering from a
-        # grouped query - which makes pagination non-deterministic (a student
-        # can appear on two pages, or none). Re-apply the ordering explicitly.
-        queryset = StudentProfile.objects.annotate(
-            interest_count=Count("interest_links")
-        ).order_by("full_name", "net_id")
+        # Ordered explicitly, with net_id as the tie-breaker: without a
+        # total order, pagination can show a student on two pages, or none.
+        queryset = StudentProfile.objects.for_cards().order_by("full_name", "net_id")
         college = (self.request.GET.get("college") or "").strip()
         if college:
             queryset = queryset.filter(college__icontains=college)
@@ -579,6 +580,8 @@ class StudentProfileDetailView(DetailView):
 
     model = StudentProfile
     context_object_name = "student"
+    # The page reads the free slots twice: the grid, and its empty state.
+    queryset = StudentProfile.objects.prefetch_related("availability_slots")
 
     def get_context_data(self, **kwargs):
         """Prefetch the related rows the template walks, so the page costs a
@@ -676,23 +679,15 @@ class StudentSearchView(View):
         else:
             matching = StudentProfile.objects.none()
 
-        # Re-select through a pk subquery so the annotation and the
-        # aggregates below are not skewed by the search's joins: counting
-        # interest_links on the filtered query would count only the
-        # interests that matched the search, not all of them.
+        # Re-select through a pk subquery so the aggregates below are not
+        # skewed by the search's joins: grouping the filtered query would
+        # count a student once per interest that matched the search.
         results = StudentProfile.objects.filter(pk__in=matching.values("pk"))
 
         # ponytail: unpaginated; the roster at /students/ paginates, add it
         # here too once the roster outgrows a single page.
-        students = (
-            results.annotate(interest_count=Count("interest_links"))
-            .prefetch_related(Prefetch(
-                "interest_links",
-                queryset=ProfileInterest.objects.select_related("interest")
-                .order_by("-is_primary", "interest__name"),
-            ))
-            .order_by("full_name", "net_id")
-        )
+        # for_cards(): each card's interests and free slots, prefetched.
+        students = results.for_cards().order_by("full_name", "net_id")
 
         # Total: aggregate() collapses the result set into one row.
         summary = results.aggregate(

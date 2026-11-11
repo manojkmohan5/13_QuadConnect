@@ -113,6 +113,23 @@ class ParticipantResponse(models.TextChoices):
 # ---------------------------------------------------------------------------
 
 
+class StudentProfileQuerySet(models.QuerySet):
+    """Adds for_cards() to StudentProfile.objects."""
+
+    def for_cards(self):
+        """With what a profile card shows: each student's interests, starred
+        first, and the weekend slots they are free. Two queries, however many
+        students, so a list of cards never costs a query per student."""
+        return self.prefetch_related(
+            models.Prefetch(
+                "interest_links",
+                queryset=ProfileInterest.objects.select_related("interest")
+                .order_by("-is_primary", "interest__name"),
+            ),
+            "availability_slots",
+        )
+
+
 class StudentProfile(models.Model):
     """
     Represents a single SSO-verified UIUC student inside QuadConnect.
@@ -210,6 +227,8 @@ class StudentProfile(models.Model):
     onboarding_completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = StudentProfileQuerySet.as_manager()
+
     class Meta:
         ordering = ["full_name", "net_id"]
         verbose_name = "Student profile"
@@ -234,6 +253,39 @@ class StudentProfile(models.Model):
         Django Admin also uses it for the "View on site" button.
         """
         return reverse("connect:student-detail", kwargs={"pk": self.pk})
+
+    # --- For the profile card. Nothing below is stored. -------------------
+
+    @property
+    def initials(self):
+        """First and last initial, e.g. "JA". A card has no photo, so the
+        initials stand where one would be."""
+        words = self.full_name.split()
+        if not words:
+            return ""
+        return (words[0][0] + (words[-1][0] if len(words) > 1 else "")).upper()
+
+    def weekend(self):
+        """The weekend grid: each day with its four time blocks, and whether
+        this student is free in each.
+
+            [("Saturday", [("10 AM - 12 PM", False), ("12 - 2 PM", True), ...]),
+             ("Sunday", [...])]
+
+        Reads availability_slots.all(), which for_cards() has prefetched.
+        """
+        free = {(slot.weekday, slot.time_block) for slot in self.availability_slots.all()}
+        return [
+            (day.label, [(block.label, (day.value, block.value) in free) for block in TimeBlock])
+            for day in Weekday
+        ]
+
+    def free_times(self):
+        """The weekend grid in words, for a screen reader:
+        "Free Saturday 2 - 4 PM, Sunday 12 - 2 PM"."""
+        slots = [f"{slot.get_weekday_display()} {slot.get_time_block_display()}"
+                 for slot in self.availability_slots.all()]
+        return "Free " + ", ".join(slots) if slots else "No free time given"
 
 
 class Interest(models.Model):
