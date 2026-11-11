@@ -34,6 +34,8 @@ found are profile cards (_person.html), as on the roster.
       <div class="field">{{ form.q.as_field_group }}</div>
       <div class="actions">
         <button type="submit">Search</button>
+        {# Filled by site.js while the language model reads a request. #}
+        {% if model_on %}<p class="reading" role="status" data-reading></p>{% endif %}
       </div>
     </form>
     <p class="samples">

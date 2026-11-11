@@ -1,6 +1,7 @@
 /*
- * Two small things every page shares. Neither is needed to read or use a
- * page: without this script the menu still opens and nothing is hidden.
+ * Three small things the pages share. None is needed to read or use a
+ * page: without this script the menu still opens, nothing is hidden, and
+ * a search still runs.
  */
 
 /*
@@ -81,5 +82,53 @@
   window.Motion.inView(selector, function (element) {
     if (!batch.length) { window.requestAnimationFrame(flush); }
     batch.push(element);
+  });
+})();
+
+/*
+ * 3. "Ask in plain English": a search waits for the language model, about
+ *    ten seconds on a laptop's processor. While it does, the line beside
+ *    Search says so and counts the seconds, and Search is disabled: a second
+ *    click would start a second search, which waits for the first and then
+ *    gets the keyword parser. Without this script, the browser's own loading
+ *    indicator is all there is.
+ */
+(function () {
+  var status = document.querySelector("[data-reading]");
+  if (!status) { return; }
+  var form = status.closest("form");
+  var button = form.querySelector("button[type=submit]");
+  var timer = null;
+
+  function reading() {
+    var started = Date.now();
+    // The words are announced once; the counting seconds are for the eyes only.
+    status.innerHTML = '<span class="spinner" aria-hidden="true"></span>' +
+      "The language model is reading your request…" +
+      ' <span class="seconds" aria-hidden="true">0 s</span>';
+    var seconds = status.querySelector(".seconds");
+    timer = window.setInterval(function () {
+      seconds.textContent = Math.round((Date.now() - started) / 1000) + " s";
+    }, 1000);
+    button.disabled = true;
+    form.setAttribute("aria-busy", "true");
+  }
+
+  form.addEventListener("submit", function () {
+    // Too short to search: the server answers at once with how to fix it.
+    if (form.elements.q.value.trim().length >= 3) { reading(); }
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".samples a"), function (link) {
+    link.addEventListener("click", function (event) {
+      if (!(event.ctrlKey || event.metaKey || event.shiftKey)) { reading(); }  // not when it opens a new tab
+    });
+  });
+  // Back on this page from the results, the browser may restore it as it was left.
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) { return; }
+    window.clearInterval(timer);
+    status.textContent = "";
+    button.disabled = false;
+    form.removeAttribute("aria-busy");
   });
 })();

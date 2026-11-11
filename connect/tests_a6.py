@@ -349,6 +349,12 @@ class AskPageTests(SeededTestCase):
         self.assertRedirects(self.client.get(self.url), f"{reverse('account_login')}?next={self.url}",
                              fetch_redirect_response=False)
 
+    def test_a_status_line_waits_beside_search_only_when_the_model_is_on(self):
+        # site.js fills it while the model reads; the keyword parser answers at once.
+        self.assertContains(self.client.get(self.url), '<p class="reading" role="status" data-reading></p>', html=True)
+        with self.settings(AI_LOCAL_ENABLED=False):
+            self.assertNotContains(self.client.get(self.url), "data-reading")
+
     def test_the_bare_page_never_runs_the_model(self):
         with reply(GAMERS) as model:
             response = self.client.get(self.url)
