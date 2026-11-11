@@ -61,7 +61,7 @@ CACHE_SECONDS = 60 * 60
 # Model runs per user per minute; cached answers are free. Like the model itself
 # and the cache, the count is per web-server process (see docs/README_AI_P1-A6.md).
 RATE_LIMIT, RATE_WINDOW = 10, 60
-LOCK_WAIT_SECONDS = 5  # how long a search waits for the model before using keywords
+LOCK_WAIT_SECONDS = 30  # how long a search waits for a busy model before using keywords
 RETRY_LOAD_SECONDS = 300  # after a failed load, how long before trying again
 # How close in meaning (cosine similarity) a word must be to an interest, and how
 # far ahead of the next-closest one, to be placed on it. Fitted to
@@ -450,8 +450,9 @@ class LocalModel:
         return copy.deepcopy(self.prefix_cache)
 
     def generate(self, messages):
-        # A search waits a few seconds at most: if another one holds the model
-        # (or it is downloading), this one uses the keyword parser instead.
+        # If another search holds the model (or it is loading), this one waits
+        # up to LOCK_WAIT_SECONDS, long enough for two or three answers on a
+        # laptop's processor, then uses the keyword parser instead.
         if not self.lock.acquire(timeout=LOCK_WAIT_SECONDS):
             raise ModelBusy("The language model is busy with another search.")
         try:
