@@ -263,7 +263,7 @@ The feature takes text only, so there is no file upload to validate.
   one-on-one hangout on Sunday around noon"*. The form is sent with GET, so a search can be bookmarked.
 * `AskForm` accepts 3 to 200 characters, and each error message says how to fix the request.
 * The page is behind the site-wide `LoginRequiredMiddleware`.
-* The model's second input comes from the database on every request: the 22 interests students can pick
+* The model's second input comes from the database on every request: the 23 interests students can pick
   (hobbies and student organizations) and the 6 colleges on file. A new interest added in Django Admin is
   understood without a code change.
 * **No student record ever enters the prompt.**
@@ -625,8 +625,9 @@ statistics. p95 uses the nearest-rank method on the 20 observations. The 19.3 s 
 
 **Evaluation machine:** Apple MacBook Air (Mac16,12) with an Apple M4 chip (10-core CPU: 4 performance cores and 6 efficiency cores), 16 GB unified memory, and an integrated 10-core Apple GPU (Metal 4 support). CUDA was unavailable (`torch.cuda.is_available() == False`), so the app used its CPU inference path; the Apple GPU was not used through CUDA.
 
-The seeded database has 8 students. So *students found* shows whether a search still finds people, not how
-good a ranking is.
+The seeded database had 8 students and 22 interests when these results were measured. So *students found*
+shows whether a search still finds people, not how good a ranking is. (Since 2026-11-11 the seed has 38
+students and a 23rd interest, Gym, so the same searches now find more students.)
 
 **Verdict:** *Exact* means the filters equal the expected ones. Otherwise the cell names what is *missing*,
 *extra* (not asked for) or *wrong*.

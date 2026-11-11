@@ -3,8 +3,10 @@ Seed realistic test data for the QuadConnect data model.
 
 Run with:  python manage.py seed_demo_data
 
-Creates eight verified student profiles, a shared interest catalogue, weekend
-availability, four approved campus locations, and nineteen weekly matches
+Creates thirty-eight verified student profiles (the eight of the summer
+pilot, and thirty fall sign-ups who have no match yet), a shared interest
+catalogue, weekend availability, four approved campus locations, and nineteen
+weekly matches
 over nine weeks: a summer pilot from mid-July, the first fall weeks, and the
 current week's two matches (one proposed, one confirmed). Completed matches
 carry check-ins and private feedback, so every relationship in the model is
@@ -59,6 +61,9 @@ ACTIVITIES = [
     "Coffee", "Campus walk", "Food", "Board games", "Sports",
     "Study/social space",
 ]
+# Hobbies added after the first catalogue. They are created last, so the
+# interests above keep their ids in a database seeded before they existed.
+LATER_HOBBIES = ["Gym"]
 
 LOCATIONS = [
     ("Illini Union", "1401 W Green St, Urbana", "Main entrance, ground floor lobby", True, 12),
@@ -183,6 +188,94 @@ HISTORY = [
 # Who said no to the one cancelled match.
 DECLINED = {"QC-1306": {"dokafor2", "mchen9"}}
 
+# The fall sign-ups: thirty more students, in none of the matches above, so a
+# search has more students to find. One row each, in the order of STUDENTS,
+# then their hobbies, student organisations, starred hobbies and free slots.
+ENG, BUS, LAS = ("Grainger College of Engineering", "Gies College of Business",
+                 "College of Liberal Arts & Sciences")
+MEDIA, AHS, FAA = ("College of Media", "College of Applied Health Sciences",
+                   "College of Fine & Applied Arts")
+QUIET, RESERVED, BALANCED, OUTGOING, VERY_SOCIAL = SocialEnergy  # 1 to 5
+CASUAL, DEEP, ACTIVITY = ConversationStyle.CASUAL, ConversationStyle.DEEP, ConversationStyle.ACTIVITY
+ONE, SMALL, EITHER = GroupPreference.ONE, GroupPreference.SMALL, GroupPreference.EITHER
+SA, SU = Weekday.SATURDAY, Weekday.SUNDAY
+MORNING, MIDDAY, AFTERNOON, EVENING = TimeBlock.MORNING, TimeBlock.MIDDAY, TimeBlock.AFTERNOON, TimeBlock.EVENING
+FALL_STUDENTS = [
+    ("mgarcia8", "Maya Garcia", ENG, "Computer Engineering", "", S, BALANCED, ACTIVITY, SMALL, True, True, True,
+     ["Gaming", "Technology", "Gym"], ["UIUC Esports", "Illini Robotics"], ["Gaming"], [(SA, AFTERNOON), (SA, EVENING)]),
+    ("ekim21", "Ethan Kim", ENG, "Electrical Engineering", "ECE Lab Assistant", F, QUIET, DEEP, ONE, True, False, False,
+     ["Reading", "Technology", "Gaming"], ["Illini Robotics"], ["Reading"], [(SU, MIDDAY), (SA, AFTERNOON)]),
+    ("lrossi4", "Lucia Rossi", FAA, "Studio Art", "Krannert Art Museum - Gallery Attendant", F, RESERVED, DEEP, ONE,
+     False, False, True, ["Art", "Photography", "Travel"], ["Habitat for Humanity UIUC"], ["Art"],
+     [(SU, AFTERNOON), (SU, MIDDAY)]),
+    ("jwash7", "Jamal Washington", AHS, "Kinesiology", "ARC - Fitness Desk", S, OUTGOING, ACTIVITY, SMALL, True, False,
+     True, ["Gym", "Basketball", "Fitness", "Music"], [], ["Gym", "Basketball"], [(SA, MORNING), (SA, AFTERNOON)]),
+    ("hsato2", "Hana Sato", LAS, "Linguistics", "", F, QUIET, DEEP, ONE, True, False, True,
+     ["Reading", "Movies", "Music"], [], ["Reading"], [(SU, MORNING), (SU, MIDDAY)]),
+    ("tadeyem2", "Tobi Adeyemi", BUS, "Accountancy", "Gies Career Services - Peer Advisor", S, VERY_SOCIAL, CASUAL,
+     SMALL, True, True, True, ["Food", "Travel", "Music", "Basketball"], ["Business Illini"], ["Food"],
+     [(SA, EVENING), (SU, AFTERNOON)]),
+    ("cmorale5", "Carlos Morales", ENG, "Civil Engineering", "", S, BALANCED, ACTIVITY, EITHER, False, True, True,
+     ["Outdoors", "Photography", "Gym"], ["Engineers Without Borders"], ["Outdoors"], [(SA, MORNING), (SU, AFTERNOON)]),
+    ("akhan14", "Ayesha Khan", AHS, "Community Health", "McKinley Health Center - Front Desk", F, BALANCED, CASUAL, ONE,
+     True, False, True, ["Fitness", "Gym", "Food"], ["UIUC Pre-Med Society"], ["Gym"], [(SU, MIDDAY), (SA, MORNING)]),
+    ("bmiller6", "Ben Miller", MEDIA, "Advertising", "", S, OUTGOING, CASUAL, SMALL, True, True, True,
+     ["Movies", "Music", "Gaming", "Food"], ["Illini Media"], ["Movies"], [(SA, AFTERNOON), (SU, EVENING)]),
+    ("zwang11", "Zoe Wang", LAS, "Mathematics", "Math Tutoring Center - Tutor", F, RESERVED, DEEP, ONE, True, False,
+     True, ["Reading", "Art", "Technology"], [], ["Reading"], [(SU, AFTERNOON), (SA, MORNING)]),
+    ("ifisch3", "Isaac Fischer", ENG, "Aerospace Engineering", "", S, BALANCED, ACTIVITY, SMALL, True, True, False,
+     ["Technology", "Gaming", "Outdoors"], ["Illini Robotics", "Engineers Without Borders"], ["Technology"],
+     [(SA, AFTERNOON), (SU, MORNING)]),
+    ("gmensah2", "Grace Mensah", BUS, "Marketing", "Illini Union Bookstore - Sales Associate", F, OUTGOING, CASUAL,
+     EITHER, True, False, True, ["Travel", "Food", "Photography"], ["Business Illini"], ["Travel"],
+     [(SU, AFTERNOON), (SA, EVENING)]),
+    ("rmehta31", "Rohan Mehta", ENG, "Computer Science", "", S, OUTGOING, ACTIVITY, SMALL, True, True, True,
+     ["Basketball", "Gaming", "Gym", "Technology"], ["Indian Students Association", "UIUC Esports"], ["Basketball"],
+     [(SA, AFTERNOON), (SA, EVENING)]),
+    ("ejohns12", "Emma Johnson", MEDIA, "Journalism", "The Daily Illini - Photographer", F, BALANCED, DEEP, ONE, False,
+     True, True, ["Photography", "Reading", "Travel"], ["Illini Media"], ["Photography"], [(SU, AFTERNOON), (SU, MIDDAY)]),
+    ("dcohen5", "David Cohen", LAS, "History", "", S, BALANCED, CASUAL, SMALL, True, False, True,
+     ["Movies", "Reading", "Food"], ["Illinois Student Government"], ["Movies"], [(SA, MIDDAY), (SU, EVENING)]),
+    ("creyes4", "Camila Reyes", FAA, "Dance", "", S, VERY_SOCIAL, ACTIVITY, SMALL, True, True, True,
+     ["Music", "Fitness", "Art"], ["UIUC Dance Marathon"], ["Music"], [(SA, AFTERNOON), (SU, MIDDAY)]),
+    ("nbaker2", "Noah Baker", AHS, "Recreation, Sport and Tourism", "Campus Rec - Climbing Wall Staff", S, OUTGOING,
+     ACTIVITY, SMALL, True, False, True, ["Outdoors", "Gym", "Basketball"], [], ["Outdoors"], [(SA, MORNING), (SU, MORNING)]),
+    ("jli27", "Jia Li", ENG, "Industrial Engineering", "", F, QUIET, DEEP, ONE, True, False, False,
+     ["Reading", "Gaming", "Movies"], [], ["Reading"], [(SU, MIDDAY), (SU, AFTERNOON)]),
+    ("kosei2", "Kwame Osei", BUS, "Finance", "", S, BALANCED, CASUAL, EITHER, True, True, True,
+     ["Basketball", "Food", "Travel"], ["Business Illini"], ["Basketball"], [(SA, AFTERNOON), (SU, EVENING)]),
+    ("lschmid4", "Lena Schmidt", LAS, "Chemistry", "", F, RESERVED, DEEP, ONE, True, True, True,
+     ["Outdoors", "Reading", "Photography"], ["UIUC Pre-Med Society"], ["Outdoors"], [(SA, MORNING), (SU, AFTERNOON)]),
+    ("arivera6", "Andre Rivera", MEDIA, "Media and Cinema Studies", "", S, OUTGOING, CASUAL, SMALL, True, False, True,
+     ["Movies", "Photography", "Music"], ["Illini Media"], ["Movies"], [(SA, EVENING), (SU, AFTERNOON)]),
+    ("pshah9", "Pooja Shah", ENG, "Bioengineering", "", F, BALANCED, CASUAL, ONE, True, True, True,
+     ["Gym", "Fitness", "Food", "Travel"], ["Indian Students Association", "UIUC Pre-Med Society"], ["Gym"],
+     [(SU, MIDDAY), (SA, MORNING)]),
+    ("tnguyen8", "Thanh Nguyen", ENG, "Computer Science", "Siebel CS - Course Assistant", S, RESERVED, ACTIVITY, SMALL,
+     False, True, False, ["Gaming", "Technology", "Music"], ["UIUC Esports"], ["Gaming"], [(SA, AFTERNOON), (SU, EVENING)]),
+    ("mbrown15", "Mia Brown", FAA, "Architecture", "", F, QUIET, DEEP, ONE, True, False, True,
+     ["Art", "Reading", "Outdoors"], ["Habitat for Humanity UIUC"], ["Art"], [(SU, MIDDAY), (SU, MORNING)]),
+    ("ojames3", "Owen James", AHS, "Kinesiology", "", S, VERY_SOCIAL, ACTIVITY, SMALL, True, False, True,
+     ["Gym", "Fitness", "Basketball", "Gaming"], [], ["Gym"], [(SA, AFTERNOON), (SA, MORNING)]),
+    ("fahmed5", "Fatima Ahmed", LAS, "Psychology", "Counseling Center - Peer Mentor", F, BALANCED, DEEP, ONE, True,
+     False, True, ["Reading", "Food", "Art"], ["Illinois Student Government"], ["Reading"], [(SU, AFTERNOON), (SA, MIDDAY)]),
+    ("lwilson4", "Liam Wilson", BUS, "Information Systems", "", S, BALANCED, ACTIVITY, EITHER, True, True, False,
+     ["Technology", "Gaming", "Basketball"], ["Business Illini", "UIUC Esports"], ["Technology"],
+     [(SA, AFTERNOON), (SU, MIDDAY)]),
+    ("nrao6", "Nisha Rao", ENG, "Materials Science", "", F, QUIET, CASUAL, ONE, True, True, True,
+     ["Reading", "Photography", "Music"], ["Indian Students Association"], ["Photography"],
+     [(SU, AFTERNOON), (SU, EVENING)]),
+    ("jcarter7", "Jasmine Carter", MEDIA, "Advertising", "", S, OUTGOING, CASUAL, SMALL, True, False, True,
+     ["Food", "Music", "Travel", "Photography"], ["UIUC Dance Marathon"], ["Food"], [(SA, EVENING), (SA, MIDDAY)]),
+    ("spark12", "Sam Park", ENG, "Mechanical Engineering", "", S, BALANCED, ACTIVITY, SMALL, True, True, True,
+     ["Gym", "Outdoors", "Technology"], ["Illini Robotics"], ["Gym"], [(SA, MORNING), (SA, AFTERNOON)]),
+]
+STUDENTS += [row[:12] for row in FALL_STUDENTS]
+PICKS |= {row[0]: row[12:15] for row in FALL_STUDENTS}
+AVAILABILITY |= {row[0]: row[15] for row in FALL_STUDENTS}
+# Three sign-ups a day from 24 August, before the week of the current matches.
+ONBOARDED |= {row[0]: date(2026, 8, 24) + timedelta(days=i // 3) for i, row in enumerate(FALL_STUDENTS)}
+
 # Course staff accounts. The assignments ask for an instructor login with
 # exactly these credentials on the deployed site. Student sign-in arrives
 # with SSO later, so students get no password at all.
@@ -213,6 +306,7 @@ class Command(BaseCommand):
             (HOBBIES, InterestCategory.HOBBY),
             (RSOS, InterestCategory.RSO),
             (ACTIVITIES, InterestCategory.ACTIVITY),
+            (LATER_HOBBIES, InterestCategory.HOBBY),
         ):
             for name in names:
                 obj, _ = Interest.objects.get_or_create(

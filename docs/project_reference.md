@@ -593,8 +593,10 @@ The assignment contradicted itself; both exist.
 
 ### Seeded data
 
-8 profiles across 6 colleges · 28 interests (12 hobby, 10 RSO, 6 activity) ·
-41 interest selections · 16 availability slots · 4 campus locations (Illini
+38 profiles across 6 colleges (the 8 in the matches, and 30 fall sign-ups
+added 2026-11-11 with no match yet) · 29 interests (13 hobby, 10 RSO,
+6 activity; Gym added last, so the older interests keep their ids) ·
+167 interest selections · 76 availability slots · 4 campus locations (Illini
 Union, Grainger Library, Main Quad, Espresso Royale) · 19 matches over nine
 weeks (2026-07-13 to 2026-09-07): the original three keep ids 1–3
 (`QC-4827` Friend/PROPOSED, `QC-5193` Squad/CONFIRMED with check-ins,

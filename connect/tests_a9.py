@@ -353,8 +353,9 @@ class AskPageTests(TestCase):
         meaning.assert_not_called()
 
     def test_no_match_says_how_to_widen_the_search(self):
-        response = self.ask('{"interests": ["Reading"], "college": "Grainger College of Engineering", '
-                            '"energy": "QUIET"}', "quiet engineering students who love reading")  # T03
+        # Nobody in the College of Media picked Gym.
+        response = self.ask('{"interests": ["Gym"], "college": "College of Media"}',
+                            "gym regulars from the College of Media")
         self.assertContains(response, "0 students found")
         self.assertContains(response, "No student matches all of these filters")
         self.assertContains(response, "Try asking for less")

@@ -80,7 +80,7 @@ class AccessTests(AuthTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertEqual(response["Access-Control-Allow-Origin"], "*")
-        self.assertEqual(response.json()[0], {"category": "Food", "count": 4, "type": "Hobby / Interest"})
+        self.assertEqual(response.json()[0], {"category": "Food", "count": 13, "type": "Hobby / Interest"})
 
     def test_the_api_docs_label_access_and_show_the_real_401(self):
         body = self.client.get(reverse("connect:api-matches")).content.decode()

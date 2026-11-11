@@ -168,7 +168,7 @@ class UnderstandTests(SeededTestCase):
 
     def test_the_vocabulary_comes_from_the_database(self):
         interests, colleges = ai_search.vocabulary()
-        self.assertEqual(len(interests), 22)  # 12 hobbies + 10 student organisations, no meeting activities
+        self.assertEqual(len(interests), 23)  # 13 hobbies + 10 student organisations, no meeting activities
         self.assertIn("UIUC Esports", interests)
         self.assertNotIn("Coffee", interests)
         self.assertEqual(colleges[0], "College of Applied Health Sciences")
@@ -299,13 +299,19 @@ class FindStudentsTests(SeededTestCase):
         return [(s.net_id, s.shared) for s in ai_search.find_students(filters)]
 
     def test_any_interest_matches_and_more_matches_come_first(self):
+        # Both interests first, then either one; ties by full name.
         self.assertEqual(self.matches({"interests": ["Gaming", "Music"]}),
-                         [("jordan4", 2), ("apatel22", 1), ("dokafor2", 1), ("mchen9", 1), ("rlin7", 1)])
+                         [("bmiller6", 2), ("jordan4", 2), ("tnguyen8", 2),
+                          ("apatel22", 1), ("arivera6", 1), ("creyes4", 1), ("dokafor2", 1), ("ekim21", 1),
+                          ("hsato2", 1), ("ifisch3", 1), ("jwash7", 1), ("jcarter7", 1), ("jli27", 1),
+                          ("lwilson4", 1), ("mgarcia8", 1), ("mchen9", 1), ("nrao6", 1), ("ojames3", 1),
+                          ("rlin7", 1), ("rmehta31", 1), ("tadeyem2", 1)])
 
     def test_a_second_free_slot_does_not_count_twice(self):
         # apatel22 is free twice on Saturday; the count is still one interest.
         self.assertEqual(self.matches({"interests": ["Music"], "day": "SATURDAY"}),
-                         [("apatel22", 1), ("dokafor2", 1), ("jordan4", 1)])
+                         [("apatel22", 1), ("arivera6", 1), ("bmiller6", 1), ("creyes4", 1), ("dokafor2", 1),
+                          ("jwash7", 1), ("jcarter7", 1), ("jordan4", 1), ("tnguyen8", 1), ("tadeyem2", 1)])
 
     def test_a_name_in_two_categories_counts_once(self):
         student = StudentProfile.objects.get(net_id="apatel22")  # has Food as a hobby
@@ -315,11 +321,17 @@ class FindStudentsTests(SeededTestCase):
 
     def test_day_and_time_must_be_the_same_free_slot(self):
         # jordan4 is free on Sunday (12-2) and at 2-4 (on Saturday): not on Sunday at 2-4.
-        self.assertEqual(self.names({"day": "SUNDAY", "time": "14-16"}), ["skoval3", "tbrooks5"])
+        self.assertEqual(self.names({"day": "SUNDAY", "time": "14-16"}),
+                         ["arivera6", "cmorale5", "ejohns12", "fahmed5", "gmensah2", "jli27", "lschmid4",
+                          "lrossi4", "nrao6", "skoval3", "tadeyem2", "tbrooks5", "zwang11"])
 
     def test_college_connection_and_energy(self):
-        self.assertEqual(self.names({"college": "Grainger College of Engineering", "energy": "QUIET"}), ["mchen9"])
-        self.assertEqual(set(self.names({"connection": "FRIEND"})), {"jordan4", "skoval3", "nhaddad4"})
+        # QUIET means social energy 1-2: ekim21, jli27 and nrao6 are 1, mchen9 and tnguyen8 are 2.
+        self.assertEqual(self.names({"college": "Grainger College of Engineering", "energy": "QUIET"}),
+                         ["ekim21", "jli27", "mchen9", "nrao6", "tnguyen8"])
+        self.assertEqual(set(self.names({"connection": "FRIEND"})),
+                         {"akhan14", "ejohns12", "ekim21", "fahmed5", "gmensah2", "hsato2", "jli27", "jordan4",
+                          "lrossi4", "lschmid4", "mbrown15", "nhaddad4", "nrao6", "pshah9", "skoval3", "zwang11"})
 
     def test_filters_in_words(self):
         self.assertEqual(ai_search.describe({"interests": ["Gaming"], "connection": "SQUAD", "day": "SATURDAY",
@@ -348,8 +360,8 @@ class AskPageTests(SeededTestCase):
             response = self.client.get(self.url, {"q": "find gamers who are free saturday afternoon"})
         self.assertContains(response, "Interest: Gaming")
         self.assertContains(response, "2 - 4 PM")
-        self.assertContains(response, "3 students found")
-        for name in ("Jordan Alvarez", "Ming Chen", "Rachel Lin"):
+        self.assertContains(response, "11 students found")
+        for name in ("Jordan Alvarez", "Ming Chen", "Rachel Lin", "Maya Garcia", "Thanh Nguyen"):
             self.assertContains(response, name)
         self.assertNotContains(response, "Sofia Kovalenko")
 
