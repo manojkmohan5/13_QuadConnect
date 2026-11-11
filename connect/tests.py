@@ -280,8 +280,9 @@ class StaticFilesTests(QuadConnectData):
         self.assertContains(response, 'src="/static/img/logo.svg"')
 
     def test_static_files_are_found(self):
-        for path in ["css/quadconnect.css", "img/logo.svg",
-                     "fonts/inter-latin-wght-normal.woff2"]:
+        for path in ["css/quadconnect.css", "img/logo.svg", "js/site.js",
+                     "fonts/figtree-latin-wght-normal.woff2",
+                     "fonts/bricolage-grotesque-latin-wght-normal.woff2"]:
             self.assertIsNotNone(finders.find(path), path)
 
     def test_production_hashes_static_filenames(self):

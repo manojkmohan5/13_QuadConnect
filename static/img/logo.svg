@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <title>QuadConnect</title>
-  <!-- Four quadrants of a campus quad; the two accent squares are the
-       connection made across it. Self-contained background so the same
-       file works on the dark header and as a favicon on a light tab. -->
-  <rect width="32" height="32" rx="8" fill="#1f2933"/>
-  <rect x="6" y="6" width="9" height="9" rx="2.5" fill="#ff8a5c"/>
-  <rect x="17" y="6" width="9" height="9" rx="2.5" fill="#f6f6f4"/>
-  <rect x="6" y="17" width="9" height="9" rx="2.5" fill="#f6f6f4"/>
-  <rect x="17" y="17" width="9" height="9" rx="2.5" fill="#ff8a5c"/>
+  <!-- A Q whose bowl is a quad: a rounded square of lawn. Its tail is the
+       path that crosses the corner, where two people meet. Illini orange
+       and blue, flat, on its own tile, so the same file works in the
+       header and as a favicon on a light or a dark tab. -->
+  <rect width="32" height="32" rx="9" fill="#ff5f05"/>
+  <rect x="8" y="7" width="15" height="15" rx="5" fill="none" stroke="#13294b" stroke-width="4.5"/>
+  <path d="M17.5 16.5l7 7" stroke="#ff5f05" stroke-width="9" stroke-linecap="round"/>
+  <path d="M17.5 16.5l7 7" stroke="#13294b" stroke-width="4.5" stroke-linecap="round"/>
 </svg>
