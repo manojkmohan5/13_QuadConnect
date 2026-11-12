@@ -1,7 +1,7 @@
 # CI for QuadConnect.
 #
-# One workflow with one job, triggered only by a push to feature/rebuild
-# (the branch the interface is rebuilt on), so every commit gets exactly one check:
+# One workflow with one job, triggered only by a push to feature/login-fixes
+# (sign-up fixed, and a profile set up after login), so every commit gets exactly one check:
 # "Deploy / test (push)". Every CI step lives inside that job: install
 # size, lint, Django checks, migrations, the committed database,
 # constraints, the test suite, the production deploy checks, the
@@ -14,7 +14,7 @@ name: Deploy
 
 on:
   push:
-    branches: [feature/rebuild]
+    branches: [feature/login-fixes]
 
 permissions:
   contents: read
