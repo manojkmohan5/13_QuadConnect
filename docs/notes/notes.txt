@@ -23,6 +23,16 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  Profile photo and headline, on feature/profile-photo
+                             [Manojkumar]
+--------------------------------------------------------------------------------
+  - Optional photo and headline on a profile; shown on the card, the
+    profile, the faces in a match and the menu avatar.
+  - A photo is kept as a small JPEG, upright, without its metadata, and
+    only signed-in students can open it (/media/ needs a login).
+  - Migration 0004. 243 tests pass.
+
+--------------------------------------------------------------------------------
 WEEK 12 (w/c 2026-11-09)  -  Real matching, on feature/matching  [Manojkumar]
 --------------------------------------------------------------------------------
   - Meet page (/meet/): sign up for the coming weekend, 1-on-1 or a group.

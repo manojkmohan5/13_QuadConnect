@@ -50,7 +50,7 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>, and log in as `tester` (see [Admin](#admin))
-or sign up. Run the test suite with `python manage.py test connect` (239
+or sign up. Run the test suite with `python manage.py test connect` (243
 tests).
 
 Since P1-A6, `requirements.txt` also installs `torch` and `transformers` for the
@@ -416,6 +416,12 @@ own `auth` app.
   - A profile is marked verified only when the account has a verified email
     (from a Google sign-in) that is the NetID's `@illinois.edu` address. A
     NetID typed into the form proves nothing.
+  - **A photo and a headline**, both optional, show on the student's card,
+    their profile and in their matches. A photo is kept as a JPEG of at
+    most 800 px, upright, under a random name, and without its metadata
+    (a phone photo's can say where it was taken). Replacing or removing it
+    deletes the old file. It is served at `/media/...` by a view that needs
+    a login, never as a public file. Staff can clear either in Django Admin.
 - **Navigation.** Signed out, the header shows only Home, Log in and Sign up,
   and the home page describes the product instead of showing student data.
   Signed in, it shows every section, "Signed in as *username*" (a link to
@@ -897,6 +903,9 @@ followed, and what any other host would need:
    then point `DJANGO_DB_PATH` at the copy in `.env`. `migrate` finds
    nothing to do, and the course accounts `tester` and `mohitg2` (password
    `uiuc12345`) are in it. The live site's accounts then never touch git.
+   Photos likewise: point `DJANGO_MEDIA_ROOT` at a folder beside it, such as
+   `~/quadconnect-data/media`. Do not map `/media/` as a static folder: the
+   app serves photos itself, to signed-in users only.
 
 Two things to check on the host:
 
@@ -996,6 +1005,7 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID. Required in production. In development, leave it empty to hide "Continue with Google". |
 | `GOOGLE_CLIENT_SECRET` | That client's secret. Required when `GOOGLE_CLIENT_ID` is set. |
 | `DJANGO_DB_PATH` | Optional: the SQLite file to use. Unset, the committed `db.sqlite3`; the live site keeps its own outside the repository. |
+| `DJANGO_MEDIA_ROOT` | Optional: where profile photos are kept. Unset, `media/` here (git ignores it); the live site keeps them outside the repository. |
 | `MAPS_API_KEY` | Placeholder for the Screen 8 campus map. Dummy value. |
 | `AI_LOCAL_ENABLED` | `1` (default) runs the local model for "Ask in plain English"; `0` uses only its keyword parser. |
 | `AI_LOCAL_MODEL` | Hugging Face id of that model, downloaded on first use. Default `Qwen/Qwen2.5-1.5B-Instruct`. |
@@ -1016,6 +1026,7 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | `/` | `connect:home` | FBV, `render()` | A2 |
 | `/privacy/` | `connect:privacy` | FBV, `render()`; public | A5 |
 | `/profile/` | `connect:profile` | FBV, GET + POST; set up or edit your own profile | login fixes |
+| `/media/<path>` | `connect:media` | FBV; a profile photo, to signed-in users only | profile photo |
 | `/meet/` | `connect:meet` | FBV, GET + POST; sign up for the weekend, see your match | matching |
 | `/students/` | `connect:student-list` | Generic CBV (`ListView`) | A2 |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV (`DetailView`) | A2 |

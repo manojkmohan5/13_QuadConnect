@@ -330,6 +330,7 @@ names, `immutable` caching, gzip. **Production needs
 | `GOOGLE_CLIENT_ID` | Google OAuth client (A5). Required in production; in development, empty hides the Google button. |
 | `GOOGLE_CLIENT_SECRET` | That client's secret. Required when the ID is set. Never in the database. |
 | `DJANGO_DB_PATH` | Optional SQLite path. The live site's database lives outside the repository. |
+| `DJANGO_MEDIA_ROOT` | Optional folder for profile photos (default `media/`, gitignored). The live site keeps it outside the repository. |
 | `AI_LOCAL_ENABLED`, `AI_LOCAL_MODEL`, `AI_LOCAL_MAX_SECONDS` | (A6) The local model for "Ask in plain English": on/off, its Hugging Face id, its time limit. |
 | `AI_EMBED_ENABLED`, `AI_EMBED_MODEL` | (A9) The embedding model that places an interest the model wrote in its own words on the list: on/off, its Hugging Face id. |
 | `AI_API_PROVIDER`, `AI_API_MODEL` | (A6) The venue check's API (`groq`, `openrouter`, `gemini`, `huggingface`) and an optional model. |
@@ -367,6 +368,7 @@ product data.
 ```
 user  OneToOne -> auth.User  CASCADE UNIQUE   net_id CharField UNIQUE
 illinois_email EmailField UNIQUE              full_name, college, department,
+headline CharField(80) blank                  photo ImageField blank (re-encoded, forms.py)
 preferred_connection  ConnectionType          part_time_job  CharField
 social_energy SocialEnergy                    conversation_style ConversationStyle
 group_preference GroupPreference              prefers_same_age Boolean
@@ -528,6 +530,7 @@ yours.
 | `/` | `connect:home` | dashboard | shared/`main` | `home.html` |
 | `/privacy/` | `connect:privacy` | FBV `render()`, public | A5 | `privacy.html` |
 | `/profile/` | `connect:profile` | FBV, GET+POST; your own profile, set up or edited (`onboarding.py`) | login fixes | `profile_form.html` |
+| `/media/<path>` | `connect:media` | FBV; a profile photo, login required (`onboarding.py`) | profile photo | — |
 | `/meet/` | `connect:meet` | FBV, GET+POST; sign up for the weekend, see your match (`meetups.py`) | matching | `meet.html` |
 | `/matches/<pk>/answer/`, `/matches/<pk>/feedback/` | `connect:match-answer`, `connect:match-feedback` | FBV; accept, decline, check in (POST); feedback after checking in | matching | `feedback_form.html` |
 | `/students/` | `connect:student-list` | Generic CBV | Kritika | `studentprofile_list.html` (default naming) |
@@ -637,6 +640,32 @@ that property when adding checks.
 ## 9. Work log
 
 The running history of what has actually been built. Newest at the top.
+
+### BUILDING `feature/profile-photo` - Manojkumar Mohankumar - 2026-11-12
+**Shipped so far:** an optional photo and headline on a profile, on a branch cut from `feature/matching` at
+`2aa011c`. Migration `0004_studentprofile_photo_headline`.
+- **Where they show:** the profile page's card, the student cards (roster and searches), the faces in a match and
+  on the Meet page (`_face.html`), and your avatar in the menu. The headline goes under the name.
+- **The photo as kept** (`ProfileForm`, `_photo_jpeg`): upright, at most 800 px, a JPEG under a random name, with
+  no metadata (a phone photo's EXIF can say where it was taken). Up to 5 MB and 50 megapixels; JPEG, PNG or WebP;
+  see-through parts become white. Replacing or removing it deletes the old file once the save is committed.
+- **Private:** `MEDIA_URL` is `/media/`, served by `onboarding.media`, which needs a login like every other view
+  and serves only `profile_photos/`. No web server mapping. `DJANGO_MEDIA_ROOT` sets the folder.
+- **On a photo,** the name and headline sit on a panel of Illini blue at 90%, so white text stays readable.
+
+**Files changed:** `connect/models.py`, migration 0004, `forms.py`, `onboarding.py`, `urls.py`, `admin.py`
+(staff can clear a photo or headline), `quadconnect/settings/base.py`, `_face.html` (new), `_person.html`,
+`studentprofile_detail.html`, `profile_form.html`, `match_detail.html`, `meet.html`, `base.html`, `privacy.html`,
+the stylesheet, `tests_onboarding.py` (4 photo tests), `tests_a5.py` (a sample path for the route sweep),
+`.env.example`, `README.md`, this file, notes.txt, the committed `db.sqlite3` (migrated).
+
+**Gotchas:**
+- **Chrome stretches an image grid item to its area, not past negative margins.** So a card with a photo drops
+  its padding and the words carry it as a margin; the photo is `justify-self`/`align-self: stretch` with
+  `contain: size`.
+- **`transaction.on_commit` never runs in a `TestCase`.** The tests wrap saves in
+  `captureOnCommitCallbacks(execute=True)` to see the old file deleted.
+- **Photos are never cached** (the middleware marks every signed-in response never-cache). Fine for now.
 
 ### BUILDING `feature/matching` - Manojkumar Mohankumar - 2026-11-12
 **Shipped so far:** real matching, on a branch cut from `feature/login-fixes` at `e2794c0`.
