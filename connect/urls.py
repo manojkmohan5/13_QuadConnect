@@ -18,7 +18,8 @@ icebreakers (/api/icebreakers/, /matches/<pk>/icebreakers/), and reports
 with exports (/reports/, /export/...). P1-A6 added /search/ask/ (a local
 language model) and an API check of /locations/ suggestions (no new
 route). /profile/ is where a student sets up, or edits, their own profile
-(onboarding.py). Each group sits under a comment
+(onboarding.py), and /meet/ where they sign up to be matched (meetups.py).
+Each group sits under a comment
 naming its assignment section; every /api/ route is in one block. Paths and
 names must not change without updating base.html and the models'
 get_absolute_url(), which reverse them.
@@ -31,6 +32,7 @@ from . import (
     api,
     charts,
     icebreakers,
+    meetups,
     onboarding,
     reports,
     vega_charts,
@@ -45,6 +47,11 @@ urlpatterns = [
     path("privacy/", views.privacy, name="privacy"),
     # Your own profile: set up after the first login, edited later.
     path("profile/", onboarding.profile, name="profile"),
+    # Meeting up (meetups.py): sign up for the weekend, then answer the
+    # match, check in, and say how it went.
+    path("meet/", meetups.meet, name="meet"),
+    path("matches/<int:pk>/answer/", meetups.answer, name="match-answer"),
+    path("matches/<int:pk>/feedback/", meetups.feedback, name="match-feedback"),
 
     # --- Kritika Agrawal - Generic CBV -----------------------------------
     path("students/", views.StudentProfileListView.as_view(),

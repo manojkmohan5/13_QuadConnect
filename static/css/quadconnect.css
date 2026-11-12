@@ -998,6 +998,12 @@ ol.steps.grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%),
   color: var(--ink);
   border-color: #ffd2b8;
 }
+/* The Meet page: what the sign-up uses but does not ask, under a label. */
+.form .label { margin: 0; font-weight: 600; font-size: 15px; }
+/* The home page's line about the coming weekend (meetups.notice). */
+.notice { margin-top: 32px; border-left: 4px solid var(--orange); }
+.notice p { margin: 4px 0 0; }
+.notice .actions { margin-top: 12px; }
 /* On your own profile page: the link to edit it. */
 .own { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 0 0 16px; color: var(--ink-2); }
 
@@ -1370,6 +1376,7 @@ footer.site a { color: var(--ink-2); }
   --i-briefcase: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/%3E%3Crect width='20' height='14' x='2' y='6' rx='2'/%3E%3C/svg%3E");
   --i-badge-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z'/%3E%3Cpath d='m16 9-5.5 5.5L8 12'/%3E%3C/svg%3E");
   --i-id-card: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 19a4 4 0 00-8 0'/%3E%3Cpath d='M16 10h2'/%3E%3Cpath d='M16 14h2'/%3E%3Ccircle cx='9' cy='12' r='3'/%3E%3Crect x='2' y='5' width='20' height='14' rx='2'/%3E%3C/svg%3E");
+  --i-coffee: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 2v2'/%3E%3Cpath d='M14 2v2'/%3E%3Cpath d='M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1'/%3E%3Cpath d='M6 2v2'/%3E%3C/svg%3E");
 }
 .i-house, [data-icon="house"]::before { --i: var(--i-house); }
 .i-users, [data-icon="users"]::before { --i: var(--i-users); }
@@ -1398,3 +1405,4 @@ footer.site a { color: var(--ink-2); }
 .i-briefcase, [data-icon="briefcase"]::before { --i: var(--i-briefcase); }
 .i-badge-check, [data-icon="badge-check"]::before { --i: var(--i-badge-check); }
 .i-id-card, [data-icon="id-card"]::before { --i: var(--i-id-card); }
+.i-coffee, [data-icon="coffee"]::before { --i: var(--i-coffee); }

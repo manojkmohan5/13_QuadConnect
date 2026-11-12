@@ -8,7 +8,9 @@ check-in code.
 
 Every link out of this page comes from a model's get_absolute_url(): the
 venue, and each participant's profile. Participants' feedback is private
-and is never loaded here.
+and is never loaded here. Only the students in the match, and staff, can
+open this page; a student in it also gets their own part
+(_match_actions.html): accept or decline, check in, feedback.
 {% endcomment %}
 
 {% block title %}{{ match.get_connection_type_display }} - QuadConnect{% endblock %}
@@ -50,6 +52,8 @@ and is never loaded here.
       <div class="v">Week of {{ match.week_start|date:"j M Y" }}</div>
     </div>
   </div>
+
+  {% if me %}{% include "connect/_match_actions.html" with next=request.path %}{% endif %}
 
   <p class="actions gap-top">
     <a class="btn btn-primary" href="{% url 'connect:match-icebreakers' match.pk %}">Icebreakers for this group</a>

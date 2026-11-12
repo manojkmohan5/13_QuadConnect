@@ -10,6 +10,8 @@ aria-describedby (help text and error) and aria-invalid="true" on error.
     NetIDLookupForm               POST  /search/     NetID lookup, kept out of the URL
     CampusLocationSuggestionForm  POST  /locations/  suggest a venue (creates a row)
     ProfileForm                   POST  /profile/    set up or edit your own profile
+    MeetForm                      POST  /meet/       sign up for the weekend's matching
+    FeedbackForm                  POST  /matches/<pk>/feedback/  after a meetup
 """
 
 import re
@@ -25,6 +27,7 @@ from .models import (
     AvailabilitySlot,
     CampusLocation,
     ConnectionType,
+    ExperienceFeedback,
     Interest,
     InterestCategory,
     ProfileInterest,
@@ -360,3 +363,50 @@ class ProfileForm(forms.ModelForm):
                 AvailabilitySlot(profile=profile, weekday=day, time_block=block)
                 for day, block in free)
         return profile
+
+
+class MeetForm(QuadForm):
+    """Sign up for the coming weekend's matching (connect/meetups.py)."""
+
+    connection_type = forms.ChoiceField(
+        label="How do you want to meet this weekend?",
+        choices=ConnectionType.choices,
+        widget=_picks(forms.RadioSelect),
+        help_text="1-on-1: the student who shares the most interests with you. "
+                  "A group: 4 to 8 students who share one of your interests.",
+        error_messages={"required": "Choose one-on-one or a group."},
+    )
+
+
+class FeedbackForm(forms.ModelForm):
+    """How a meetup went (Screen 9). Private: nobody else in the match sees
+    it. Only "stay connected" is ever acted on, and only when it is mutual."""
+
+    rating = forms.TypedChoiceField(
+        label="Your rating",
+        choices=[(n, f"{n} star{'s' if n > 1 else ''}") for n in range(1, 6)],
+        coerce=int,
+        widget=_picks(forms.RadioSelect),
+        error_messages={"required": "Choose from 1 to 5 stars."},
+    )
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = ExperienceFeedback
+        fields = ["rating", "enjoyed_conversation", "enjoyed_shared_interests", "enjoyed_activity",
+                  "felt_comfortable", "wants_to_stay_connected", "private_note"]
+        labels = {
+            "enjoyed_conversation": "I enjoyed the conversation",
+            "enjoyed_shared_interests": "We had interests in common",
+            "enjoyed_activity": "I enjoyed what we did",
+            "felt_comfortable": "I felt comfortable",
+            "wants_to_stay_connected": "I'd like to stay connected",
+            "private_note": "Anything else? (optional)",
+        }
+        help_texts = {
+            "wants_to_stay_connected": "If they say so too, you each see the other's Illinois email.",
+            "private_note": "Only QuadConnect staff read this.",
+        }

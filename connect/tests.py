@@ -123,6 +123,7 @@ class UrlLinkingTests(QuadConnectData):
         self.assertEqual(self.union.get_absolute_url(), f"/locations/{self.union.pk}/")
 
     def test_every_list_row_links_to_its_detail_page(self):
+        self.client.force_login(self.staff)  # a student sees only their own matches
         pages = {
             "/students/": [self.ada, self.ben, self.cy],
             "/matches/": [self.squad, self.friend],
@@ -134,9 +135,11 @@ class UrlLinkingTests(QuadConnectData):
             for obj in objects:
                 self.assertContains(response, f'href="{obj.get_absolute_url()}"')
         # An unapproved venue is never linked from the public list.
+        self.client.force_login(self.member)
         self.assertNotContains(self.client.get("/locations/"), self.pending.get_absolute_url())
 
     def test_detail_pages_link_onward(self):
+        self.client.force_login(self.staff)  # a match, and a student's match history, are private
         response = self.client.get(self.squad.get_absolute_url())
         self.assertContains(response, f'href="{self.ben.get_absolute_url()}"')
         self.assertContains(response, f'href="{self.union.get_absolute_url()}"')
@@ -176,6 +179,7 @@ class UrlLinkingTests(QuadConnectData):
         self.assertContains(second, 'href="/students/?page=1&amp;college=media"')
 
     def test_nav_marks_list_page_and_detail_page_differently(self):
+        self.client.force_login(self.staff)
         list_page = self.client.get("/matches/").content.decode()
         detail_page = self.client.get(self.squad.get_absolute_url()).content.decode()
         self.assertRegex(list_page, r'href="/matches/"\s+class="active" aria-current="page"')

@@ -142,6 +142,8 @@ deliberately absent.
       </div>
     {% endif %}
 
+    {# Only the student themselves and staff: who met whom is private. #}
+    {% if participations is not None %}
     <h2 class="section">Match history</h2>
     <ul class="list" role="list">
     {% for p in participations %}
@@ -169,6 +171,7 @@ deliberately absent.
       </li>
     {% endfor %}
     </ul>
+    {% endif %}
 
   </div>
 </div>

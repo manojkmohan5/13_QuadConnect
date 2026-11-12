@@ -1,12 +1,13 @@
 """
 Data model for QuadConnect - a verified campus social discovery platform.
 
-The eight models below map onto the nine screens documented in the team's
+The nine models below map onto the nine screens documented in the team's
 wireframe deck, so that every stored field has a visible reason to exist:
 
     Screen 1 (UIUC SSO Login) .............. StudentProfile
     Screen 2 (Interests & Hobbies) ......... Interest, ProfileInterest
-    Screen 3 (Choose Connection Type) ...... StudentProfile.preferred_connection
+    Screen 3 (Choose Connection Type) ...... StudentProfile.preferred_connection,
+                                             MatchRequest (for one weekend)
     Screen 4 (Social Preferences) .......... StudentProfile (preference fields)
     Screen 5 (Availability) ................ AvailabilitySlot
     Screen 6/7 (Friend / Squad Match) ...... Match, MatchParticipant
@@ -402,6 +403,48 @@ class AvailabilitySlot(models.Model):
         )
 
 
+class MatchRequest(models.Model):
+    """
+    Represents one student's sign-up for one weekend's matching: "match me
+    this weekend, one-on-one" (or in a squad).
+
+    It exists because a profile says who a student is, not that they are
+    free and willing this week. Matching (connect/matching.py) only ever
+    pairs students who signed up for that weekend, in the way they asked.
+    """
+
+    profile = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="match_requests",
+        # CASCADE: a sign-up means nothing once the student is gone.
+    )
+    week_start = models.DateField(
+        help_text="Monday of the week whose weekend this sign-up is for.",
+    )
+    connection_type = models.CharField(
+        max_length=10,
+        choices=ConnectionType.choices,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-week_start", "created_at"]
+        verbose_name = "Match request"
+        constraints = [
+            # Signing up twice for one weekend must not put a student in the
+            # pool twice, where they could be matched with two people.
+            models.UniqueConstraint(
+                fields=["profile", "week_start"],
+                name="uniq_request_per_profile_week",
+            ),
+        ]
+
+    def __str__(self):
+        return (f"{self.profile.net_id} for the weekend of {self.week_start:%d %b} "
+                f"({self.get_connection_type_display()})")
+
+
 class CampusLocation(models.Model):
     """
     Represents an approved public meeting place on the UIUC campus.
@@ -472,6 +515,19 @@ class CampusLocation(models.Model):
         return [flag.replace("_", " ") for flag in self.ai_flags.split(",") if flag]
 
 
+class MatchQuerySet(models.QuerySet):
+    """Adds visible_to() to Match.objects."""
+
+    def visible_to(self, user):
+        """The matches this user may see: staff see every match, a student
+        only the ones they are in, since who meets whom is private. A
+        subquery, not a join, so a Count("participants") on the result
+        still counts everyone in each match."""
+        if user.is_staff:
+            return self
+        return self.filter(pk__in=MatchParticipant.objects.filter(profile__user=user).values("match"))
+
+
 class Match(models.Model):
     """
     Represents one weekly scheduled experience produced by the matching cycle.
@@ -520,6 +576,8 @@ class Match(models.Model):
         help_text="Short code shown on Screen 8, e.g. QC-4827.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = MatchQuerySet.as_manager()
 
     class Meta:
         ordering = ["-week_start", "-scheduled_for"]

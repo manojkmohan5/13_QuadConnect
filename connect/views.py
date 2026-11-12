@@ -34,7 +34,7 @@ from django.utils.timezone import localtime
 from django.views import View
 from django.views.generic import DetailView, ListView
 
-from . import ai_venues
+from . import ai_venues, meetups
 from .forms import CampusLocationSuggestionForm, NetIDLookupForm, StudentSearchForm
 from .models import (
     CampusLocation,
@@ -53,11 +53,13 @@ from .models import (
 @login_not_required  # the public landing page (P1-A5)
 def home(request):
     """Landing page. Visitors who are not signed in see what QuadConnect is
-    and how to join, and no student data; signed-in users also get a count
-    of every seeded entity and the recent matches."""
+    and how to join, and no student data; signed-in users also get what to
+    do about the coming weekend (meetups.notice), a count of every seeded
+    entity, and the recent matches they may see (their own; staff, all)."""
     if not request.user.is_authenticated:
         return render(request, "connect/home.html")
     context = {
+        "notice": meetups.notice(request.user),
         "counts": [
             ("Student profiles", StudentProfile.objects.count()),
             ("Interests in catalogue", Interest.objects.count()),
@@ -68,7 +70,7 @@ def home(request):
             ("Feedback submissions", ExperienceFeedback.objects.count()),
         ],
         "recent_matches": (
-            Match.objects.select_related("location", "suggested_activity")
+            Match.objects.visible_to(request.user).select_related("location", "suggested_activity")
             .annotate(headcount=Count("participants"))
             # annotate() drops Meta.ordering (GROUP BY), so order here.
             .order_by("-week_start", "-scheduled_for", "-pk")[:5]
@@ -224,7 +226,9 @@ def _match_rows(matches):
 
 
 def match_list(request):
-    """List every weekly scheduled experience, optionally filtered by week.
+    """List the weekly scheduled experiences, optionally filtered by week:
+    every one for staff, and a student's own for a student, since who meets
+    whom is private (Match.objects.visible_to).
 
     The graded `render()` view: it queries the model, builds a context
     dictionary, and hands both to the render() shortcut. Compare with
@@ -240,8 +244,9 @@ def match_list(request):
             # A hand-typed query string should not produce a 500.
             bad_date = True
 
+    staff = request.user.is_staff
     matches = (
-        Match.objects
+        Match.objects.visible_to(request.user)
         .select_related("location", "suggested_activity")
         .prefetch_related("participants__profile")  # each row's faces: two queries in all
         .annotate(headcount=Count("participants"))
@@ -264,6 +269,10 @@ def match_list(request):
         empty_title = f"No matches for the week of {selected_week:%d %b %Y}"
         empty_message = ("No experience was scheduled that week. Clear the "
                          "filter to see every match.")
+    elif not staff:
+        empty_title = "No matches yet"
+        empty_message = ("Sign up for the coming weekend on the Meet page, "
+                         "and your matches will be listed here.")
     else:
         empty_title = "No matches scheduled yet"
         empty_message = ("Matches appear here once a weekly matching cycle "
@@ -272,17 +281,19 @@ def match_list(request):
 
     context = {
         "page_title": "Matches - QuadConnect",
-        "heading": "Weekly matches",
-        "subtitle": "Every scheduled experience, newest cycle first. "
-                    "Each match is one real meeting at an approved campus "
-                    "location.",
+        "heading": "Weekly matches" if staff else "Your matches",
+        "subtitle": ("Every scheduled experience, newest cycle first. "
+                     "Each match is one real meeting at an approved campus "
+                     "location." if staff else
+                     "The meetups you have been matched into, newest first. "
+                     "Only the students in a match can see it."),
         "items": _match_rows(matches),
         "empty_title": empty_title,
         "empty_message": empty_message,
         # For the filter form in match_list.html.
         "selected_week": raw_week,
         "available_weeks": (
-            Match.objects.order_by("-week_start")
+            Match.objects.visible_to(request.user).order_by("-week_start")
             .values_list("week_start", flat=True).distinct()
         ),
     }
@@ -294,12 +305,19 @@ class MatchDetailView(DetailView):
 
     Reached from any match row via Match.get_absolute_url(). DetailView
     looks the match up by the <int:pk> in the URL and raises 404 for a pk
-    that does not exist. Template: connect/match_detail.html by convention.
+    that does not exist, or that the user may not see: a student sees only
+    the matches they are in, staff see all. Template:
+    connect/match_detail.html by convention.
+
+    A student in the match also gets their own part of it: accept or
+    decline, check in, feedback (connect/meetups.py).
     """
 
     model = Match
     context_object_name = "match"
-    queryset = Match.objects.select_related("location", "suggested_activity")
+
+    def get_queryset(self):
+        return Match.objects.visible_to(self.request.user).select_related("location", "suggested_activity")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -308,6 +326,11 @@ class MatchDetailView(DetailView):
         context["participants"] = (
             self.object.participants.select_related("profile")
         )
+        me = self.object.participants.filter(profile__user=self.request.user).first()
+        if me:
+            me.match = self.object  # already loaded
+        context["me"] = me
+        context["actions"] = meetups.actions(me) if me else None
         return context
 
 
@@ -599,11 +622,13 @@ class StudentProfileDetailView(DetailView):
             .order_by("-is_primary", "interest__name")
         )
         context["slots"] = student.availability_slots.all()
+        # When and where a student met someone is theirs, and staff's, to see.
+        mine = self.request.user.is_staff or student.user_id == self.request.user.pk
         context["participations"] = (
             student.match_participations
             .select_related("match", "match__location")
             .order_by("-match__scheduled_for")
-        )
+        ) if mine else None
         return context
 
 

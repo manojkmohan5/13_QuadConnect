@@ -1,0 +1,145 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Meet (connect/meetups.py): the coming weekend for the signed-in student,
+in one of four states:
+
+  no profile  matches are made from interests and free times: set them up;
+  signing up  choose 1-on-1 or a group (MeetForm), and sign up;
+  waiting     signed up, no match yet. Matching runs whenever anyone signs
+              up, so the match can come at any time; or leave the weekend;
+  matched     the plan (when, where, who, why), the student's own part
+              (_match_actions.html), the icebreakers; or leave.
+
+Context: profile (from for_cards(), or None), saturday, sunday, and with a
+profile: signup, form, me, actions, others, no_time_left, called_off.
+{% endcomment %}
+
+{% block title %}{% if form.errors %}Error: {% endif %}This weekend - QuadConnect{% endblock %}
+
+{% block heading %}This weekend{% endblock %}
+{% block subtitle %}
+  <p class="sub">
+    Saturday {{ saturday|date:"j" }} and Sunday {{ sunday|date:"j F" }}. Every meetup is at an
+    approved public place on campus.
+  </p>
+{% endblock %}
+
+{% block content %}
+{% if not profile %}
+
+  <section class="card" aria-labelledby="first-title">
+    <h2 class="card-title" id="first-title">First, your profile</h2>
+    <p>Matches are made from your interests and the times you are free, so set those up first.</p>
+    <p class="actions"><a class="btn btn-primary" href="{% url 'connect:profile' %}">Set up your profile</a></p>
+  </section>
+
+{% elif not signup and not me %}
+
+  <section class="card" aria-labelledby="signup-title">
+    <h2 class="card-title" id="signup-title">Sign up to be matched</h2>
+    <p class="form-note">You are matched with students who share your interests and are free when you are.</p>
+    {% if form.errors %}
+      <div class="messages">
+        <p class="message message-error" role="alert">You are not signed up yet. Choose how you want to meet.</p>
+      </div>
+    {% endif %}
+    {# novalidate: the server's message says what is missing. #}
+    <form class="form" method="post" action="{% url 'connect:meet' %}" novalidate>
+      {% csrf_token %}
+      <div class="field">{{ form.connection_type.as_field_group }}</div>
+      <div class="field">
+        <p class="label">Your interests</p>
+        <ul class="chips" aria-label="Your interests">
+          {% for link in profile.interest_links.all %}<li class="chip">{{ link.interest.name }}</li>{% endfor %}
+        </ul>
+      </div>
+      <div class="field">
+        <p class="label">When you are free</p>
+        <p>{{ profile.free_times }}.
+           <a href="{% url 'connect:profile' %}">Change these in your profile</a>.</p>
+        {% if no_time_left %}
+          <p class="message message-info">None of your free times this weekend is far enough ahead.
+             Add a later one in your profile to be matched.</p>
+        {% endif %}
+      </div>
+      <div class="actions"><button type="submit">Sign me up</button></div>
+    </form>
+  </section>
+
+{% elif not me %}
+
+  <section class="card" aria-labelledby="waiting-title">
+    <h2 class="card-title" id="waiting-title">You're signed up: {{ signup.get_connection_type_display }}</h2>
+    {% if called_off %}
+      <p>Your match was called off because someone declined, so you are back in the pool.</p>
+    {% endif %}
+    <p>No match yet. Matching runs every time someone signs up, so you will be matched as soon
+       as a student who shares an interest and a free time joins. Your match will be on this page
+       and on the home page.</p>
+    {% if no_time_left %}
+      <p class="message message-info">None of your free times this weekend is far enough ahead.
+         <a href="{% url 'connect:profile' %}">Add a later one in your profile</a> to be matched.</p>
+    {% endif %}
+    <form method="post" action="{% url 'connect:meet' %}" class="actions">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-secondary" name="leave" value="1">Leave this weekend</button>
+    </form>
+  </section>
+
+{% else %}
+  {% with match=me.match %}
+
+  <section class="banner k-{{ match.connection_type|lower }}" aria-labelledby="plan-title">
+    <div>
+      <h2 class="card-title" id="plan-title">Your {{ match.get_connection_type_display }}</h2>
+      <p class="sub">{{ match.scheduled_for|date:"l j F, g:i A" }} &middot; {{ match.location.name }}</p>
+      <span class="badge s-{{ match.status|lower }}">{{ match.get_status_display }}</span>
+    </div>
+    <div class="aside code">
+      <div class="l">Check-in code</div>
+      <div class="v">{{ match.check_in_code }}</div>
+    </div>
+  </section>
+
+  <h2 class="section">Who</h2>
+  <ul class="list k-{{ match.connection_type|lower }}" role="list">
+    {% for p in others %}
+      <li class="card linked with-tile">
+        <span class="face" aria-hidden="true">{{ p.profile.initials }}</span>
+        <div class="row">
+          <div>
+            <div class="title"><a href="{{ p.profile.get_absolute_url }}">{{ p.profile.full_name }}</a></div>
+            <div class="subtitle">{{ p.profile.college }}</div>
+            {% if p.match_reason %}<div class="meta"><span>In common: {{ p.match_reason }}</span></div>{% endif %}
+          </div>
+          <span class="badge s-{{ p.response|lower }}">{{ p.get_response_display }}</span>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+  {% if me.match_reason %}<p class="note">Why you were matched: you share {{ me.match_reason }}.</p>{% endif %}
+
+  <h2 class="section">Where</h2>
+  <div class="card">
+    <div class="title"><a href="{{ match.location.get_absolute_url }}">{{ match.location.name }}</a></div>
+    <div class="subtitle">{{ match.location.street_address }}</div>
+    {% if match.location.arrival_note %}<div class="meta"><span>{{ match.location.arrival_note }}</span></div>{% endif %}
+  </div>
+
+  {% include "connect/_match_actions.html" with next=request.path %}
+
+  <p class="actions gap-top">
+    <a class="btn btn-primary" href="{% url 'connect:match-icebreakers' match.pk %}">Icebreakers for your meetup</a>
+    <a class="btn btn-secondary" href="{{ match.get_absolute_url }}">The match page</a>
+  </p>
+
+  {% if signup and actions.can_answer %}
+    <form method="post" action="{% url 'connect:meet' %}" class="gap-top">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-secondary" name="leave" value="1">Leave this weekend</button>
+    </form>
+  {% endif %}
+
+  {% endwith %}
+{% endif %}
+{% endblock %}

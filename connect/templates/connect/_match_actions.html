@@ -1,0 +1,64 @@
+{% comment %}
+The signed-in student's own part in a match (connect/meetups.py): are they
+in, checking in at the venue, and how it went. On the match page and on the
+Meet page. Every button posts to /matches/<pk>/answer/, which comes back to
+"next".
+
+Context
+-------
+me       the student's MatchParticipant
+actions  meetups.actions(me): can_answer, can_check_in, check_in_later,
+         can_give_feedback, connected (others who also asked to stay
+         connected, when this student did)
+next     the page to come back to
+{% endcomment %}
+{% with match=me.match %}
+<section class="card gap-top" aria-labelledby="you-title">
+  <h2 class="card-title" id="you-title">Your part</h2>
+
+  {% if actions.can_answer %}
+    <p>
+      {% if me.response == "ACCEPTED" %}You're in. If you can't make it after all, decline before it starts.
+      {% else %}Are you in? Accept to say you'll be there.{% endif %}
+    </p>
+    <form method="post" action="{% url 'connect:match-answer' match.pk %}" class="actions">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      {% if me.response != "ACCEPTED" %}<button type="submit" class="btn btn-primary" name="action" value="accept">Accept</button>{% endif %}
+      <button type="submit" class="btn btn-secondary" name="action" value="decline">Decline</button>
+    </form>
+    <p class="form-note">If you decline, you go back into this weekend's pool and can be matched with someone else.</p>
+  {% elif me.response == "DECLINED" %}
+    <p>You declined this match.</p>
+  {% endif %}
+
+  {% if actions.can_check_in %}
+    <p>At {{ match.location.name }}? Find the others by the code <strong>{{ match.check_in_code }}</strong>.
+       Everyone in this match has the same code. Then check in.</p>
+    <form method="post" action="{% url 'connect:match-answer' match.pk %}" class="actions">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-primary" name="action" value="check_in">I'm here: check in</button>
+    </form>
+  {% elif me.checked_in_at %}
+    <p>You checked in at {{ me.checked_in_at|date:"g:i A" }}.</p>
+  {% elif me.response == "ACCEPTED" and actions.check_in_later and match.status != "CANCELLED" %}
+    <p class="form-note">Check-in opens 30 minutes before the start, at the venue.</p>
+  {% endif %}
+
+  {% if actions.can_give_feedback %}
+    <p class="actions"><a class="btn btn-primary" href="{% url 'connect:match-feedback' match.pk %}">How was it?</a></p>
+  {% elif me.feedback %}
+    <p>Thank you for your feedback.</p>
+  {% endif %}
+
+  {% if actions.connected %}
+    <p>They want to stay connected too:</p>
+    <ul>
+      {% for profile in actions.connected %}
+        <li>{{ profile.full_name }}: <a href="mailto:{{ profile.illinois_email }}">{{ profile.illinois_email }}</a></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>
+{% endwith %}

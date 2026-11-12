@@ -75,12 +75,14 @@ them first; the <noscript> rule below shows them when there is no script.
       <a data-icon="house" href="{% url 'connect:home' %}"
          {% if u == 'home' %}class="active" aria-current="page"{% endif %}>Home</a>
       {% if user.is_authenticated %}
+      <a data-icon="coffee" href="{% url 'connect:meet' %}"
+         {% if u == 'meet' %}class="active" aria-current="page"{% endif %}>Meet</a>
       <a data-icon="users" href="{% url 'connect:student-list' %}"
          {% if u == 'student-list' %}class="active" aria-current="page"{% elif u == 'student-detail' %}class="active" aria-current="true"{% endif %}>Students</a>
       <a data-icon="search" href="{% url 'connect:student-search' %}"
          {% if u == 'student-search' %}class="active" aria-current="page"{% elif u == 'student-ask' %}class="active" aria-current="true"{% endif %}>Search</a>
       <a data-icon="calendar-check" href="{% url 'connect:match-list' %}"
-         {% if u == 'match-list' %}class="active" aria-current="page"{% elif u == 'match-detail' or u == 'match-icebreakers' %}class="active" aria-current="true"{% endif %}>Matches</a>
+         {% if u == 'match-list' %}class="active" aria-current="page"{% elif u == 'match-detail' or u == 'match-icebreakers' or u == 'match-feedback' %}class="active" aria-current="true"{% endif %}>Matches</a>
       <a data-icon="map-pin" href="{% url 'connect:location-list' %}"
          {% if u == 'location-list' %}class="active" aria-current="page"{% elif u == 'location-detail' %}class="active" aria-current="true"{% endif %}>Locations</a>
       <details>

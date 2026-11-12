@@ -116,6 +116,7 @@ class SeedDataTests(SeededTestCase):
     def test_match_lists_put_the_newest_cycle_first(self):
         # With the history seeded, id order is no longer date order, and
         # annotate() drops Meta.ordering, so each list must order by date.
+        self.client.force_login(User.objects.get(username="tester"))  # staff see every match
         newest = [m.get_absolute_url()
                   for m in Match.objects.order_by("-week_start", "-scheduled_for", "-pk")]
         for name, count in [("match-list", len(newest)), ("home", 5)]:
@@ -263,6 +264,8 @@ class IcebreakerTests(SeededTestCase):
 
     def setUp(self):
         super().setUp()
+        # A match's icebreakers are for its students and staff; the member is neither.
+        self.client.force_login(User.objects.get(username="tester"))
         patcher = patch("connect.icebreakers.requests.get",
                         return_value=trivia_reply(body={"response_code": 0, "results": [QUESTION]}))
         self.get = patcher.start()

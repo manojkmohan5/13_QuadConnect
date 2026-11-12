@@ -15,6 +15,7 @@ from .models import (
     Interest,
     Match,
     MatchParticipant,
+    MatchRequest,
     ProfileInterest,
     StudentProfile,
 )
@@ -127,6 +128,14 @@ class ProfileInterestAdmin(admin.ModelAdmin):
 class AvailabilitySlotAdmin(admin.ModelAdmin):
     list_display = ("profile", "weekday", "time_block")
     list_filter = ("weekday", "time_block")
+    search_fields = ("profile__net_id", "profile__full_name")
+    autocomplete_fields = ["profile"]
+
+
+@admin.register(MatchRequest)
+class MatchRequestAdmin(admin.ModelAdmin):
+    list_display = ("profile", "week_start", "connection_type", "created_at")
+    list_filter = ("week_start", "connection_type")
     search_fields = ("profile__net_id", "profile__full_name")
     autocomplete_fields = ["profile"]
 
