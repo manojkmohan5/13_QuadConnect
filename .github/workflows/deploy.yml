@@ -273,11 +273,13 @@ jobs:
           expect 200 text/csv         /export/students.csv
           expect 200 application/json /export/students.json
 
-          # The four scripts the Insights page loads (Vega, Vega-Lite,
-          # vega-embed and the chart code) must be hashed static files.
+          # The six scripts the Insights page loads must be hashed static
+          # files: the four of its charts (Vega, Vega-Lite, vega-embed and
+          # the chart code), and Motion and site.js, which every page has
+          # loaded since the interface was rebuilt.
           scripts="$(curl -fs -b "$jar" "$base/insights/" | grep -o '/static/[^"]*\.[0-9a-f]\{12\}\.js' || true)"
-          if [ "$(printf '%s\n' "$scripts" | grep -c .)" -ne 4 ]; then
-            echo "::error::The Insights page does not load its four hashed scripts: $scripts"
+          if [ "$(printf '%s\n' "$scripts" | grep -c .)" -ne 6 ]; then
+            echo "::error::The Insights page does not load its six hashed scripts: $scripts"
             exit 1
           fi
           for js in $scripts; do
