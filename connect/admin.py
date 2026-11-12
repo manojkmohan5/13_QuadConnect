@@ -88,6 +88,10 @@ class StudentProfileAdmin(admin.ModelAdmin):
             "fields": ("user", "net_id", "illinois_email", "full_name",
                        "is_sso_verified"),
         }),
+        # Staff can clear a photo or a headline that breaks the rules.
+        ("Photo and headline", {
+            "fields": ("photo", "headline"),
+        }),
         ("Academic context (Screen 2)", {
             "fields": ("college", "department", "part_time_job"),
         }),

@@ -1,18 +1,25 @@
 """
 Tests for joining QuadConnect (connect/onboarding.py): a double click on
-"Create account", and setting up a profile after the first login.
+"Create account", setting up a profile after the first login, and the
+profile's photo and headline.
 
     python manage.py test connect.tests_onboarding
 """
 
+import os
+import shutil
+import tempfile
+from io import BytesIO
 from unittest.mock import patch
 
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.models import EmailAddress
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.html import escape
+from PIL import Image
 
 from .models import Interest, InterestCategory, StudentProfile, TimeBlock, Weekday
 
@@ -170,3 +177,89 @@ class ProfileTests(OnboardingTestCase):
                          [(Weekday.SUNDAY, TimeBlock.EVENING)])
         self.assertEqual(profile.onboarding_completed_at, set_up_at)
         self.assertEqual(StudentProfile.objects.filter(user=self.maddy).count(), 1)
+
+
+def image_upload(name="me.png", fmt="PNG", mode="RGBA", size=(1600, 1200), exif=None):
+    """A photo as a browser would send it."""
+    buffer = BytesIO()
+    extra = {"exif": exif} if exif else {}
+    colour = (0, 0, 0, 0) if mode == "RGBA" else "orange"  # RGBA: all see-through
+    Image.new(mode, size, colour).save(buffer, fmt, **extra)
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type=f"image/{fmt.lower()}")
+
+
+class PhotoTests(OnboardingTestCase):
+    """Every photo goes to a throwaway MEDIA_ROOT."""
+
+    def setUp(self):
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.client.force_login(self.maddy)
+        self.url = reverse("connect:profile")
+
+    def photo(self):
+        return StudentProfile.objects.get(user=self.maddy).photo
+
+    def test_a_photo_and_a_headline_show_to_every_signed_in_student(self):
+        exif = Image.Exif()
+        exif[0x010F] = "PhoneMaker"  # the camera's maker; a phone also stores where
+        upload = image_upload("me.jpg", "JPEG", "RGB", exif=exif.tobytes())
+        self.client.post(self.url, self.answers(photo=upload, headline="Always up for board games"))
+        photo = self.photo()
+        self.assertRegex(photo.name, r"^profile_photos/[0-9a-f]{32}\.jpg$")  # never the name sent
+        with Image.open(photo.path) as kept:
+            self.assertEqual((kept.format, kept.size), ("JPEG", (800, 600)))
+            self.assertEqual(dict(kept.getexif()), {})
+        profile = StudentProfile.objects.get(user=self.maddy)
+        for page in (profile.get_absolute_url(), reverse("connect:student-list")):
+            response = self.client.get(page)
+            self.assertContains(response, f'src="{photo.url}"')
+            self.assertContains(response, "Always up for board games")
+        response = self.client.get(photo.url)
+        self.assertEqual((response.status_code, response["Content-Type"]), (200, "image/jpeg"))
+        self.assertTrue(b"".join(response.streaming_content).startswith(b"\xff\xd8"))
+        self.client.logout()  # the file is never public
+        self.assertRedirects(self.client.get(photo.url), f"{reverse('account_login')}?next={photo.url}",
+                             fetch_redirect_response=False)
+
+    def test_a_new_photo_replaces_the_old_one_and_removing_deletes_it(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(self.url, self.answers(photo=image_upload()))  # see-through PNG
+        first = self.photo().path
+        with Image.open(first) as kept:
+            self.assertGreater(min(kept.getpixel((0, 0))), 250)  # see-through is white, not black
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(self.url, self.answers(photo=image_upload("again.webp", "WEBP", "RGB")))
+        second = self.photo().path
+        self.assertNotEqual(first, second)
+        self.assertFalse(os.path.exists(first))
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(self.url, self.answers(remove_photo="on"), follow=True)
+        self.assertContains(response, "Your profile is saved.")
+        self.assertFalse(self.photo())
+        self.assertFalse(os.path.exists(second))
+
+    def test_what_is_not_a_usable_photo_is_refused(self):
+        refused = [
+            (SimpleUploadedFile("notes.jpg", b"not a photo", content_type="image/jpeg"),
+             "That file is not a photo we can open."),
+            (image_upload("me.gif", "GIF", "RGB"), "Choose a JPEG, PNG or WebP image."),
+        ]
+        for upload, message in refused:
+            with self.subTest(file=upload.name):
+                self.assertContains(self.client.post(self.url, self.answers(photo=upload)), message)
+        with patch("connect.forms.MAX_PHOTO_BYTES", 10):
+            self.assertContains(self.client.post(self.url, self.answers(photo=image_upload())),
+                                "That photo is over 5 MB.")
+        with patch("connect.forms.MAX_PHOTO_PIXELS", 100):
+            self.assertContains(self.client.post(self.url, self.answers(photo=image_upload())),
+                                "That photo is too big to use.")
+        self.assertFalse(StudentProfile.objects.filter(user=self.maddy).exists())
+
+    def test_only_photos_are_served_and_never_from_outside_the_folder(self):
+        self.assertEqual(self.client.get("/media/profile_photos/missing.jpg").status_code, 404)
+        self.assertEqual(self.client.get("/media/db.sqlite3").status_code, 404)
+        self.assertEqual(self.client.get("/media/profile_photos/../../db.sqlite3").status_code, 400)

@@ -11,11 +11,14 @@ profile later, and until it is filled in, every other page links to it
 
     SignupView   /accounts/signup/   allauth's sign-up, safe against a double click
     profile      /profile/           set up or edit your own profile
+    media        /media/<path>       a profile photo, for signed-in users only
 """
 
 from allauth.account.views import SignupView as AllauthSignupView
 from django.contrib import messages
+from django.core.files.storage import default_storage
 from django.db import IntegrityError, transaction
+from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 
 from .forms import ProfileForm
@@ -49,7 +52,8 @@ def profile(request):
     cannot send the form again (Post/Redirect/Get)."""
     mine = StudentProfile.objects.filter(user=request.user).first()
     new = mine is None
-    form = ProfileForm(request.POST if request.method == "POST" else None,
+    posted = request.method == "POST"
+    form = ProfileForm(request.POST if posted else None, request.FILES if posted else None,
                        instance=mine, user=request.user)
     if form.is_valid():
         try:
@@ -65,3 +69,18 @@ def profile(request):
                              if new else "Your profile is saved.")
             return redirect(mine)
     return render(request, "connect/profile_form.html", {"form": form, "new": new})
+
+
+def media(request, path):
+    """An uploaded file: a profile photo. Never a public file: like every
+    view not marked public, this one needs a login (connect/middleware.py).
+    The storage refuses a path that climbs out of MEDIA_ROOT (a 400).
+
+    ponytail: Django sends the photo, and the middleware marks it never-cache
+    as it does every signed-in page, so a photo is fetched again on each
+    page. Fine at a campus's scale; let the web server send it (X-Sendfile)
+    if that ever shows.
+    """
+    if not path.startswith("profile_photos/") or not default_storage.exists(path):
+        raise Http404("No such photo.")
+    return FileResponse(default_storage.open(path), content_type="image/jpeg")

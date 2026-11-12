@@ -1,0 +1,7 @@
+{% comment %}
+A student's round avatar: their photo, or their initials when they have
+none. Decorative, since their name is always beside it.
+
+Context: profile, a StudentProfile.
+{% endcomment %}
+{% if profile.photo %}<img class="face" src="{{ profile.photo.url }}" alt="">{% else %}<span class="face" aria-hidden="true">{{ profile.initials }}</span>{% endif %}

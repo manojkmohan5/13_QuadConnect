@@ -24,9 +24,14 @@ match_names  optional set of interest names: these are marked as asked for,
              (student.shared, annotated by ai_search.find_students)
 
 A marked chip is orange and bold, and says why in words for a screen reader.
+
+A student's photo, if they gave one, fills the block in place of the
+initials (alt="": the name is right there), and their headline, if any,
+goes under the name.
 {% endcomment %}
 <li class="person k-{{ student.preferred_connection|lower }}">
-  <div class="person-top">
+  <div class="person-top{% if student.photo %} has-photo{% endif %}">
+    {% if student.photo %}<img class="photo" src="{{ student.photo.url }}" alt="">{% endif %}
     <span class="mono" aria-hidden="true" data-initials="{{ student.initials }}"></span>
     <div class="over">
       <span class="badge">{{ student.get_preferred_connection_display }}</span>
@@ -37,6 +42,7 @@ A marked chip is orange and bold, and says why in words for a screen reader.
         <div class="subtitle">
           {{ student.college }}{% if student.department %} &middot; {{ student.department }}{% endif %}
         </div>
+        {% if student.headline %}<p class="headline">{{ student.headline }}</p>{% endif %}
       </div>
     </div>
     <span class="go" aria-hidden="true"><span class="icon i-arrow-right"></span></span>

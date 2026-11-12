@@ -84,7 +84,7 @@ open this page; a student in it also gets their own part
   <ul class="list k-{{ match.connection_type|lower }}" role="list">
   {% for p in participants %}
     <li class="card linked with-tile">
-      <span class="face" aria-hidden="true">{{ p.profile.initials }}</span>
+      {% include "connect/_face.html" with profile=p.profile %}
       <div class="row">
         <div>
           <div class="title">

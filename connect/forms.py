@@ -15,13 +15,18 @@ aria-describedby (help text and error) and aria-invalid="true" on error.
 """
 
 import re
+from io import BytesIO
+from uuid import uuid4
 
 from allauth.account.forms import LoginForm as AllauthLoginForm
 from allauth.account.models import EmailAddress
 from django import forms
+from django.core.files.base import ContentFile
+from django.core.validators import FileExtensionValidator
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from PIL import Image, ImageOps
 
 from .models import (
     AvailabilitySlot,
@@ -234,6 +239,31 @@ def _picks(widget):
     return widget(attrs={"class": "picks"})
 
 
+MAX_PHOTO_BYTES = 5 * 1024 * 1024
+MAX_PHOTO_PIXELS = 50_000_000  # a 48-megapixel phone photo fits; a small file that unpacks to more does not
+PHOTO_SIDE = 800  # pixels, the longer side
+
+
+def _photo_jpeg(upload):
+    """The uploaded photo as we keep it: upright, at most 800 px a side, as a
+    JPEG under a random name. Saving a new JPEG drops the original's
+    metadata, which on a phone photo can include where it was taken."""
+    upload.seek(0)
+    with Image.open(upload) as original:
+        if original.width * original.height > MAX_PHOTO_PIXELS:
+            raise forms.ValidationError("That photo is too big to use. Choose one under 50 megapixels.")
+        image = ImageOps.exif_transpose(original)
+        image.thumbnail((PHOTO_SIDE, PHOTO_SIDE))
+        if image.mode in ("RGBA", "LA", "P"):  # see-through parts become white, not black
+            image = image.convert("RGBA")
+            backing = Image.new("RGB", image.size, "white")
+            backing.paste(image, mask=image.getchannel("A"))
+            image = backing
+        out = BytesIO()
+        image.convert("RGB").save(out, "JPEG", quality=85)
+    return ContentFile(out.getvalue(), name=f"{uuid4().hex}.jpg")
+
+
 class ProfileForm(forms.ModelForm):
     """Your own profile (connect/onboarding.py): who you are, how you like to
     meet, your interests and when you are free, the wireframes' onboarding
@@ -243,6 +273,10 @@ class ProfileForm(forms.ModelForm):
     address is made from it. The profile is marked verified only when the
     account has proved it owns that address (a Google sign-in with it); a
     NetID typed into a form proves nothing.
+
+    The photo and the headline are optional. A photo is never kept as sent:
+    _photo_jpeg() makes a smaller JPEG of it, under a new name, and the old
+    file goes once the new one is saved, or the photo is removed.
     """
 
     TAKEN = ('Another account already has a profile with the NetID "{}". '
@@ -253,6 +287,15 @@ class ProfileForm(forms.ModelForm):
         choices=[("", "Choose your college"), *((c, c) for c in COLLEGES)],
         error_messages={"required": "Choose your college from the list."},
     )
+    photo = forms.ImageField(
+        label="Photo (optional)",
+        required=False,
+        help_text="A clear photo of you: JPEG, PNG or WebP, up to 5 MB. Every signed-in student can see it.",
+        widget=forms.FileInput(attrs={"accept": "image/jpeg,image/png,image/webp"}),
+        error_messages={"invalid_image": "That file is not a photo we can open. "
+                                         "Choose a JPEG, PNG or WebP image."},
+    )
+    remove_photo = forms.BooleanField(label="Remove my photo", required=False)
     hobbies = forms.ModelMultipleChoiceField(
         label="Hobbies and interests",
         required=False,
@@ -274,10 +317,11 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = StudentProfile
-        fields = ["full_name", "net_id", "college", "department", "preferred_connection",
+        fields = ["full_name", "headline", "net_id", "college", "department", "preferred_connection",
                   "group_preference", "social_energy", "conversation_style"]
         labels = {
             "full_name": "Your name",
+            "headline": "Headline (optional)",
             "net_id": "NetID",
             "department": "Major or program (optional)",
             "preferred_connection": "How do you want to meet?",
@@ -287,6 +331,7 @@ class ProfileForm(forms.ModelForm):
         }
         help_texts = {
             "full_name": "As other students will see it.",
+            "headline": "One line under your name, e.g. Always up for a board game night.",
             "net_id": "The part of your Illinois email before @illinois.edu, e.g. jordan4.",
             "department": "e.g. Information Sciences.",
         }
@@ -309,6 +354,9 @@ class ProfileForm(forms.ModelForm):
         self.user = user
         for name in ("hobbies", "clubs"):  # "Gym", not "Gym [Hobby / Interest]"
             self.fields[name].label_from_instance = lambda interest: interest.name
+        # In place of every format Pillow reads: these three, said plainly.
+        self.fields["photo"].validators = [FileExtensionValidator(
+            ["jpg", "jpeg", "png", "webp"], message="Choose a JPEG, PNG or WebP image.")]
         if self.instance.pk:  # editing: the answers already given
             chosen = list(self.instance.interest_links.values_list("interest_id", flat=True))
             self.initial["hobbies"] = self.initial["clubs"] = chosen
@@ -320,6 +368,17 @@ class ProfileForm(forms.ModelForm):
             local, _, domain = user.email.partition("@")
             if domain.lower() == "illinois.edu":
                 self.initial["net_id"] = local.lower()
+
+    def clean_photo(self):
+        upload = self.cleaned_data.get("photo")
+        if not upload:
+            return None
+        if upload.size > MAX_PHOTO_BYTES:
+            raise forms.ValidationError("That photo is over 5 MB. Choose a smaller one.")
+        try:
+            return _photo_jpeg(upload)
+        except (OSError, ValueError) as error:  # opened, but could not be read to the end
+            raise forms.ValidationError(self.fields["photo"].error_messages["invalid_image"]) from error
 
     def clean_net_id(self):
         net_id = normalise_net_id(self.cleaned_data["net_id"])
@@ -347,6 +406,11 @@ class ProfileForm(forms.ModelForm):
         profile.is_sso_verified = EmailAddress.objects.filter(
             user=self.user, email__iexact=profile.illinois_email, verified=True).exists()
         profile.onboarding_completed_at = profile.onboarding_completed_at or timezone.now()
+        old_photo = profile.photo.name
+        if self.cleaned_data.get("photo"):
+            profile.photo = self.cleaned_data["photo"]
+        elif self.cleaned_data.get("remove_photo"):
+            profile.photo = ""
         chosen = [*self.cleaned_data["hobbies"], *self.cleaned_data["clubs"]]
         free = [(Weekday.SATURDAY, block) for block in self.cleaned_data["saturday"]]
         free += [(Weekday.SUNDAY, block) for block in self.cleaned_data["sunday"]]
@@ -362,6 +426,8 @@ class ProfileForm(forms.ModelForm):
             AvailabilitySlot.objects.bulk_create(
                 AvailabilitySlot(profile=profile, weekday=day, time_block=block)
                 for day, block in free)
+            if old_photo and old_photo != profile.photo.name:  # replaced or removed
+                transaction.on_commit(lambda: profile.photo.storage.delete(old_photo))
         return profile
 
 

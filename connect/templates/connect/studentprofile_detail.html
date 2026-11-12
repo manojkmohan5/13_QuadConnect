@@ -6,7 +6,8 @@ One student's profile. Named by DetailView's convention
 Laid out as a profile is in any meetup app. On the left, and staying put
 as the page scrolls, the student's card: a block of the colour of the
 connection they want (blue for Friend Connect, purple for Squad Connect;
-the badge says it) with their initials and name. On the right, what they
+the badge says it) with their photo, or their initials, and their name and
+headline. On the right, what they
 said in onboarding, each answer as a prompt: the question small, the answer
 large. Then their interests, the weekend they are free, and their matches.
 On your own profile, a link to edit it (connect/onboarding.py) comes first.
@@ -28,13 +29,15 @@ deliberately absent.
 {% block content %}
 <div class="profile">
 
-  <div class="portrait k-{{ student.preferred_connection|lower }}" data-enter>
+  <div class="portrait k-{{ student.preferred_connection|lower }}{% if student.photo %} has-photo{% endif %}" data-enter>
+    {% if student.photo %}<img class="photo" src="{{ student.photo.url }}" alt="Photo of {{ student.full_name }}">{% endif %}
     <span class="mono" aria-hidden="true" data-initials="{{ student.initials }}"></span>
     <div class="over">
       <span class="badge">{{ student.get_preferred_connection_display }}</span>
-      <div>
+      <div class="name">
         <h1 class="page">{{ student.full_name }}</h1>
         <p class="sub">{{ student.net_id }}</p>
+        {% if student.headline %}<p class="headline">{{ student.headline }}</p>{% endif %}
       </div>
     </div>
   </div>

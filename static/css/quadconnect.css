@@ -679,6 +679,30 @@ ul.people {
 .portrait .mono { font-size: 176px; margin-top: 48px; }
 .portrait h1.page { margin: 0 0 4px; color: #ffffff; }
 .portrait p.sub { margin: 0; color: #ffffff; font-size: 15px; }
+
+/* A student's photo, where they gave one (ProfileForm), fills the block
+   behind the name, edge to edge, and the initials step aside. The block
+   gives up its padding and the words keep it as a margin, so the grid can
+   stretch the photo over the whole block; contain: size keeps the photo
+   from setting the block's size. The name and headline then sit on a panel
+   of Illini blue at 90%, which keeps the white text at 10:1 or more over
+   any photo. */
+.person-top.has-photo,
+.portrait.has-photo { padding: 0; }
+.person-top.has-photo > .over,
+.person-top.has-photo > .go { margin: 16px; }
+.portrait.has-photo > .over { margin: 24px; }
+.person-top > .photo,
+.portrait > .photo { contain: size; justify-self: stretch; align-self: stretch; object-fit: cover; }
+.has-photo .mono { display: none; }
+.has-photo .name { background: rgba(19, 41, 75, 0.9); border-radius: 12px; }
+.person-top.has-photo .name { padding: 8px 52px 8px 12px; }
+.portrait.has-photo .name { padding: 12px 16px; }
+.headline { margin: 6px 0 0; font-size: 15px; line-height: 1.35; color: #ffffff; }
+img.face { object-fit: cover; background: var(--raised); }
+/* The profile form: the photo you have now, beside "Remove my photo". */
+.form .field.current-photo { flex-direction: row; align-items: center; gap: 16px; }
+.current-photo .face { width: 72px; height: 72px; }
 .profile-main > h2.section:first-child { margin-top: 0; }
 /* The plain facts, in a row, each behind its icon. */
 .vitals {

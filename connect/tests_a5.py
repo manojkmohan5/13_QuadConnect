@@ -24,7 +24,7 @@ from .models import StudentProfile
 
 PUBLIC_ROUTES = {"home", "privacy", "api-summary"}
 # A value for each URL parameter, so every route can be requested.
-SAMPLE_KWARGS = {"pk": 1, "chart": "chart1", "fmt": "png"}
+SAMPLE_KWARGS = {"pk": 1, "chart": "chart1", "fmt": "png", "path": "profile_photos/none.jpg"}
 
 GOOGLE = {"google": {"SCOPE": ["profile", "email"], "OAUTH_PKCE_ENABLED": True,
                      "AUTH_PARAMS": {"access_type": "online", "prompt": "select_account"},

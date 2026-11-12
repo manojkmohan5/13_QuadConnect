@@ -162,6 +162,17 @@ class StudentProfile(models.Model):
         help_text="illinois.edu address returned by SSO.",
     )
     full_name = models.CharField(max_length=120)
+    headline = models.CharField(
+        max_length=80,
+        blank=True,
+        help_text="Optional line under the name, in the student's own words.",
+    )
+    photo = models.ImageField(
+        upload_to="profile_photos/",
+        blank=True,
+        help_text="Optional. Stored as a JPEG of at most 800 px without its "
+                  "metadata (connect/forms.py); only signed-in users see it.",
+    )
 
     # --- Screen 2: academic context --------------------------------------
     college = models.CharField(

@@ -45,8 +45,10 @@ urlpatterns = [
     path("", views.home, name="home"),
     # P1-A5: public, linked from Google's sign-in screen and the footer.
     path("privacy/", views.privacy, name="privacy"),
-    # Your own profile: set up after the first login, edited later.
+    # Your own profile: set up after the first login, edited later. Its photo
+    # is served by a view that needs a login, never as a public file.
     path("profile/", onboarding.profile, name="profile"),
+    path("media/<path:path>", onboarding.media, name="media"),
     # Meeting up (meetups.py): sign up for the weekend, then answer the
     # match, check in, and say how it went.
     path("meet/", meetups.meet, name="meet"),

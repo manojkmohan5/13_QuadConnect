@@ -38,13 +38,22 @@ Context: form (ProfileForm); new, True until the student has a profile.
   {% endif %}
 
   {# novalidate: the server's messages say how to fix each answer. #}
-  <form class="form profile-form" method="post" action="{% url 'connect:profile' %}" novalidate>
+  <form class="form profile-form" method="post" action="{% url 'connect:profile' %}"
+        enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
     <section class="card" aria-labelledby="about-title">
       <h2 class="card-title" id="about-title">About you</h2>
-      <p class="form-note">Your name, college and major are on your card.</p>
+      <p class="form-note">Your photo, name, headline, college and major are on your card.</p>
+      <div class="field">{{ form.photo.as_field_group }}</div>
+      {% if form.instance.photo %}
+        <div class="field current-photo">
+          <img class="face" src="{{ form.instance.photo.url }}" alt="Your photo now">
+          <div class="field field-check">{{ form.remove_photo.as_field_group }}</div>
+        </div>
+      {% endif %}
       <div class="field">{{ form.full_name.as_field_group }}</div>
+      <div class="field">{{ form.headline.as_field_group }}</div>
       <div class="field">{{ form.net_id.as_field_group }}</div>
       <div class="field">{{ form.college.as_field_group }}</div>
       <div class="field">{{ form.department.as_field_group }}</div>

@@ -161,6 +161,14 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # collectstatic target, gitignored. Production serves from here.
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# --- Uploads (profile photos) -----------------------------------------------
+# Never public: /media/ is a view that needs a login (connect/onboarding.py),
+# not a folder the web server hands out. The live site points
+# DJANGO_MEDIA_ROOT outside the repository, like the database; locally the
+# photos are in media/, which git ignores.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = env("DJANGO_MEDIA_ROOT", default=BASE_DIR / "media")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 

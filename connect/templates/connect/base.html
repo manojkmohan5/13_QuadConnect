@@ -104,7 +104,8 @@ them first; the <noscript> rule below shows them when there is no script.
       {% if user.is_authenticated %}
         {% url 'connect:profile' as setup_url %}
         <a class="me" href="{% firstof user.student_profile.get_absolute_url setup_url %}">
-          <span class="face" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>
+          {% if user.student_profile.photo %}<img class="face" src="{{ user.student_profile.photo.url }}" alt="">
+          {% else %}<span class="face" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>{% endif %}
           <span class="who">Signed in as <strong>{{ user.get_username }}</strong>
             <span class="to">{% if user.student_profile %}Your profile{% else %}Set up your profile{% endif %}</span></span>
         </a>

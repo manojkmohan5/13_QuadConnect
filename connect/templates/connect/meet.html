@@ -105,7 +105,7 @@ profile: signup, form, me, actions, others, no_time_left, called_off.
   <ul class="list k-{{ match.connection_type|lower }}" role="list">
     {% for p in others %}
       <li class="card linked with-tile">
-        <span class="face" aria-hidden="true">{{ p.profile.initials }}</span>
+        {% include "connect/_face.html" with profile=p.profile %}
         <div class="row">
           <div>
             <div class="title"><a href="{{ p.profile.get_absolute_url }}">{{ p.profile.full_name }}</a></div>
