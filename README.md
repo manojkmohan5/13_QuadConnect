@@ -50,7 +50,7 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>, and log in as `tester` (see [Admin](#admin))
-or sign up. Run the test suite with `python manage.py test connect` (220
+or sign up. Run the test suite with `python manage.py test connect` (239
 tests).
 
 Since P1-A6, `requirements.txt` also installs `torch` and `transformers` for the
@@ -97,6 +97,55 @@ The seed data also ships two superusers, both with password `uiuc12345`:
 exist.)
 
 ---
+
+## Meeting up: real matching
+
+A student signs up for the coming weekend on **Meet** (`/meet/`), one-on-one
+(Friend Connect) or in a group (Squad Connect). Matching runs at once, on
+every sign-up, decline and withdrawal
+([`connect/matching.py`](connect/matching.py)):
+
+- **1-on-1:** the two waiting students who share the most interests (a
+  starred one counts double) and are both free at one of the weekend's
+  blocks that is at least two hours away.
+- **Group:** 4 to 8 waiting students free at the same block who picked the
+  same interest, the biggest group first.
+- Two students who were in a match together that weekend are never put
+  together again that weekend.
+- The meetup is at the soonest block they share, at the approved venue with
+  room for everyone. It has a check-in code, and an activity that suits what
+  they share (Gaming: Board games; Gym: Sports; otherwise Coffee).
+
+Then each student, on the Meet page or the match page
+([`connect/meetups.py`](connect/meetups.py)):
+
+1. **Accepts or declines**, until it starts. When everyone left has
+   accepted, it is confirmed. A 1-on-1 with a decline, or a group down to
+   two, is called off, and the others are matched again. Whoever declines is
+   back in the pool, for someone else.
+2. **Sees what to do on the home page**: one line says the next step (sign
+   up, answer, check in, give feedback).
+3. **Checks in** at the venue, from 30 minutes before the start to the end
+   of the block. Two check-ins mark the meetup completed.
+4. **Gives feedback** once checked in. It is private. Students who both ask
+   to stay connected each see the other's Illinois email.
+5. **Gets icebreakers**: trivia questions fetched live from the Open Trivia
+   Database, on a topic the match's students share.
+
+**Privacy.** A match, its icebreakers and a student's match history are
+seen only by the students in it and by staff (`Match.objects.visible_to`).
+Staff see every match, and the sign-ups (`MatchRequest`) in Django Admin.
+
+**Try it** with two accounts in two browser windows (one of them private).
+Give both profiles an interest and a weekend time in common, then sign up on
+Meet in both: the second sign-up makes the match. Check-in opens only near
+the meetup's time; staff can move a match's time in Django Admin to try it
+sooner.
+
+**Not yet:** email or push notices (there is no mail server), proof that a
+student is at the venue (check-in is on trust; the shared code helps them
+find each other), and UIUC sign-in with Microsoft Entra, planned for the
+last stage.
 
 ## The interface, rebuilt
 
@@ -966,6 +1015,8 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 |---|---|---|---|
 | `/` | `connect:home` | FBV, `render()` | A2 |
 | `/privacy/` | `connect:privacy` | FBV, `render()`; public | A5 |
+| `/profile/` | `connect:profile` | FBV, GET + POST; set up or edit your own profile | login fixes |
+| `/meet/` | `connect:meet` | FBV, GET + POST; sign up for the weekend, see your match | matching |
 | `/students/` | `connect:student-list` | Generic CBV (`ListView`) | A2 |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV (`DetailView`) | A2 |
 | `/search/` | `connect:student-search` | Base CBV (`View`), GET + POST | A3 |
@@ -973,6 +1024,8 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | `/matches/` | `connect:match-list` | FBV, `render()` | A2 |
 | `/matches/<pk>/` | `connect:match-detail` | Generic CBV (`DetailView`) | A3 |
 | `/matches/<pk>/icebreakers/` | `connect:match-icebreakers` | FBV, `render()`; calls Open Trivia DB | A4 |
+| `/matches/<pk>/answer/` | `connect:match-answer` | FBV, POST only: accept, decline, check in | matching |
+| `/matches/<pk>/feedback/` | `connect:match-feedback` | FBV, GET + POST; after checking in | matching |
 | `/locations/` | `connect:location-list` | Base CBV (`View`), GET + POST | A2, POST in A3 |
 | `/locations/<pk>/` | `connect:location-detail` | Generic CBV (`DetailView`) | A3 |
 | `/feedback/summary/` | `connect:feedback-summary` | FBV, `HttpResponse` | A2 |
@@ -1052,7 +1105,7 @@ own login, for staff.
 │   │   └── production.py         DEBUG=False, security headers, hashed static
 │   ├── urls.py  wsgi.py  asgi.py
 └── connect/                      the one domain app
-    ├── models.py                 8 models; get_absolute_url() on 3
+    ├── models.py                 9 models; get_absolute_url() on 3
     ├── views.py                  pages, detail views, search, venue suggestions
     ├── forms.py                  search, NetID lookup, venue suggestion, login
     ├── middleware.py             login required everywhere; 401 for the API
@@ -1070,7 +1123,7 @@ own login, for staff.
     ├── tests_a6.py               61 tests: the local model's pipeline, the API check, hygiene
     ├── tests_a9.py               37 tests: the embedding step, the time limit and the page (Part 1); the request check (Part 3)
     ├── urls.py                   all routes named
-    ├── admin.py                  all 8 models registered, with inlines
+    ├── admin.py                  all 9 models registered, with inlines
     ├── templates/connect/        base.html, shared entity_list.html, pages; _person.html (a student's card),
     │                             _weekend.html (the free-time grid), _photo_credit.html
     └── management/commands/
@@ -1083,8 +1136,9 @@ own login, for staff.
 
 ## Data model
 
-Eight models in `connect/models.py`, each mapping to a screen in the
-wireframes. Full rationale — every field, every `on_delete`, every constraint —
+Nine models in `connect/models.py`, each mapping to a screen in the
+wireframes. The ninth, `MatchRequest`, is a student's sign-up for one
+weekend's matching (`StudentProfile` 1-N `MatchRequest`, one per weekend). Full rationale — every field, every `on_delete`, every constraint —
 is in [`docs/data_model_notes.md`](docs/data_model_notes.md); the diagram is
 [`docs/er_diagram.pdf`](docs/er_diagram.pdf).
 

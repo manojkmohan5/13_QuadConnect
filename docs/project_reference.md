@@ -249,7 +249,7 @@ the same models as a foundation.
 │   ├── urls.py                    /admin/, /accounts/ (allauth) and '' -> connect.urls
 │   ├── wsgi.py  asgi.py           -> quadconnect.settings.production
 └── connect/
-    ├── models.py                  8 models; A3 added get_absolute_url() to 3 (no migration)
+    ├── models.py                  9 models; A3 added get_absolute_url() to 3 (no migration)
     ├── views.py                   one section per owner, plus A3 sections
     ├── forms.py                   (A3) search, NetID lookup, venue suggestion; (A5) login form
     ├── middleware.py              (A5) login required by default; 401 JSON for /api/
@@ -338,7 +338,7 @@ names, `immutable` caching, gzip. **Production needs
 
 ---
 
-## 6. Data model — 8 models
+## 6. Data model — 9 models
 
 All in `connect/models.py`. **Frozen for P1-A2** — do not add fields or
 migrations. Every model has a class docstring, `Meta.ordering`, and `__str__`.
@@ -459,6 +459,19 @@ submitted_at DateTime auto_now_add
 Meta.ordering ["-submitted_at"]
 ```
 
+### `MatchRequest`
+A student's sign-up for one weekend's matching (`connect/matching.py`). Added
+with real matching; migration `0003_matchrequest`.
+
+```
+profile FK -> StudentProfile CASCADE
+week_start Date            Monday of the week whose weekend it is
+connection_type            ConnectionType (FRIEND | SQUAD)
+created_at DateTime auto_now_add   first to sign up, first into a squad
+UniqueConstraint (profile, week_start)  uniq_request_per_profile_week
+Meta.ordering ["-week_start", "created_at"]
+```
+
 ### Relationship map
 
 ```
@@ -492,15 +505,16 @@ Pattern: **CASCADE** when the child is a detail of its parent · **PROTECT**
 when deletion destroys history or affects a third party · **SET_NULL** when
 the link is genuinely optional.
 
-### The five `UniqueConstraint`s
+### The six `UniqueConstraint`s
 
 `uniq_profile_netid_email` · `uniq_interest_name_per_category` ·
 `uniq_interest_per_profile` · `uniq_slot_per_profile_day_block` ·
-`uniq_participant_per_match`
+`uniq_participant_per_match` · `uniq_request_per_profile_week`
 
 > **Django limitation:** `UniqueConstraint` cannot span relations. "One match
 > per student per week" (`profile`, `match__week_start`) is **not expressible**
-> and was removed. Enforce it in the matching service layer.
+> and was removed. `connect/matching.py` enforces it: only a student in no
+> match going ahead that weekend is matched (`_waiting`).
 
 ---
 
@@ -514,6 +528,8 @@ yours.
 | `/` | `connect:home` | dashboard | shared/`main` | `home.html` |
 | `/privacy/` | `connect:privacy` | FBV `render()`, public | A5 | `privacy.html` |
 | `/profile/` | `connect:profile` | FBV, GET+POST; your own profile, set up or edited (`onboarding.py`) | login fixes | `profile_form.html` |
+| `/meet/` | `connect:meet` | FBV, GET+POST; sign up for the weekend, see your match (`meetups.py`) | matching | `meet.html` |
+| `/matches/<pk>/answer/`, `/matches/<pk>/feedback/` | `connect:match-answer`, `connect:match-feedback` | FBV; accept, decline, check in (POST); feedback after checking in | matching | `feedback_form.html` |
 | `/students/` | `connect:student-list` | Generic CBV | Kritika | `studentprofile_list.html` (default naming) |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV | Kritika | `studentprofile_detail.html` |
 | `/matches/` | `connect:match-list` | FBV `render()` | Manojkumar | `entity_list.html` (shared) |
@@ -621,6 +637,39 @@ that property when adding checks.
 ## 9. Work log
 
 The running history of what has actually been built. Newest at the top.
+
+### BUILDING `feature/matching` - Manojkumar Mohankumar - 2026-11-12
+**Shipped so far:** real matching, on a branch cut from `feature/login-fixes` at `e2794c0`.
+- **Sign up for a weekend** on `/meet/`: 1-on-1 (Friend Connect) or a group (Squad Connect). New model
+  `MatchRequest` (migration `0003_matchrequest`), one per student per weekend.
+- **Matching** (`connect/matching.py`) runs on every sign-up, decline and withdrawal. 1-on-1: the pair sharing the
+  most interests (starred double) and a weekend block at least 2 hours away. Group: 4 to 8 free at one block
+  who picked one interest. Never the same students together twice in a weekend. Soonest shared block; the
+  approved venue that seats them with the fewest meetups then; a `QC-` code; an activity from a shared interest.
+- **Answers** (`connect/meetups.py`, `_match_actions.html`): accept or decline until it starts. All left
+  accepted: CONFIRMED. A 1-on-1 with a decline, or a squad under 3: CANCELLED, the rest matched again.
+- **Notice:** the home page's "This weekend" card says the next step. **Check-in:** 30 minutes before the start
+  to the end of the block; two check-ins: COMPLETED. **Feedback** once checked in; mutual "stay connected"
+  shows each other's Illinois email.
+- **Privacy:** `Match.objects.visible_to(user)`: a student sees only their own matches (list, page,
+  icebreakers page and API, home) and their own match history; staff see all.
+- **Icebreakers** stay live from Open Trivia DB; Gym now maps to Sports. **Menu:** "Meet" first (coffee icon).
+
+**Files changed:** `connect/matching.py`, `connect/meetups.py`, `connect/tests_matching.py`,
+`connect/migrations/0003_matchrequest.py` and `templates/connect/meet.html`, `_match_actions.html`,
+`feedback_form.html` (new); `models.py`, `forms.py`, `views.py`, `urls.py`, `admin.py`, `icebreakers.py`,
+`base.html`, `home.html`, `match_detail.html`, `studentprofile_detail.html`, `privacy.html`, the stylesheet, the
+lucide README, five existing tests (staff log in to see every match), the committed `db.sqlite3` (migrated),
+`README.md`, `docs/data_model_notes.md`, this file, notes.txt.
+
+**Gotchas:**
+- **`visible_to` is a subquery on purpose.** A join on `participants` before `annotate(Count("participants"))`
+  would count only the viewer.
+- **A test that opens a match needs a participant or staff.** Seeded matches have only seeded students, so the old
+  tests sign in as staff (`tester`).
+- **Check-in can't be tried before the weekend** unless staff move the match's time in Admin.
+- **One process lock.** `matching._lock` keeps two sign-ups from matching one student twice; several server
+  processes would need a database lock.
 
 ### BUILDING `feature/login-fixes` - Manojkumar Mohankumar - 2026-11-12
 **Shipped so far:** on a branch cut from `feature/rebuild` at `5ad1050`.

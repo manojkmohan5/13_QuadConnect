@@ -27,7 +27,7 @@ see the Team Contribution Contract.
 
 ## 2. Model overview
 
-Eight models, each mapping to a screen in the wireframe deck.
+Nine models, each mapping to a screen in the wireframe deck.
 
 | Model | Real-world entity | Screen |
 |---|---|---|
@@ -39,6 +39,7 @@ Eight models, each mapping to a screen in the wireframe deck.
 | `Match` | One scheduled weekly experience | 6, 7 |
 | `MatchParticipant` | One student's place in one match | 6, 7, 8 |
 | `ExperienceFeedback` | One student's private post-meeting feedback | 9 |
+| `MatchRequest` | One student's sign-up for one weekend's matching (added with real matching) | 3 |
 
 This exceeds the recommended 3–5 because the binding requirement is a
 *minimum* of two models per feature, and the product has four distinct
@@ -91,7 +92,7 @@ The mix is deliberate: `CASCADE` where the child is a detail of its parent,
 
 ## 4. Uniqueness constraints
 
-Five multi-field `UniqueConstraint`s, all verified against the live database:
+Six multi-field `UniqueConstraint`s:
 
 | Constraint | Fields | Prevents |
 |---|---|---|
@@ -100,6 +101,7 @@ Five multi-field `UniqueConstraint`s, all verified against the live database:
 | `uniq_interest_per_profile` | `profile`, `interest` | The same interest selected twice, which would double-count overlap |
 | `uniq_slot_per_profile_day_block` | `profile`, `weekday`, `time_block` | The same weekend window selected twice |
 | `uniq_participant_per_match` | `match`, `profile` | The same student appearing twice in one match |
+| `uniq_request_per_profile_week` | `profile`, `week_start` | A student in one weekend's pool twice, where they could be matched twice |
 
 ---
 

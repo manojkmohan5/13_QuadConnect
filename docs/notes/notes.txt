@@ -23,6 +23,20 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  Real matching, on feature/matching  [Manojkumar]
+--------------------------------------------------------------------------------
+  - Meet page (/meet/): sign up for the coming weekend, 1-on-1 or a group.
+    Matching runs on every sign-up: 1-on-1 = most shared interests and a
+    shared free block; group = 4-8 free at one block sharing one interest.
+  - Accept or decline; confirmed when all accept; called off and re-matched
+    on a decline. Home page card says the next step. Check-in from 30 min
+    before; feedback after; mutual "stay connected" shows Illinois emails.
+  - Students see only their own matches; staff see all. Icebreakers are
+    live trivia for the match (Gym -> Sports).
+  - New model MatchRequest (migration 0003). 239 tests pass.
+Next: Microsoft Entra sign-in for UIUC students, at the last stage.
+
+--------------------------------------------------------------------------------
 WEEK 12 (w/c 2026-11-09)  -  Sign-up fixed, and a profile set up after login,
                              on feature/login-fixes  [Manojkumar]
 --------------------------------------------------------------------------------
