@@ -1,7 +1,7 @@
 /*
- * Three small things the pages share. None is needed to read or use a
- * page: without this script the menu still opens, nothing is hidden, and
- * a search still runs.
+ * Four small things the pages share. None is needed to read or use a
+ * page: without this script the menu still opens, nothing is hidden, a
+ * search still runs and a form is still sent.
  */
 
 /*
@@ -130,5 +130,35 @@
     status.textContent = "";
     button.disabled = false;
     form.removeAttribute("aria-busy");
+  });
+})();
+
+/*
+ * 4. A form that saves something is sent once. A double click on "Create
+ *    account" sent it twice: the first copy made the account, and the
+ *    second found its username taken. So once a POST form is on its way,
+ *    its buttons are disabled (the server still answers a second copy
+ *    properly, for when this script does not run). Back on the page, the
+ *    browser may restore it as it was left, so they are enabled again.
+ */
+(function () {
+  function busy(form, on) {
+    Array.prototype.forEach.call(form.querySelectorAll("button"), function (button) {
+      button.disabled = on;
+    });
+    if (on) { form.setAttribute("aria-busy", "true"); } else { form.removeAttribute("aria-busy"); }
+  }
+
+  document.addEventListener("submit", function (event) {
+    var form = event.target;
+    if (form.method !== "post" || event.defaultPrevented) { return; }
+    // After the browser has read the form, so a named button still sends its value.
+    window.setTimeout(function () { busy(form, true); }, 0);
+  });
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll('form[method="post"][aria-busy]'), function (form) {
+      busy(form, false);
+    });
   });
 })();
