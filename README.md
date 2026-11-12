@@ -50,7 +50,7 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>, and log in as `tester` (see [Admin](#admin))
-or sign up. Run the test suite with `python manage.py test connect` (210
+or sign up. Run the test suite with `python manage.py test connect` (220
 tests).
 
 Since P1-A6, `requirements.txt` also installs `torch` and `transformers` for the
@@ -332,6 +332,10 @@ own `auth` app.
   ([`templates/account/`](templates/account/)), not allauth's defaults.
   - Log in takes a username or an email address.
   - Sign up asks for a username, an email address and the password twice.
+    A double click on **Create account** sends the form once
+    ([`static/js/site.js`](static/js/site.js)). If a second copy still
+    reaches the server, it gets the form back with the reason, not an error
+    page ([`connect/onboarding.py`](connect/onboarding.py)).
   - Log out is a button in the header that sends a POST, so a link or an
     image on another page cannot sign anyone out.
 - **Settings** ([`quadconnect/settings/base.py`](quadconnect/settings/base.py)):
@@ -352,9 +356,21 @@ own `auth` app.
     (`?next=`).
   - An API endpoint answers `401` with JSON instead, because a program cannot
     fill in a login form.
+- **Your profile first.** An account is not yet a student. After a login or
+  a sign-up, by password or by Google, a student with no profile goes to
+  `/profile/`, wherever they were headed (`AccountAdapter.post_login` in
+  [`connect/adapters.py`](connect/adapters.py)). The form asks for their
+  name, NetID, college, how they like to meet, their interests and the
+  weekend times they are free. Saving opens their profile page, and the same
+  form edits it later. Until it is set up, every page says so and links to
+  it. Staff are not sent there.
+  - A profile is marked verified only when the account has a verified email
+    (from a Google sign-in) that is the NetID's `@illinois.edu` address. A
+    NetID typed into the form proves nothing.
 - **Navigation.** Signed out, the header shows only Home, Log in and Sign up,
   and the home page describes the product instead of showing student data.
-  Signed in, it shows every section, "Signed in as *username*", and Log out.
+  Signed in, it shows every section, "Signed in as *username*" (a link to
+  your profile, or to setting it up), and Log out.
 
 | Signed out, a request for | gets |
 |---|---|

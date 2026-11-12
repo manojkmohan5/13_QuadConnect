@@ -23,6 +23,22 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  Sign-up fixed, and a profile set up after login,
+                             on feature/login-fixes  [Manojkumar]
+--------------------------------------------------------------------------------
+  - A double click on "Create account" gave a 500 (IntegrityError: the
+    username was saved by the first click). The form now comes back with the
+    reason, and every POST form is sent once (site.js).
+  - After a login or sign-up, a student without a profile goes to /profile/:
+    name, NetID, college, how they like to meet, interests, free weekend
+    times. Saving opens their profile, which is on the roster from then on.
+    The same page edits it; "Signed in as" links to it.
+  - Verified only when a Google sign-in proved the NetID's illinois.edu
+    address. The roster, search and privacy page now say so.
+Next: try it on the laptop, then push and open a PR into feature/rebuild
+or main.
+
+--------------------------------------------------------------------------------
 WEEK 12 (w/c 2026-11-09)  -  The interface rebuilt on feature/rebuild
                              [Manojkumar]
 --------------------------------------------------------------------------------

@@ -513,6 +513,7 @@ yours.
 |---|---|---|---|---|
 | `/` | `connect:home` | dashboard | shared/`main` | `home.html` |
 | `/privacy/` | `connect:privacy` | FBV `render()`, public | A5 | `privacy.html` |
+| `/profile/` | `connect:profile` | FBV, GET+POST; your own profile, set up or edited (`onboarding.py`) | login fixes | `profile_form.html` |
 | `/students/` | `connect:student-list` | Generic CBV | Kritika | `studentprofile_list.html` (default naming) |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV | Kritika | `studentprofile_detail.html` |
 | `/matches/` | `connect:match-list` | FBV `render()` | Manojkumar | `entity_list.html` (shared) |
@@ -541,7 +542,10 @@ request redirects to `/accounts/login/?next=...`, and an `/api/` request gets
 `401` JSON. A new view is private unless you mark it, so decide on purpose,
 and add a public one to `PUBLIC_ROUTES` in `tests_a5.py`. The account pages
 live under `/accounts/` (allauth's URLs), with the site's templates in the
-project-level `templates/account/`.
+project-level `templates/account/`. Sign-up runs `connect.onboarding.SignupView`
+(allauth's, routed before `include('allauth.urls')` in `quadconnect/urls.py`),
+and every login ends in `AccountAdapter.post_login`, which sends a student
+without a profile to `/profile/`.
 
 ### Template architecture
 
@@ -617,6 +621,35 @@ that property when adding checks.
 ## 9. Work log
 
 The running history of what has actually been built. Newest at the top.
+
+### BUILDING `feature/login-fixes` - Manojkumar Mohankumar - 2026-11-12
+**Shipped so far:** on a branch cut from `feature/rebuild` at `5ad1050`.
+- **Sign-up error fixed.** A double click on "Create account" sent the form twice. Both copies passed allauth's
+  "username taken" check before either was saved, so the second save hit the database's unique rule and gave a
+  500 page (`IntegrityError` on `auth_user.username`). `connect.onboarding.SignupView` now gives the form back
+  with the reason. `site.js` sends any POST form once.
+- **Profile first.** A new account had no `StudentProfile`, so nobody could find it, and nothing asked for one.
+  Now every login or sign-up of a student without a profile ends on `/profile/` (`AccountAdapter.post_login`),
+  whose form (`ProfileForm`) asks for the name, NetID, college, the four matching preferences, interests (hobbies
+  and clubs) and the free weekend blocks. Saving opens the profile page. The same page edits it later. Until a
+  student has one, every page shows a prompt, and "Signed in as" links to the form (then to the profile).
+- **Verified means verified.** `is_sso_verified` is set only when the account has a verified email equal to
+  `<netid>@illinois.edu` (a Google sign-in). The roster no longer says every student is verified.
+- **Privacy page** lists the profile data and who sees it.
+- **Fixed on the way:** the "reading" status line (`e17b456`) shared its class with `main.reading`, so the
+  privacy page was laid out as a row. The status line is `.model-status` now.
+
+**Files changed:** `connect/onboarding.py` (new), `connect/forms.py`, `connect/adapters.py`, `connect/urls.py`,
+`quadconnect/urls.py`, `connect/templates/connect/profile_form.html` (new), `base.html`,
+`studentprofile_detail.html`, `studentprofile_list.html`, `student_search.html`, `student_ask.html`,
+`privacy.html`, `static/css/quadconnect.css`, `static/js/site.js`, `connect/tests_onboarding.py` (new),
+`tests_a5.py`, `tests_a6.py`, `README.md`, this file, notes.txt. No migration.
+
+**Gotchas:**
+- **`?next=` is not followed when there is no profile.** The adapter sends the student to the form first, and
+  saving opens their own profile. A test that logs in and expects `next` needs a user who has a profile, or staff.
+- **The menu costs a query.** `base.html` reads `user.student_profile`, so the ask page runs 8 queries, not 7.
+- **Two pages can share a class name by accident.** Check `grep` for a class before giving it a new meaning.
 
 ### BUILDING `feature/rebuild` - Manojkumar Mohankumar - 2026-11-11
 **Shipped so far:** the interface rebuilt, on a branch cut from `main` at `0c20516` (after P1-A9). No feature,
