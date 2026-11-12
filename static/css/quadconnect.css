@@ -955,10 +955,10 @@ ol.steps.grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%),
 .ask .field input { min-height: 52px; font-size: 17px; border-radius: 16px; padding: 8px 16px; }
 .samples { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 16px 0 0; font-size: 14px; color: var(--muted); }
 /* Beside Search while the model reads (site.js): a turning ring, the words, the seconds. */
-.reading { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; font-weight: 600; color: var(--ink-2); }
-.reading:empty { display: none; }
+.model-status { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; font-weight: 600; color: var(--ink-2); }
+.model-status:empty { display: none; }
 form[aria-busy="true"] button:disabled { opacity: 0.55; cursor: progress; }
-.reading .seconds { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.model-status .seconds { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
 .spinner {
   flex: none;
   width: 20px; height: 20px;
