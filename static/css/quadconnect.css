@@ -338,6 +338,10 @@ nav.site .menu a { border-radius: 8px; }
 /* Sign up is the one orange thing in the header. */
 .account a.signup { background: var(--orange); color: var(--ink); font-weight: 600; padding: 0 16px; }
 .account a.signup:hover { background: var(--orange-hover); color: var(--ink); }
+/* Signed in: the face and "Signed in as" are one link, to your profile. */
+.account a.me { gap: 10px; height: auto; min-height: 44px; min-width: 0; padding: 4px 12px 4px 4px; }
+.account .me .who { display: block; }
+.account .me .to { display: block; color: var(--orange-ink); font-weight: 600; }
 
 /* --- Layout ------------------------------------------------------------- */
 main {
@@ -951,6 +955,52 @@ ol.steps.grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%),
 .form-note { font-size: 14px; color: var(--muted); margin: 4px 0 16px; }
 .lookup-result { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
 
+/* A question with set answers is a <fieldset>; its <legend> reads as a label. */
+.form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.form legend { padding: 0; margin: 0 0 8px; font-weight: 600; font-size: 15px; }
+/* Its answers as pills (ProfileForm). A chosen pill keeps its tick or dot
+   and is filled and bold too, so a choice never shows by colour alone. */
+.form div.picks { display: flex; flex-wrap: wrap; gap: 8px; }
+.form div.picks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 14px 6px 10px;
+  border: 1px solid var(--field-border);
+  border-radius: 999px;
+  background: var(--card);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms var(--ease);
+}
+.form div.picks label:hover { background: var(--raised); }
+.form div.picks label:has(:checked) {
+  background: var(--orange-soft);
+  border-color: var(--orange-ink);
+  color: var(--orange-ink);
+  font-weight: 600;
+}
+.form div.picks input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--orange-ink); }
+
+/* Your profile, as a form: one card per step. */
+.form.profile-form { max-width: none; gap: 20px; }
+.profile-form .field + .field { margin-top: 20px; }
+
+/* Above every page until a student has a profile (base.html). */
+.nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  background: var(--orange-soft);
+  color: var(--ink);
+  border-color: #ffd2b8;
+}
+/* On your own profile page: the link to edit it. */
+.own { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 0 0 16px; color: var(--ink-2); }
+
 /* "Ask in plain English": one wide box, as in a chat. */
 .ask .field input { min-height: 52px; font-size: 17px; border-radius: 16px; padding: 8px 16px; }
 .samples { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 16px 0 0; font-size: 14px; color: var(--muted); }
@@ -1165,6 +1215,7 @@ footer.site a { color: var(--ink-2); }
     padding: 16px 12px 0;
     border-top: 1px solid var(--line);
   }
+  body.has-tabs .account a.me { flex: 1; }
   body.has-tabs .account .who { flex: 1; min-width: 0; }
   body.has-tabs .account form { flex-basis: 100%; }
   body.has-tabs .account button { width: 100%; justify-content: center; }
@@ -1173,13 +1224,15 @@ footer.site a { color: var(--ink-2); }
 /* --- Responsive ----------------------------------------------------------
    Under 960px the navigation leaves the header and becomes a tab bar along
    the bottom, as in a phone app. Home is the logo; the tab bar holds the
-   four sections and More. The header keeps the logo and Log out; "Signed
-   in as" stays in the page for a screen reader. */
+   four sections and More. The header keeps the logo, your face (the link
+   to your profile) and Log out; "Signed in as" stays in the page for a
+   screen reader. */
 @media (max-width: 959px) {
   .bar { padding: 0 16px; min-height: 56px; }
   main { padding: 24px 16px 64px; }
   .account .who { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-  .account .face { display: none; }
+  /* The link to your profile is the face alone; its words stay for a screen reader. */
+  .account a.me { padding: 0; min-height: 0; border-radius: 50%; }
   .profile { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .portrait { position: static; min-height: 280px; }
   .portrait .mono { font-size: 128px; margin-top: 24px; }

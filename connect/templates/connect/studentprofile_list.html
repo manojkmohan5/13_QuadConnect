@@ -12,11 +12,12 @@ Each student is a profile card (_person.html), shared with the search pages.
 {% endcomment %}
 
 {% block title %}Students - QuadConnect{% endblock %}
-{% block heading %}Verified students{% endblock %}
+{% block heading %}Students{% endblock %}
 
 {% block subtitle %}
   <p class="sub">
-    Every student who has completed UIUC SSO verification and onboarding.
+    Every student who has set up a profile. A tick beside a name means a UIUC
+    sign-in verified it.
     {% if selected_college %}
       Showing {{ page_obj.paginator.count }} of {{ total_count }}.
     {% else %}
@@ -52,16 +53,16 @@ Each student is a profile card (_person.html), shared with the search pages.
         <div class="big">No students in a college matching
           &ldquo;{{ selected_college }}&rdquo;</div>
         <p>
-          No verified student has a college matching that text.
+          No student has a college matching that text.
           <a href="{% url 'connect:student-list' %}">Clear the filter</a>
           to see all {{ total_count }} students.
         </p>
       {% else %}
         <div class="big">No students yet</div>
         <p>
-          Students appear here once they complete SSO verification and
-          onboarding. Run <code>python manage.py seed_demo_data</code> to load
-          the sample roster.
+          Students appear here once they set up a profile. Run
+          <code>python manage.py seed_demo_data</code> to load the sample
+          roster.
         </p>
       {% endif %}
     </li>

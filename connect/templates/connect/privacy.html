@@ -11,7 +11,7 @@ a Google sign-in stores is set by SOCIALACCOUNT_PROVIDERS in settings/base.py
 {% block heading %}Privacy{% endblock %}
 
 {% block subtitle %}
-  <p class="sub">What QuadConnect keeps about you, and why. Last updated 19 October 2026.</p>
+  <p class="sub">What QuadConnect keeps about you, and why. Last updated 12 November 2026.</p>
 {% endblock %}
 
 {% block content %}
@@ -22,6 +22,11 @@ a Google sign-in stores is set by SOCIALACCOUNT_PROVIDERS in settings/base.py
     <ul>
       <li><strong>Your account:</strong> your username, your email address, and your
           password, which is stored only as a salted hash.</li>
+      <li><strong>Your profile, once you set it up:</strong> your name, NetID, college and
+          major, how you like to meet, your interests, and the weekend times you are free.
+          Your Illinois email address is made from your NetID. Every logged-in student can
+          see your profile, and the student list's download has all of it except that
+          address and your free times. None of it is public.</li>
       <li><strong>If you continue with Google:</strong> Google sends us your name, your
           email address, a link to your profile picture and your Google account number.
           We ask Google for nothing else: not your contacts, files or calendar. We never
@@ -34,9 +39,9 @@ a Google sign-in stores is set by SOCIALACCOUNT_PROVIDERS in settings/base.py
 
   <div class="card">
     <h2 class="card-title">How we use it</h2>
-    <p>To log you in, and to show who is logged in. Matching uses the interests and free
-       times on student profiles; in this first prototype those profiles are sample
-       data.</p>
+    <p>To log you in, to show who is logged in, and to show your profile to other
+       students so that you can be matched. Matching uses the interests and free times on
+       student profiles. The students listed before anyone signed up are sample data.</p>
   </div>
 
   <div class="card">
@@ -54,7 +59,8 @@ a Google sign-in stores is set by SOCIALACCOUNT_PROVIDERS in settings/base.py
 
   <div class="card">
     <h2 class="card-title">Your choices</h2>
-    <p>To delete your account and everything stored with it, email
+    <p>You can change your profile at any time from "Your profile", beside your name.
+       To delete your account and everything stored with it, email
        <a href="mailto:mm240@illinois.edu">mm240@illinois.edu</a>. To stop QuadConnect
        using your Google account, remove it from
        <a href="https://myaccount.google.com/connections">your Google account's

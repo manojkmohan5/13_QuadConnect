@@ -36,6 +36,10 @@ JavaScript. On a small screen the navigation is a tab bar along the bottom
 (body.has-tabs). Logging out is a POST form, so a link or a prefetch can
 never sign anyone out.
 
+"Signed in as" is the link to your own profile, or to setting one up. Until
+a student (not staff) has one, every page but that form says so above its
+content, since nobody can find them yet (connect/onboarding.py).
+
 Elements marked data-enter (or the first six items of a data-enter-list)
 fade in once, drawn by static/js/site.js with Motion. The stylesheet hides
 them first; the <noscript> rule below shows them when there is no script.
@@ -96,8 +100,12 @@ them first; the <noscript> rule below shows them when there is no script.
     </nav>
     <div class="account">
       {% if user.is_authenticated %}
-        <span class="face" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>
-        <span class="who">Signed in as <strong>{{ user.get_username }}</strong></span>
+        {% url 'connect:profile' as setup_url %}
+        <a class="me" href="{% firstof user.student_profile.get_absolute_url setup_url %}">
+          <span class="face" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>
+          <span class="who">Signed in as <strong>{{ user.get_username }}</strong>
+            <span class="to">{% if user.student_profile %}Your profile{% else %}Set up your profile{% endif %}</span></span>
+        </a>
         <form method="post" action="{% url 'account_logout' %}">
           {% csrf_token %}
           <button type="submit">Log out</button>
@@ -122,6 +130,14 @@ them first; the <noscript> rule below shows them when there is no script.
           {{ message }}
         </p>
       {% endfor %}
+    </div>
+  {% endif %}
+  {% if user.is_authenticated and not user.is_staff and not user.student_profile and request.resolver_match.url_name != "profile" %}
+    <div class="messages">
+      <p class="message nudge">
+        <span><strong>Your profile is not set up yet.</strong> Until it is, other students cannot find you, and you cannot be matched.</span>
+        <a class="btn btn-primary" href="{% url 'connect:profile' %}">Set up your profile</a>
+      </p>
     </div>
   {% endif %}
 

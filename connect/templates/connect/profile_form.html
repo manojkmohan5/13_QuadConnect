@@ -1,0 +1,81 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Your own profile, as a form (connect/onboarding.py): set up after the first
+login, edited later. One page, in the order of the wireframes' onboarding
+screens: who you are, how you like to meet, your interests, and when you are
+free on the weekend.
+
+Each set of choices is a <fieldset> whose <legend> is the question (Django
+renders them so), drawn as pills by the stylesheet (.picks). A chosen pill
+keeps its tick or dot, and is also filled and bold, so a choice is never
+shown by colour alone.
+
+Context: form (ProfileForm); new, True until the student has a profile.
+{% endcomment %}
+
+{% block title %}{% if form.errors %}Error: {% endif %}{% if new %}Set up your profile{% else %}Edit your profile{% endif %} - QuadConnect{% endblock %}
+{% block main_class %} class="reading"{% endblock %}
+
+{% block heading %}{% if new %}Set up your profile{% else %}Edit your profile{% endif %}{% endblock %}
+{% block subtitle %}
+  <p class="sub">
+    {% if new %}
+      Tell other students who you are, what you are into, and when you are free.
+      This is what your card shows them, and what your matches are made from.
+    {% else %}
+      Other students see these answers on your card.
+    {% endif %}
+  </p>
+{% endblock %}
+
+{% block content %}
+  {% if form.errors %}
+    <div class="messages">
+      <p class="message message-error" role="alert">
+        Your profile was not saved. Fix the answers marked below, then save again.
+      </p>
+    </div>
+  {% endif %}
+
+  {# novalidate: the server's messages say how to fix each answer. #}
+  <form class="form profile-form" method="post" action="{% url 'connect:profile' %}" novalidate>
+    {% csrf_token %}
+
+    <section class="card" aria-labelledby="about-title">
+      <h2 class="card-title" id="about-title">About you</h2>
+      <p class="form-note">Your name, college and major are on your card.</p>
+      <div class="field">{{ form.full_name.as_field_group }}</div>
+      <div class="field">{{ form.net_id.as_field_group }}</div>
+      <div class="field">{{ form.college.as_field_group }}</div>
+      <div class="field">{{ form.department.as_field_group }}</div>
+    </section>
+
+    <section class="card" aria-labelledby="meet-title">
+      <h2 class="card-title" id="meet-title">How you like to meet</h2>
+      <p class="form-note">Matches are made from these answers.</p>
+      <div class="field">{{ form.preferred_connection.as_field_group }}</div>
+      <div class="field">{{ form.group_preference.as_field_group }}</div>
+      <div class="field">{{ form.social_energy.as_field_group }}</div>
+      <div class="field">{{ form.conversation_style.as_field_group }}</div>
+    </section>
+
+    <section class="card" aria-labelledby="interests-title">
+      <h2 class="card-title" id="interests-title">Your interests</h2>
+      <p class="form-note">Pick at least one. You are matched with students who share them.</p>
+      <div class="field">{{ form.hobbies.as_field_group }}</div>
+      <div class="field">{{ form.clubs.as_field_group }}</div>
+    </section>
+
+    <section class="card" aria-labelledby="free-title">
+      <h2 class="card-title" id="free-title">When you are free</h2>
+      <p class="form-note">Meetups are on weekends. Pick every time you could meet, at least one.</p>
+      <div class="field">{{ form.saturday.as_field_group }}</div>
+      <div class="field">{{ form.sunday.as_field_group }}</div>
+    </section>
+
+    <div class="actions">
+      <button type="submit">{% if new %}Save profile{% else %}Save changes{% endif %}</button>
+      {% if not new %}<a class="btn btn-secondary" href="{{ form.instance.get_absolute_url }}">Cancel</a>{% endif %}
+    </div>
+  </form>
+{% endblock %}

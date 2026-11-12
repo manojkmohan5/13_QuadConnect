@@ -9,6 +9,7 @@ connection they want (blue for Friend Connect, purple for Squad Connect;
 the badge says it) with their initials and name. On the right, what they
 said in onboarding, each answer as a prompt: the question small, the answer
 large. Then their interests, the weekend they are free, and their matches.
+On your own profile, a link to edit it (connect/onboarding.py) comes first.
 
 Privacy note: this is an internal/admin-facing view of the roster. It shows a
 student's own onboarding answers and their match history - it never shows
@@ -39,6 +40,13 @@ deliberately absent.
   </div>
 
   <div class="profile-main">
+
+    {% if student.user_id == user.pk %}
+      <p class="own">
+        This is your profile, as other students see it.
+        <a class="btn btn-secondary" href="{% url 'connect:profile' %}">Edit your profile</a>
+      </p>
+    {% endif %}
 
     <ul class="vitals" role="list" aria-label="About {{ student.full_name }}">
       {% if student.is_sso_verified %}
