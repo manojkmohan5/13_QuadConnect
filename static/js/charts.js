@@ -13,8 +13,11 @@
  * Without JavaScript the page shows the server-rendered image in the
  * <noscript> next to each chart, so nothing here is required to read it.
  */
-document.querySelectorAll("[data-vega-spec]").forEach(function (container) {
-  vegaEmbed(container, container.dataset.vegaSpec, {
+// data-vega-inline="<key>" instead names a spec in the page's #vega-specs JSON (/analytics/).
+var inlineSpecs = document.getElementById("vega-specs");
+inlineSpecs = inlineSpecs ? JSON.parse(inlineSpecs.textContent) : {};
+document.querySelectorAll("[data-vega-spec], [data-vega-inline]").forEach(function (container) {
+  vegaEmbed(container, container.dataset.vegaSpec || inlineSpecs[container.dataset.vegaInline], {
     renderer: "svg",
     actions: false,
     tooltip: false,

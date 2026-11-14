@@ -711,3 +711,46 @@ class ExperienceFeedback(models.Model):
 
     def __str__(self):
         return f"{self.participant.profile.net_id}: {self.rating}/5"
+
+
+class AIRequestLog(models.Model):
+    """
+    One "Ask in plain English" search (P1-A10): what was asked, how the AI
+    answered, how long it took and how many tokens it used. Feeds /analytics/.
+
+    Cost is not stored: it is tokens times the price in connect/analytics.py,
+    so a new price re-prices every row.
+    """
+
+    class Source(models.TextChoices):
+        MODEL = "model", "Language model"
+        CACHED = "cached", "Cached answer"
+        KEYWORDS = "keywords", "Keyword fallback"
+
+    created_at = models.DateTimeField(db_index=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        # SET_NULL: the usage numbers stay when an account is deleted.
+    )
+    request = models.CharField(max_length=200)
+    source = models.CharField(max_length=10, choices=Source.choices)
+    filter_kinds = models.CharField(
+        max_length=80, blank=True,
+        help_text="The filters the AI found, comma-separated: interests,day,time,...",
+    )
+    students_found = models.PositiveIntegerField(default=0)
+    latency_ms = models.PositiveIntegerField()
+    prompt_tokens = models.PositiveIntegerField(default=0)
+    completion_tokens = models.PositiveIntegerField(default=0)
+    flagged = models.BooleanField(default=False, help_text="Looked like a prompt injection.")
+    note = models.CharField(max_length=120, blank=True, help_text="Why the model was not used, if it was not.")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "AI request log"
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.source} {self.latency_ms} ms"

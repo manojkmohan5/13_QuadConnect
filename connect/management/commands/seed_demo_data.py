@@ -21,6 +21,7 @@ rebuilt exactly.
 from datetime import date, datetime, time, timedelta
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -297,6 +298,7 @@ class Command(BaseCommand):
         # After the three matches above, so they keep ids 1-3.
         self._seed_history(profiles, interests, locations)
         self._seed_staff()
+        call_command("seed_ai_logs", stdout=self.stdout)  # P1-A10: /analytics/
         self._summarise()
 
     # -- catalogue ------------------------------------------------------

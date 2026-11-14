@@ -86,7 +86,7 @@ them first; the <noscript> rule below shows them when there is no script.
       <a data-icon="map-pin" href="{% url 'connect:location-list' %}"
          {% if u == 'location-list' %}class="active" aria-current="page"{% elif u == 'location-detail' %}class="active" aria-current="true"{% endif %}>Locations</a>
       <details>
-        <summary data-icon="ellipsis"{% if u == 'feedback-summary' or u == 'insights' or u == 'reports' or u == 'api-docs' %} class="active"{% endif %}>More</summary>
+        <summary data-icon="ellipsis"{% if u == 'feedback-summary' or u == 'insights' or u == 'reports' or u == 'api-docs' or u == 'analytics' %} class="active"{% endif %}>More</summary>
         <div class="menu">
           <a data-icon="star" href="{% url 'connect:feedback-summary' %}"
              {% if u == 'feedback-summary' %}class="active" aria-current="page"{% endif %}>Feedback</a>
@@ -94,6 +94,10 @@ them first; the <noscript> rule below shows them when there is no script.
              {% if u == 'insights' %}class="active" aria-current="page"{% endif %}>Insights</a>
           <a data-icon="file-text" href="{% url 'connect:reports' %}"
              {% if u == 'reports' %}class="active" aria-current="page"{% endif %}>Reports</a>
+          {% if user.is_staff %}
+          <a data-icon="chart-column" href="{% url 'connect:analytics' %}"
+             {% if u == 'analytics' %}class="active" aria-current="page"{% endif %}>AI analytics</a>
+          {% endif %}
           <a data-icon="braces" href="{% url 'connect:api-docs' %}"
              {% if u == 'api-docs' %}class="active" aria-current="page"{% endif %}>API</a>
         </div>

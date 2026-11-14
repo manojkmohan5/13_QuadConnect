@@ -29,6 +29,7 @@ from django.urls import path
 
 from . import (
     ai_search,
+    analytics,
     api,
     charts,
     icebreakers,
@@ -115,4 +116,7 @@ urlpatterns = [
     path("reports/", reports.reports, name="reports"),
     path("export/students.csv", reports.students_csv, name="export-students-csv"),
     path("export/students.json", reports.students_json, name="export-students-json"),
+
+    # --- P1-A10 - AI analytics dashboard (staff only) -----------------------
+    path("analytics/", analytics.analytics, name="analytics"),
 ]

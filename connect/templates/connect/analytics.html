@@ -1,0 +1,151 @@
+{% extends "connect/base.html" %}
+{% load static %}
+{% comment %}
+AI analytics (P1-A10): connect/analytics.py. Every card is titled with the
+question it answers; the charts are Vega-Lite specs with inline data, drawn
+by static/js/charts.js from the json_script below.
+{% endcomment %}
+
+{% block title %}AI analytics - QuadConnect{% endblock %}
+{% block heading %}AI analytics{% endblock %}
+
+{% block subtitle %}
+  <p class="sub">
+    How <a href="{% url 'connect:student-ask' %}">Ask in plain English</a> performs, how students use it,
+    and what it costs. {{ start|date:"M j" }} &ndash; {{ end|date:"M j, Y" }}.
+  </p>
+  <p class="chips" aria-label="Time window">
+    {% for w in windows %}
+      <a class="badge{% if w == days %} badge-ok{% endif %}" href="{% url 'connect:analytics' %}?days={{ w }}"
+         {% if w == days %}aria-current="page"{% endif %}>Last {{ w }} days</a>
+    {% endfor %}
+  </p>
+{% endblock %}
+
+{% block content %}
+<div class="stack">
+
+  {# ---------------------------------------------------------------- performance #}
+  <section aria-labelledby="perf">
+    <h2 id="perf">1. System performance</h2>
+    <div class="grid">
+      <div class="card stat"><div class="n">{{ kpis.median|floatformat:2 }} s</div><div class="l">Median latency (model)</div></div>
+      <div class="card stat"><div class="n">{{ kpis.p95|floatformat:2 }} s</div><div class="l">95th percentile (model)</div></div>
+      <div class="card stat"><div class="n">{{ kpis.cv|floatformat:2 }}</div><div class="l">Coefficient of variation (lower = steadier)</div></div>
+      <div class="card stat"><div class="n">{{ kpis.fallback|floatformat:1 }}%</div><div class="l">Fell back to keywords</div></div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <h3 class="card-title">Q1. How does latency change over time, and is the slow tail getting worse?</h3>
+        <div class="vega-chart" data-vega-inline="perf_trend"></div>
+      </div>
+      <div class="card">
+        <h3 class="card-title">Q2. How consistent is response time?</h3>
+        <div class="vega-chart" data-vega-inline="perf_hist"></div>
+        <p class="sub">{{ kpis.slow_share|floatformat:1 }}% of requests took over 5 s (model loading or a busy model).</p>
+      </div>
+      <div class="card" style="grid-column:1/-1">
+        <h3 class="card-title">Q3. Which inputs cause slower responses?</h3>
+        <div class="vega-chart" data-vega-inline="perf_box"></div>
+        <p class="sub">Correlation between filters found and latency:
+          r = {% if kpis.r_filters is not None %}{{ kpis.r_filters|floatformat:2 }}{% else %}n/a{% endif %}.
+          Each extra filter is more JSON for the model to write; the outliers above 9 s are cold starts and retries.</p>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------- behaviour #}
+  <section aria-labelledby="use">
+    <h2 id="use">2. User behavior</h2>
+    <div class="grid">
+      <div class="card stat"><div class="n">{{ kpis.requests }}</div><div class="l">Searches ({{ kpis.per_day|floatformat:1 }} a day)</div></div>
+      <div class="card stat"><div class="n">{{ kpis.distinct }}</div><div class="l">Distinct requests</div></div>
+      <div class="card stat"><div class="n">{{ kpis.zero|floatformat:1 }}%</div><div class="l">Found no students</div></div>
+      <div class="card stat"><div class="n">{{ kpis.flagged }}</div><div class="l">Prompt-injection attempts flagged</div></div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <h3 class="card-title">Q4. How often is the AI search used, and is usage growing?</h3>
+        <div class="vega-chart" data-vega-inline="use_daily"></div>
+      </div>
+      <div class="card">
+        <h3 class="card-title">Q5. When do students use it?</h3>
+        <div class="vega-chart" data-vega-inline="use_heat"></div>
+      </div>
+      <div class="card">
+        <h3 class="card-title">Q6. What kinds of things do students ask for?</h3>
+        <div class="vega-chart" data-vega-inline="use_kinds"></div>
+      </div>
+      <div class="card">
+        <h3 class="card-title">Q7. What are the most common requests, and do they find anyone?</h3>
+        <div class="scroll" tabindex="0" role="region" aria-labelledby="top-caption">
+          <table>
+            <caption class="visually-hidden" id="top-caption">Most common requests</caption>
+            <thead><tr><th scope="col">Request</th><th scope="col" class="num">Times</th>
+              <th scope="col" class="num">Students found (mean)</th><th scope="col" class="num">No result</th></tr></thead>
+            <tbody>
+              {% for q in top %}
+                <tr><td>{{ q.text }}</td><td class="num">{{ q.count }}</td><td class="num">{{ q.found }}</td><td class="num">{{ q.zero }}%</td></tr>
+              {% empty %}
+                <tr><td colspan="4">No searches in this window.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------------- cost #}
+  <section aria-labelledby="cost">
+    <h2 id="cost">3. Cost</h2>
+    <div class="grid">
+      <div class="card stat"><div class="n">${{ kpis.per_1k|floatformat:4 }}</div><div class="l">Per 1,000 searches (all)</div></div>
+      <div class="card stat"><div class="n">${{ kpis.total_cost|floatformat:4 }}</div><div class="l">Total in window ({{ kpis.tokens|floatformat:"0g" }} tokens)</div></div>
+      <div class="card stat"><div class="n">{{ kpis.cached|floatformat:1 }}%</div><div class="l">Served from cache (${{ kpis.saved|floatformat:4 }} saved)</div></div>
+      <div class="card stat"><div class="n">{{ kpis.prompt_share|floatformat:0 }}%</div><div class="l">Of tokens are the prompt</div></div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <h3 class="card-title">Q8. How does cost move with usage over time?</h3>
+        <div class="vega-chart" data-vega-inline="cost_daily"></div>
+      </div>
+      <div class="card">
+        <h3 class="card-title">Q9. What does one request cost, and does it depend on the request?</h3>
+        <div class="vega-chart" data-vega-inline="cost_tokens"></div>
+        <p class="sub">A model answer costs ${{ kpis.model_per_1k|floatformat:4 }} per 1,000; cached and keyword answers cost nothing. The prompt (rules, examples, lists) is the same for every request, so it, not the request, sets the cost.</p>
+      </div>
+      <div class="card" style="grid-column:1/-1">
+        <h3 class="card-title">Q10. Which requests consume the most tokens?</h3>
+        <p class="sub">Long answers (more filters) and replies the model had to be asked for twice rise to the top.</p>
+        <div class="scroll" tabindex="0" role="region" aria-labelledby="costly-caption">
+          <table>
+            <caption class="visually-hidden" id="costly-caption">Requests by tokens per model answer</caption>
+            <thead><tr><th scope="col">Request</th><th scope="col" class="num">Tokens / answer</th>
+              <th scope="col" class="num">Times</th><th scope="col" class="num">Cost (¢ total)</th></tr></thead>
+            <tbody>
+              {% for q in costly %}
+                <tr><td>{{ q.text }}</td><td class="num">{{ q.tokens }}</td><td class="num">{{ q.count }}</td><td class="num">{{ q.cost|floatformat:3 }}</td></tr>
+              {% empty %}
+                <tr><td colspan="4">No searches in this window.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="sub">Cost model: the language model runs on our own server, so each request is priced as if a
+      hosted model of the same size had answered it: ${{ price_prompt }} per million prompt tokens and
+      ${{ price_completion }} per million completion tokens.</p>
+  </section>
+
+</div>
+{{ charts|json_script:"vega-specs" }}
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'vendor/vega/vega.min.js' %}" defer></script>
+  <script src="{% static 'vendor/vega/vega-lite.min.js' %}" defer></script>
+  <script src="{% static 'vendor/vega/vega-embed.min.js' %}" defer></script>
+  <script src="{% static 'js/charts.js' %}" defer></script>
+{% endblock %}

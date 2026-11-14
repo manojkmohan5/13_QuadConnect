@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>P1-A10 AI Analytics Dashboard</title>
+<style>
+  @page { size: letter; margin: 0.45in 0.5in; }
+  body { font: 8.6pt/1.32 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #13294b; margin: 0; }
+  h1 { font-size: 14pt; margin: 0 0 2px; }
+  h2 { font-size: 10.5pt; margin: 9px 0 3px; border-bottom: 1px solid #d6dbe4; padding-bottom: 2px; }
+  p { margin: 3px 0; }
+  .meta { color: #44506a; margin-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 8pt; }
+  th, td { text-align: left; vertical-align: top; padding: 2.5px 5px; border-bottom: 1px solid #e6e3dd; }
+  th { background: #eef2f8; }
+  td.cat { font-weight: 600; white-space: nowrap; }
+  ul { margin: 2px 0; padding-left: 16px; }
+  li { margin: 1.5px 0; }
+  code { font-size: 7.8pt; background: #f3f0ea; padding: 0 2px; border-radius: 2px; }
+  img { width: 100%; border: 1px solid #d6dbe4; margin-top: 4px; }
+  .cap { color: #566076; font-size: 7.6pt; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .page2 { break-before: page; }
+</style>
+</head>
+<body>
+
+<h1>P1-A10: AI System Evaluation &amp; Analytics Dashboard &mdash; QuadConnect</h1>
+<p class="meta">Team 13 &middot; The Connectors &middot; INFO 490, Fall 2026 &middot;
+  Dashboard: <b>https://manojkmohan43.pythonanywhere.com/analytics/</b> (login <code>mohitg2</code> / <code>uiuc12345</code>, staff only) &middot;
+  Code: <b>github.com/manojkmohan5/13_QuadConnect</b> (branch <code>p1-A10</code>: <code>connect/analytics.py</code>)</p>
+
+<p><b>System monitored.</b> <i>Ask in plain English</i> (<code>/search/ask/</code>): a local LLM (Qwen2.5-1.5B-Instruct) turns a
+request such as &ldquo;quiet engineering students who love reading&rdquo; into allow-listed search filters; answers are cached for an
+hour, and a keyword parser takes over if the model is busy, slow or off. <b>Data.</b> Every search now writes an
+<code>AIRequestLog</code> row: time, request, answer source (model / cache / keywords), filters found, students found, latency,
+prompt and completion tokens (counted by the model&rsquo;s own tokenizer) and a prompt-injection flag. The dashboard shows 6 weeks
+(563 searches) of <b>simulated</b> logs built from real P1-A9 measurements: the 20 evaluation requests with their measured latencies,
+results and token counts, plus volume growth, time-of-day habits, cache hits, busy-model fallbacks, cold starts and retries.</p>
+
+<h2>Part 1 &middot; Analytics questions &rarr; widgets &rarr; data</h2>
+<table>
+  <tr><th></th><th style="width:31%">Question</th><th style="width:33%">Widget that answers it</th><th>Data (AIRequestLog fields)</th></tr>
+  <tr><td class="cat" rowspan="3">System<br>performance</td>
+    <td>Q1. How does latency change over time, and is the slow tail getting worse?</td>
+    <td>Line chart: rolling 7-day <b>median</b> and <b>p95</b> latency</td><td><code>latency_ms</code>, <code>created_at</code> (model answers)</td></tr>
+  <tr><td>Q2. How consistent is response time?</td>
+    <td>KPI tiles (median, p95, coefficient of variation, % keyword fallback) + <b>histogram</b> of latency stacked by answer source</td>
+    <td><code>latency_ms</code>, <code>source</code></td></tr>
+  <tr><td>Q3. Which inputs cause slower responses?</td>
+    <td><b>Box plot</b> of latency by number of filters the request produced, with Pearson <i>r</i></td><td><code>latency_ms</code>, <code>filter_kinds</code></td></tr>
+  <tr><td class="cat" rowspan="4">User<br>behavior</td>
+    <td>Q4. How often is the AI search used, and is usage growing?</td>
+    <td>Bar chart of searches per day + <b>7-day moving average</b> line; KPI searches/day</td><td><code>created_at</code></td></tr>
+  <tr><td>Q5. When do students use it?</td><td><b>Heat map</b> weekday &times; hour (Central time)</td><td><code>created_at</code></td></tr>
+  <tr><td>Q6. What kinds of things do students ask for?</td>
+    <td>Horizontal bar: % of searches containing each filter type (interest, day, college, &hellip;)</td><td><code>filter_kinds</code></td></tr>
+  <tr><td>Q7. What are the most common requests, and do they find anyone?</td>
+    <td><b>Table</b>: top requests, count, mean students found, % no result; KPIs: zero-result rate, injection attempts</td>
+    <td><code>request</code>, <code>students_found</code>, <code>flagged</code></td></tr>
+  <tr><td class="cat" rowspan="3">Cost</td>
+    <td>Q8. How does cost move with usage over time?</td><td><b>Area chart</b> of cost per day</td><td>tokens &times; price, <code>created_at</code></td></tr>
+  <tr><td>Q9. What does one request cost, and does it depend on the request?</td>
+    <td>KPIs: $ per 1,000 searches, cache hit rate and $ saved, prompt share of tokens; <b>stacked bar</b> prompt vs completion tokens by filters found</td>
+    <td><code>prompt_tokens</code>, <code>completion_tokens</code>, <code>source</code></td></tr>
+  <tr><td>Q10. Which requests consume the most tokens?</td><td><b>Table</b> of requests ranked by tokens per model answer, with total cost</td>
+    <td><code>request</code>, tokens</td></tr>
+</table>
+<p class="cap">Cost model: the LLM runs on our own server, so each request is priced as a hosted model of the same size would charge
+($0.10 / 1M prompt, $0.20 / 1M completion tokens). Cached and keyword answers use no tokens. A <i>Last 7 / 30 / 90 days</i> selector re-computes every widget.</p>
+
+<h2>Step 3 &middot; Statistical thinking</h2>
+<div class="two">
+<ul>
+  <li><b>Median and p95, not the mean.</b> Latency is right-skewed (9.5 s cold starts, 30 s busy-model waits), so the mean would hide the
+    typical case and the tail. p95 is what the slowest 1 in 20 students feel.</li>
+  <li><b>Rolling 7-day windows.</b> One day holds ~10 model answers: too few for a stable p95. A 7-day window also cancels the weekday/weekend cycle in the usage trend.</li>
+  <li><b>Coefficient of variation</b> (&sigma;/&mu; = 0.72) gives a unit-free consistency score that can be compared across model versions.</li>
+</ul>
+<ul>
+  <li><b>Distributions.</b> The histogram is bimodal (cache &asymp; 0 s, model &asymp; 2 s) with a long tail; one average could not show that.</li>
+  <li><b>Group comparison and correlation.</b> Box plots by number of filters, and Pearson <i>r</i> = 0.28: more filters means more JSON to generate, so output length, not the request, drives decoding time.</li>
+  <li><b>Rates and proportions:</b> fallback, cache hit, zero-result and prompt share of tokens, each over the same window.</li>
+</ul>
+</div>
+
+<div class="page2">
+<h2>Part 2 &middot; Dashboard (<code>/analytics/</code>, last 30 days)</h2>
+<img src="screenshots/dashboard_all_sections.png" alt="Dashboard screenshots: system performance, user behavior and cost sections">
+<p class="cap">Left to right: System performance (Q1&ndash;Q3), User behavior (Q4&ndash;Q7), Cost (Q8&ndash;Q10). Built with Django + Vega-Lite; each card is titled with the question it answers.</p>
+<p><b>What it shows.</b> Median latency is <b>2.07 s</b> and p95 <b>3.84 s</b>; the p95 was noisy in the first week, when few searches fell in each window, and has held near 3.5&ndash;4 s since: no regression.
+Usage grew from <b>11 to 21 searches a day</b> (7-day average), peaking at <b>6&ndash;10 pm on weekdays</b>; only 17% happen at weekends.
+<b>12%</b> of searches find no one (narrow college + interest combinations, plus off-topic and injection requests): a gap in the student pool, not a model failure.
+A search costs <b>$0.057 per 1,000</b>; <b>97% of tokens are the fixed prompt</b>, so shortening the prompt or raising the 21% cache hit rate
+cuts cost more than anything the user types.</p>
+</div>
+
+</body>
+</html>

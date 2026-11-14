@@ -23,6 +23,7 @@ from django.utils.html import escape
 from .models import StudentProfile
 
 PUBLIC_ROUTES = {"home", "privacy", "api-summary"}
+STAFF_ROUTES = {"analytics"}  # P1-A10: shows what other students searched for
 # A value for each URL parameter, so every route can be requested.
 SAMPLE_KWARGS = {"pk": 1, "chart": "chart1", "fmt": "png", "path": "profile_photos/none.jpg"}
 
@@ -73,9 +74,10 @@ class AccessTests(AuthTestCase):
     def test_a_signed_in_member_can_open_every_route(self):
         self.client.force_login(self.member)
         with patch("connect.icebreakers.requests.get", side_effect=requests.ConnectionError):
-            for _name, path in connect_routes():
+            for name, path in connect_routes():
                 with self.subTest(path=path):
-                    self.assertNotIn(self.client.get(path).status_code, (302, 401))
+                    if name not in STAFF_ROUTES:
+                        self.assertNotIn(self.client.get(path).status_code, (302, 401))
 
     def test_the_public_api_needs_no_login(self):
         response = self.client.get(reverse("connect:api-summary"))

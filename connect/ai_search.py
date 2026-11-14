@@ -38,11 +38,14 @@ import unicodedata
 from django import forms
 from django.conf import settings
 from django.core.cache import cache
+from django.db import DatabaseError
 from django.db.models import Count, Q, Value
 from django.shortcuts import render
+from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from .models import (
+    AIRequestLog,
     ConnectionType,
     Interest,
     InterestCategory,
@@ -53,6 +56,7 @@ from .models import (
 )
 
 logger = logging.getLogger(__name__)
+usage = threading.local()  # tokens the model read and wrote for the current request (P1-A10)
 
 MAX_REQUEST_CHARS = 200
 MAX_INTERESTS = 4
@@ -471,6 +475,8 @@ class LocalModel:
                     max_new_tokens=MAX_NEW_TOKENS, do_sample=False, stop_strings=["}"],
                     tokenizer=self.tokenizer, max_time=settings.AI_LOCAL_MAX_SECONDS,
                     pad_token_id=self.tokenizer.eos_token_id if pad is None else pad)
+            usage.prompt = getattr(usage, "prompt", 0) + prompt_tokens
+            usage.completion = getattr(usage, "completion", 0) + len(output[0]) - prompt_tokens
             if time.perf_counter() - started >= settings.AI_LOCAL_MAX_SECONDS:
                 raise ModelTimeout(f"No answer within AI_LOCAL_MAX_SECONDS={settings.AI_LOCAL_MAX_SECONDS:g}.")
             return self.tokenizer.decode(output[0][prompt_tokens:], skip_special_tokens=True)
@@ -570,6 +576,7 @@ def understand(raw_text, user=None):
         return {**answer, "cached": True}
 
     started = time.perf_counter()
+    usage.prompt = usage.completion = 0
     answer = {"filters": {}, "source": "keywords", "model": settings.AI_LOCAL_MODEL, "by_meaning": {},
               "flagged": looks_like_injection(text), "note": "", "cached": False}
     if answer["flagged"]:
@@ -614,6 +621,7 @@ def understand(raw_text, user=None):
     else:
         answer["filters"] = keyword_filters(text, interests, colleges)
     answer["seconds"] = round(time.perf_counter() - started, 1)
+    answer["tokens"] = [usage.prompt, usage.completion]
     if answer["source"] == "model":  # only good answers are reused
         cache.set(key, answer, CACHE_SECONDS)
     return answer
@@ -715,6 +723,20 @@ SAMPLES = [  # each one read correctly by the default model (docs/README_AI_P1-A
 ]
 
 
+def log_request(request, text, answer, latency_ms, found):
+    """One AIRequestLog row for /analytics/. A cached answer ran no model, so it used no tokens."""
+    prompt, completion = (0, 0) if answer["cached"] else answer.get("tokens", (0, 0))
+    try:
+        AIRequestLog.objects.create(
+            created_at=timezone.now(), user=request.user if request.user.is_authenticated else None,
+            request=text[:200], source="cached" if answer["cached"] else answer["source"],
+            filter_kinds=",".join(answer["filters"]), students_found=found, latency_ms=latency_ms,
+            prompt_tokens=prompt, completion_tokens=completion, flagged=answer["flagged"],
+            note=answer["note"][:120])
+    except DatabaseError:  # a missing log row must never break the search
+        logger.exception("Could not log an AI request")
+
+
 @require_GET
 def student_ask(request):
     """GET /search/ask/?q=... A GET, so a search can be bookmarked and shared,
@@ -723,8 +745,11 @@ def student_ask(request):
     context = {"form": form, "samples": SAMPLES, "model_name": settings.AI_LOCAL_MODEL,
                "model_on": settings.AI_LOCAL_ENABLED, "embed_model": settings.AI_EMBED_MODEL}
     if form.is_bound and form.is_valid():
+        started = time.perf_counter()
         answer = understand(form.cleaned_data["q"], user=request.user)
+        latency_ms = round((time.perf_counter() - started) * 1000)
         students = find_students(answer["filters"]) if answer["filters"] else StudentProfile.objects.none()
+        log_request(request, form.cleaned_data["q"], answer, latency_ms, len(students))
         context.update(answer=answer, understood=describe(answer["filters"]), students=students,
                        interest_names=set(answer["filters"].get("interests", [])))
     return render(request, "connect/student_ask.html", context)
