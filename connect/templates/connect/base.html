@@ -77,6 +77,8 @@ them first; the <noscript> rule below shows them when there is no script.
       {% if user.is_authenticated %}
       <a data-icon="coffee" href="{% url 'connect:meet' %}"
          {% if u == 'meet' %}class="active" aria-current="page"{% endif %}>Meet</a>
+      <a data-icon="calendar" href="{% url 'connect:plan-list' %}"
+         {% if u == 'plan-list' %}class="active" aria-current="page"{% elif u == 'plan-detail' or u == 'plan-create' %}class="active" aria-current="true"{% endif %}>Plans</a>
       <a data-icon="users" href="{% url 'connect:student-list' %}"
          {% if u == 'student-list' %}class="active" aria-current="page"{% elif u == 'student-detail' %}class="active" aria-current="true"{% endif %}>Students</a>
       <a data-icon="search" href="{% url 'connect:student-search' %}"

@@ -711,3 +711,83 @@ class ExperienceFeedback(models.Model):
 
     def __str__(self):
         return f"{self.participant.profile.net_id}: {self.rating}/5"
+
+
+class Plan(models.Model):
+    """
+    A plan one student posts for others to join: "Board games, Saturday 3 PM
+    at the Illini Union, up to 6 of us". The open counterpart to the weekly
+    match: anyone signed in can see it, and any student can RSVP until it is
+    full or starts. The rules live in connect/plans.py.
+
+    Like a match, a plan only ever happens at an approved campus location,
+    so "public, staffed place" stays a rule rather than a promise.
+    """
+
+    host = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="hosted_plans",
+        # CASCADE: a plan without its host has nobody to run it.
+    )
+    title = models.CharField(max_length=80, help_text="What you're doing, e.g. Board games and coffee.")
+    details = models.TextField(
+        max_length=500,
+        blank=True,
+        help_text="Anything people should know: what to bring, where inside to find you.",
+    )
+    starts_at = models.DateTimeField(db_index=True)
+    location = models.ForeignKey(
+        CampusLocation,
+        on_delete=models.PROTECT,
+        related_name="plans",
+        # PROTECT: a venue with plans is retired with is_approved=False, as for matches.
+    )
+    capacity = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(2), MaxValueValidator(50)],
+        help_text="Most people who can come, you included.",
+    )
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["starts_at", "pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(capacity__gte=2) & models.Q(capacity__lte=50),
+                name="plan_capacity_2_to_50",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.starts_at:%Y-%m-%d %H:%M})"
+
+    def get_absolute_url(self):
+        return reverse("connect:plan-detail", kwargs={"pk": self.pk})
+
+
+class PlanRSVP(models.Model):
+    """
+    One student saying "I'm going" to a plan. Leaving deletes the row, so
+    a row always means going. The host is never a row: they are always going.
+    """
+
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="rsvps")
+    profile = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="plan_rsvps",
+        # CASCADE: an RSVP means nothing once the student is gone.
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "pk"]
+        verbose_name = "Plan RSVP"
+        constraints = [
+            # Two clicks must not take two places.
+            models.UniqueConstraint(fields=["plan", "profile"], name="uniq_rsvp_per_plan_profile"),
+        ]
+
+    def __str__(self):
+        return f"{self.profile.net_id} going to plan {self.plan_id}"

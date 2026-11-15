@@ -16,6 +16,8 @@ from .models import (
     Match,
     MatchParticipant,
     MatchRequest,
+    Plan,
+    PlanRSVP,
     ProfileInterest,
     StudentProfile,
 )
@@ -201,3 +203,18 @@ class ExperienceFeedbackAdmin(admin.ModelAdmin):
 admin.site.site_header = "QuadConnect Administration"
 admin.site.site_title = "QuadConnect Admin"
 admin.site.index_title = "Verified campus social discovery - data model"
+
+
+class PlanRSVPInline(admin.TabularInline):
+    model = PlanRSVP
+    extra = 0
+    autocomplete_fields = ["profile"]
+
+
+@admin.register(Plan)
+class PlanAdmin(admin.ModelAdmin):
+    list_display = ("title", "host", "starts_at", "location", "capacity", "cancelled_at")
+    list_filter = ("location", "cancelled_at")
+    search_fields = ("title", "host__net_id", "host__full_name")
+    autocomplete_fields = ["host"]
+    inlines = [PlanRSVPInline]

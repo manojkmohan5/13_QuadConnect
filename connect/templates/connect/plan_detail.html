@@ -1,0 +1,85 @@
+{% extends "connect/base.html" %}
+{% comment %}
+One plan (connect/plans.py, plan_detail): when, where, who's hosting, who's
+going, and what the signed-in student can do (join, leave, call it off).
+
+Context: plan, profile (or None), rsvps, and from plans.state(): is_host,
+going, open, started, spots_left, can_join, can_leave, can_cancel.
+{% endcomment %}
+
+{% block title %}{{ plan.title }} - QuadConnect{% endblock %}
+
+{% block page_header %}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'connect:plan-list' %}">Plans</a> /
+    <span aria-current="page">{{ plan.title }}</span>
+  </nav>
+  <h1 class="page">{{ plan.title }}</h1>
+  <p class="sub">{{ plan.starts_at|date:"l j F, g:i A" }} &middot;
+    <a href="{{ plan.location.get_absolute_url }}">{{ plan.location.name }}</a></p>
+{% endblock %}
+
+{% block content %}
+  {% if plan.cancelled_at %}
+    <p class="message message-info" role="status">{{ plan.host.full_name }} called this plan off.</p>
+  {% elif started %}
+    <p class="message message-info" role="status">This plan has started, so RSVPs are closed.</p>
+  {% endif %}
+
+  <section class="card" aria-labelledby="about-title">
+    <h2 class="card-title" id="about-title">About</h2>
+    {% if plan.details %}<p>{{ plan.details|linebreaksbr }}</p>{% endif %}
+    <div class="meta">
+      <span>{{ plan.location.street_address }}{% if plan.location.arrival_note %} &middot; {{ plan.location.arrival_note }}{% endif %}</span>
+      <span>{{ rsvps|length|add:1 }} of {{ plan.capacity }} going</span>
+      {% if open %}<span>{% if spots_left > 0 %}{{ spots_left }} place{{ spots_left|pluralize }} left{% else %}Full{% endif %}</span>{% endif %}
+    </div>
+
+    {% if open %}
+      <div class="actions" style="margin-top:16px">
+        {% if can_join %}
+          <form method="post" action="{% url 'connect:plan-rsvp' plan.pk %}">
+            {% csrf_token %}<button type="submit" class="btn btn-primary" name="action" value="join">I'm going</button>
+          </form>
+        {% elif can_leave %}
+          <span class="badge s-accepted">You're going</span>
+          <form method="post" action="{% url 'connect:plan-rsvp' plan.pk %}">
+            {% csrf_token %}<button type="submit" class="btn btn-secondary" name="action" value="leave">I can't make it</button>
+          </form>
+        {% elif is_host %}
+          <span class="badge s-confirmed">You're hosting</span>
+          <form method="post" action="{% url 'connect:plan-cancel' plan.pk %}">
+            {% csrf_token %}<button type="submit" class="btn btn-secondary">Call it off</button>
+          </form>
+        {% elif not profile %}
+          <a class="btn btn-primary" href="{% url 'connect:profile' %}">Set up your profile to join</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+
+  <h2 class="section">Who's going</h2>
+  <ul class="list" role="list">
+    <li class="card linked with-tile">
+      {% include "connect/_face.html" with profile=plan.host %}
+      <div class="row">
+        <div>
+          <div class="title"><a href="{{ plan.host.get_absolute_url }}">{{ plan.host.full_name }}</a></div>
+          <div class="subtitle">{{ plan.host.college }}</div>
+        </div>
+        <span class="badge s-confirmed">Host</span>
+      </div>
+    </li>
+    {% for rsvp in rsvps %}
+      <li class="card linked with-tile">
+        {% include "connect/_face.html" with profile=rsvp.profile %}
+        <div class="row">
+          <div>
+            <div class="title"><a href="{{ rsvp.profile.get_absolute_url }}">{{ rsvp.profile.full_name }}</a></div>
+            <div class="subtitle">{{ rsvp.profile.college }}</div>
+          </div>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}
