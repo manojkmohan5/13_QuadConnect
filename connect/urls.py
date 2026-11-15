@@ -35,6 +35,7 @@ from . import (
     icebreakers,
     meetups,
     onboarding,
+    plans,
     reports,
     vega_charts,
     views,
@@ -55,6 +56,12 @@ urlpatterns = [
     path("meet/", meetups.meet, name="meet"),
     path("matches/<int:pk>/answer/", meetups.answer, name="match-answer"),
     path("matches/<int:pk>/feedback/", meetups.feedback, name="match-feedback"),
+    # Plans (plans.py): a student posts what they're doing; others RSVP.
+    path("plans/", plans.plan_list, name="plan-list"),
+    path("plans/new/", plans.plan_create, name="plan-create"),
+    path("plans/<int:pk>/", plans.plan_detail, name="plan-detail"),
+    path("plans/<int:pk>/rsvp/", plans.plan_rsvp, name="plan-rsvp"),
+    path("plans/<int:pk>/cancel/", plans.plan_cancel, name="plan-cancel"),
 
     # --- Kritika Agrawal - Generic CBV -----------------------------------
     path("students/", views.StudentProfileListView.as_view(),

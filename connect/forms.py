@@ -15,6 +15,7 @@ aria-describedby (help text and error) and aria-invalid="true" on error.
 """
 
 import re
+from datetime import timedelta
 from io import BytesIO
 from uuid import uuid4
 
@@ -35,6 +36,7 @@ from .models import (
     ExperienceFeedback,
     Interest,
     InterestCategory,
+    Plan,
     ProfileInterest,
     StudentProfile,
     TimeBlock,
@@ -476,3 +478,65 @@ class FeedbackForm(forms.ModelForm):
             "wants_to_stay_connected": "If they say so too, you each see the other's Illinois email.",
             "private_note": "Only QuadConnect staff read this.",
         }
+
+
+class PlanForm(forms.ModelForm):
+    """Post a plan (connect/plans.py). The host and the RSVPs are never fields."""
+
+    LEAD = timedelta(hours=1)  # at least this far ahead
+    HORIZON = timedelta(days=30)  # and no further ahead than this
+
+    starts_at = forms.DateTimeField(
+        label="When",
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+        help_text="Campus time. At least an hour from now, at most 30 days ahead.",
+        error_messages={"required": "Choose a date and a time.", "invalid": "Enter a date and a time."},
+    )
+    location = forms.ModelChoiceField(
+        label="Where",
+        queryset=CampusLocation.objects.filter(is_approved=True),
+        empty_label="Choose an approved place",
+        help_text="Only approved public places on campus.",
+        error_messages={"required": "Choose where to meet.",
+                        "invalid_choice": "Choose one of the approved places."},
+    )
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
+        super().__init__(*args, **kwargs)
+        self.fields["capacity"].widget.attrs.update({"min": 2, "max": 50})
+        self.fields["capacity"].initial = 4
+
+    class Meta:
+        model = Plan
+        fields = ["title", "starts_at", "location", "capacity", "details"]
+        labels = {"title": "What are you doing?", "capacity": "How many people, you included?",
+                  "details": "Details (optional)"}
+        widgets = {"details": forms.Textarea(attrs={"rows": 3, "maxlength": 500})}
+        error_messages = {"title": {"required": "Say what you're doing, in a few words."},
+                          "capacity": {"required": "Say how many people can come.",
+                                       "min_value": "A plan needs room for at least 2 people.",
+                                       "max_value": "Keep it to 50 people or fewer."}}
+
+    def clean_title(self):
+        title = " ".join(self.cleaned_data["title"].split())
+        if not title:
+            raise forms.ValidationError("Say what you're doing, in a few words.")
+        return title
+
+    def clean_starts_at(self):
+        when = self.cleaned_data["starts_at"]
+        now = timezone.now()
+        if when < now + self.LEAD:
+            raise forms.ValidationError("Choose a time at least an hour from now.")
+        if when > now + self.HORIZON:
+            raise forms.ValidationError("Choose a time in the next 30 days.")
+        return when
+
+    def clean(self):
+        cleaned = super().clean()
+        place, size = cleaned.get("location"), cleaned.get("capacity")
+        if place and size and size > place.capacity:
+            self.add_error("capacity", f"{place.name} seats up to {place.capacity}. Choose fewer people "
+                                       f"or a bigger place.")
+        return cleaned

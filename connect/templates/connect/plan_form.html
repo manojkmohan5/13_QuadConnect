@@ -1,0 +1,46 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Post a plan (connect/plans.py, plan_create; PlanForm). Context: form, or None for someone with no profile yet.
+{% endcomment %}
+
+{% block title %}{% if form.errors %}Error: {% endif %}Post a plan - QuadConnect{% endblock %}
+{% block main_class %} class="reading"{% endblock %}
+
+{% block page_header %}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'connect:plan-list' %}">Plans</a> /
+    <span aria-current="page">Post a plan</span>
+  </nav>
+  <h1 class="page">Post a plan</h1>
+  <p class="sub">Say what you're doing, when and where. Anyone signed in can see it and join until it's full.</p>
+{% endblock %}
+
+{% block content %}
+  {% if not form %}
+  <section class="card" aria-labelledby="first-title">
+    <h2 class="card-title" id="first-title">First, your profile</h2>
+    <p>Plans show who's hosting, so set up your profile before you post one.</p>
+    <p class="actions"><a class="btn btn-primary" href="{% url 'connect:profile' %}">Set up your profile</a></p>
+  </section>
+  {% else %}
+  {% if form.errors %}
+    <div class="messages">
+      <p class="message message-error" role="alert">Your plan is not posted yet. Fix the answers marked below.</p>
+    </div>
+  {% endif %}
+
+  {# novalidate: the server's messages say how to fix each answer. #}
+  <form class="form card" method="post" action="{% url 'connect:plan-create' %}" novalidate>
+    {% csrf_token %}
+    <div class="field">{{ form.title.as_field_group }}</div>
+    <div class="field">{{ form.starts_at.as_field_group }}</div>
+    <div class="field">{{ form.location.as_field_group }}</div>
+    <div class="field">{{ form.capacity.as_field_group }}</div>
+    <div class="field">{{ form.details.as_field_group }}</div>
+    <div class="actions">
+      <button type="submit">Post plan</button>
+      <a href="{% url 'connect:plan-list' %}">Cancel</a>
+    </div>
+  </form>
+  {% endif %}
+{% endblock %}
