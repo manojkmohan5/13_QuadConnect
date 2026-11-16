@@ -1,7 +1,7 @@
 # CI for QuadConnect.
 #
-# One workflow with one job, triggered only by a push to feature/profile-photo
-# (a profile photo and headline), so every commit gets exactly one check:
+# One workflow with one job, triggered only by a push to p1-A10-plans
+# (P1-A10's AI analytics dashboard, and plans), so every commit gets exactly one check:
 # "Deploy / test (push)". Every CI step lives inside that job: install
 # size, lint, Django checks, migrations, the committed database,
 # constraints, the test suite, the production deploy checks, the
@@ -14,7 +14,7 @@ name: Deploy
 
 on:
   push:
-    branches: [feature/profile-photo]
+    branches: [p1-A10-plans]
 
 permissions:
   contents: read
