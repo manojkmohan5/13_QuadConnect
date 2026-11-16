@@ -14,6 +14,7 @@ Vega-Lite spec with its data inline; static/js/charts.js draws them.
 """
 
 import statistics
+import textwrap
 from collections import Counter, defaultdict
 from datetime import timedelta
 
@@ -47,17 +48,20 @@ def p95(values):
 
 def spec(title, subtitle, description, values, body, height=220):
     """A Vega-Lite spec in the site's style, its data inline. The card around it shows
-    the question as its heading, so the chart's own title is only the subtitle;
-    `title` names the chart in screen readers' description."""
+    the question as its heading, so the chart's own title is only the subtitle,
+    wrapped so it never runs past a narrow card; `title` names the chart in
+    screen readers' description."""
     return {
         "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-        "title": {"text": subtitle, "anchor": "start", "fontWeight": "normal", "fontSize": 13, "color": "#566076"},
+        "title": {"text": textwrap.wrap(subtitle, 44), "anchor": "start", "fontWeight": "normal", "fontSize": 13,
+                  "color": "#566076"},
         "description": f"{title}. {description}",
         "data": {"values": values},
         "width": "container", "height": height, "background": "white",
         "config": {"font": "Figtree, sans-serif", "axis": {"labelColor": "#44506a", "titleColor": "#44506a",
                                                            "gridColor": "#e6e3dd"},
-                   "view": {"stroke": None}, "legend": {"orient": "top", "title": None}},
+                   # Two entries a row: three labels in one row overflow a narrow card.
+                   "view": {"stroke": None}, "legend": {"orient": "top", "title": None, "columns": 2}},
         **body,
     }
 
@@ -160,8 +164,9 @@ def build(logs, days, end, before=()):
             "How response time is distributed", "Requests per 0.5-second bin, by how they were answered",
             "Histogram of request latency in half-second bins, stacked by answer source.",
             [p for p in points if p["s"] <= 12],  # the tail beyond 12 s is counted in the KPI instead
-            {"mark": {"type": "bar", "cornerRadiusEnd": 2},
-             "encoding": {"x": {"field": "s", "bin": {"step": 0.5}, "title": "Seconds (up to 12)"},
+            {"mark": {"type": "bar", "cornerRadiusEnd": 2, "stroke": "white", "strokeWidth": 0.5},
+             "encoding": {"x": {"field": "s", "bin": {"step": 0.5}, "title": "Seconds (up to 12)",
+                                "axis": {"values": list(range(0, 13, 2)), "format": "d"}},
                           "y": {"aggregate": "count", "title": "Requests"}, "color": color}}),
         "perf_box": spec(
             "Which requests are slower", "Language-model latency by how many filters the request turned into",
@@ -176,7 +181,8 @@ def build(logs, days, end, before=()):
             "Bar chart of AI searches per day with a 7-day moving average line.",
             day_rows,
             {"encoding": {"x": x_date},
-             "layer": [{"mark": {"type": "bar", "color": "#c9d7ef", "cornerRadiusEnd": 2},
+             # Bars and stacked parts are at least 3:1 against white (WCAG 1.4.11).
+             "layer": [{"mark": {"type": "bar", "color": "#6a8cc7", "cornerRadiusEnd": 2},
                         "encoding": {"y": {"field": "requests", "type": "quantitative", "title": "Searches"}}},
                        {"mark": {"type": "line", "color": "#13294b", "strokeWidth": 2.5},
                         "encoding": {"y": {"field": "avg7", "type": "quantitative"}}}]}),
@@ -209,13 +215,13 @@ def build(logs, days, end, before=()):
             "by number of filters found.",
             [p for p in points if p["source"] == SOURCE_LABELS["model"]],
             {"transform": [{"fold": ["prompt", "completion"], "as": ["part", "n"]}],
-             "mark": {"type": "bar"},
+             "mark": {"type": "bar", "stroke": "white", "strokeWidth": 1},
              "encoding": {"x": {"field": "filters", "type": "ordinal", "title": "Filters found",
                                 "axis": {"labelAngle": 0}},
                           "y": {"aggregate": "mean", "field": "n", "type": "quantitative", "title": "Mean tokens"},
                           "color": {"field": "part", "type": "nominal", "sort": ["prompt", "completion"],
                                     "scale": {"domain": ["prompt", "completion"],
-                                              "range": ["#c9bdf0", "#6b3fc4"]}}}}),
+                                              "range": ["#9a83e0", "#6b3fc4"]}}}}),
     }
     top = sorted(query_rows, key=lambda q: -q["count"])[:8]
     costly = sorted(query_rows, key=lambda q: (-q["tokens"], -q["cost"]))[:8]

@@ -14,12 +14,12 @@ by static/js/charts.js from the json_script below.
     How <a href="{% url 'connect:student-ask' %}">Ask in plain English</a> performs, how students use it,
     and what it costs. {{ start|date:"M j" }} &ndash; {{ end|date:"M j, Y" }}.
   </p>
-  <p class="chips" aria-label="Time window">
+  <nav class="chips" aria-label="Time window">
     {% for w in windows %}
       <a class="badge{% if w == days %} badge-ok{% endif %}" href="{% url 'connect:analytics' %}?days={{ w }}"
          {% if w == days %}aria-current="page"{% endif %}>Last {{ w }} days</a>
     {% endfor %}
-  </p>
+  </nav>
 {% endblock %}
 
 {% block content %}
@@ -135,8 +135,8 @@ by static/js/charts.js from the json_script below.
       </div>
     </div>
     <p class="sub">Cost model: the language model runs on our own server, so each request is priced as if a
-      hosted model of the same size had answered it: ${{ price_prompt }} per million prompt tokens and
-      ${{ price_completion }} per million completion tokens.</p>
+      hosted model of the same size had answered it: ${{ price_prompt|floatformat:2 }} per million prompt tokens and
+      ${{ price_completion|floatformat:2 }} per million completion tokens.</p>
   </section>
 
 </div>
