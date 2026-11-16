@@ -39,38 +39,35 @@
 
 <h2 class="section">Rating distribution</h2>
 
-<ul class="list" role="list">
+{% if distribution %}
+<ul class="card bars" role="list">
 {% for stars, count, percent in distribution %}
-<li class="card">
-  <div class="row">
-    <div>
-      <div class="title">
-        {{ stars }} star{{ stars|pluralize }}
-      </div>
-      <div class="meta">
-        {{ count }} response{{ count|pluralize }}
-      </div>
-    </div>
-
-    <div class="badge">{{ percent }}%</div>
+<li>
+  <div class="title">
+    {{ stars }} star{{ stars|pluralize }}
   </div>
 
-  {# Decorative: the percentage is already given as text in the badge. #}
+  {# Decorative: the count and the percentage are given as text beside it. #}
   <div class="bar-track" aria-hidden="true">
     <div class="bar-fill" style="width: {{ percent }}%;"></div>
   </div>
-</li>
 
-{% empty %}
-<li class="empty">
+  <div class="meta">
+    <span>{{ count }} response{{ count|pluralize }}</span>
+    <span>{{ percent }}%</span>
+  </div>
+</li>
+{% endfor %}
+</ul>
+{% else %}
+<div class="empty">
   <div class="big">No feedback submitted yet</div>
   <p>
     Feedback will appear here once students complete a match and submit
     their post-experience feedback.
   </p>
-</li>
-{% endfor %}
-</ul>
+</div>
+{% endif %}
 
 <h2 class="section">What students enjoyed</h2>
 

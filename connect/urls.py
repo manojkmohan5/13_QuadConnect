@@ -17,7 +17,9 @@ chart data (/api/summary/...), Vega-Lite specs and images (/vega-lite/...),
 icebreakers (/api/icebreakers/, /matches/<pk>/icebreakers/), and reports
 with exports (/reports/, /export/...). P1-A6 added /search/ask/ (a local
 language model) and an API check of /locations/ suggestions (no new
-route). Each group sits under a comment
+route). /profile/ is where a student sets up, or edits, their own profile
+(onboarding.py), and /meet/ where they sign up to be matched (meetups.py).
+Each group sits under a comment
 naming its assignment section; every /api/ route is in one block. Paths and
 names must not change without updating base.html and the models'
 get_absolute_url(), which reverse them.
@@ -25,7 +27,19 @@ get_absolute_url(), which reverse them.
 
 from django.urls import path
 
-from . import ai_search, api, charts, icebreakers, reports, vega_charts, views
+from . import (
+    ai_search,
+    analytics,
+    api,
+    charts,
+    icebreakers,
+    meetups,
+    onboarding,
+    plans,
+    reports,
+    vega_charts,
+    views,
+)
 
 app_name = "connect"
 
@@ -33,6 +47,21 @@ urlpatterns = [
     path("", views.home, name="home"),
     # P1-A5: public, linked from Google's sign-in screen and the footer.
     path("privacy/", views.privacy, name="privacy"),
+    # Your own profile: set up after the first login, edited later. Its photo
+    # is served by a view that needs a login, never as a public file.
+    path("profile/", onboarding.profile, name="profile"),
+    path("media/<path:path>", onboarding.media, name="media"),
+    # Meeting up (meetups.py): sign up for the weekend, then answer the
+    # match, check in, and say how it went.
+    path("meet/", meetups.meet, name="meet"),
+    path("matches/<int:pk>/answer/", meetups.answer, name="match-answer"),
+    path("matches/<int:pk>/feedback/", meetups.feedback, name="match-feedback"),
+    # Plans (plans.py): a student posts what they're doing; others RSVP.
+    path("plans/", plans.plan_list, name="plan-list"),
+    path("plans/new/", plans.plan_create, name="plan-create"),
+    path("plans/<int:pk>/", plans.plan_detail, name="plan-detail"),
+    path("plans/<int:pk>/rsvp/", plans.plan_rsvp, name="plan-rsvp"),
+    path("plans/<int:pk>/cancel/", plans.plan_cancel, name="plan-cancel"),
 
     # --- Kritika Agrawal - Generic CBV -----------------------------------
     path("students/", views.StudentProfileListView.as_view(),
@@ -94,4 +123,7 @@ urlpatterns = [
     path("reports/", reports.reports, name="reports"),
     path("export/students.csv", reports.students_csv, name="export-students-csv"),
     path("export/students.json", reports.students_json, name="export-students-json"),
+
+    # --- P1-A10 - AI analytics dashboard (staff only) -----------------------
+    path("analytics/", analytics.analytics, name="analytics"),
 ]

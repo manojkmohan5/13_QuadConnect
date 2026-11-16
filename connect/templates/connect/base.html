@@ -9,6 +9,12 @@ filename (cache busting - see docs/notes/notes.txt).
 
 Blocks available to children:
     title        text inside <title>
+    main_class   optional class on <main>: "narrow" (sign-in pages),
+                 "reading" (long text) or "wide" (the home page, whose
+                 sections centre themselves)
+    body_class   optional extra class on <body>: " scene-page" puts the
+                 campus photo behind the page (sign-in pages)
+    footer_extra optional last line of the footer (the photo's credit)
     page_header  the whole page header; override to replace it (home does)
       heading    the <h1> text, inside page_header
       subtitle   optional line under the heading, inside page_header
@@ -19,11 +25,24 @@ Blocks available to children:
 Navigation marks the current section with class="active". The list page
 itself gets aria-current="page"; its detail pages get aria-current="true",
 because the link then points at the section, not at the page being shown.
+Each link's icon is drawn by the stylesheet from its data-icon, so the
+link's text stays its whole content.
 
 Before login the navigation shows only Home, plus Log in and Sign up on the
 right; those pages are the only ones a visitor can open (P1-A5). After login
-every section appears, with the username and a Log out button. Logging out
-is a POST form, so a link or a prefetch can never sign anyone out.
+the four sections appear, and the pages about QuadConnect itself (Feedback,
+Insights, Reports, API) sit behind "More", a <details>, so it opens without
+JavaScript. On a small screen the navigation is a tab bar along the bottom
+(body.has-tabs). Logging out is a POST form, so a link or a prefetch can
+never sign anyone out.
+
+"Signed in as" is the link to your own profile, or to setting one up. Until
+a student (not staff) has one, every page but that form says so above its
+content, since nobody can find them yet (connect/onboarding.py).
+
+Elements marked data-enter (or the first six items of a data-enter-list)
+fade in once, drawn by static/js/site.js with Motion. The stylesheet hides
+them first; the <noscript> rule below shows them when there is no script.
 {% endcomment %}
 <!doctype html>
 <html lang="en">
@@ -31,48 +50,71 @@ is a POST form, so a link or a prefetch can never sign anyone out.
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}QuadConnect{% endblock %}</title>
+  <meta name="description" content="QuadConnect matches verified Illinois students into weekend meetups, one-on-one or in small squads, at approved campus locations.">
   <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
-  <link rel="preload" href="{% static 'fonts/inter-latin-wght-normal.woff2' %}"
+  <link rel="preload" href="{% static 'fonts/figtree-latin-wght-normal.woff2' %}"
+        as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'fonts/bricolage-grotesque-latin-wght-normal.woff2' %}"
         as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/quadconnect.css' %}">
+  <noscript><style>[data-enter], [data-enter-list] > * { opacity: 1 !important; animation: none !important; }</style></noscript>
   {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% if user.is_authenticated %}has-tabs{% endif %}{% block body_class %}{% endblock %}">
 
 <a class="skip-link" href="#main">Skip to main content</a>
 
 <header class="site">
   <div class="bar">
     <a class="brand" href="{% url 'connect:home' %}">
-      <img src="{% static 'img/logo.svg' %}" alt="" width="30" height="30">
+      <img src="{% static 'img/logo.svg' %}" alt="" width="32" height="32">
       QuadConnect
     </a>
     {% with u=request.resolver_match.url_name %}
     <nav class="site" aria-label="Main">
-      <a href="{% url 'connect:home' %}"
+      <a data-icon="house" href="{% url 'connect:home' %}"
          {% if u == 'home' %}class="active" aria-current="page"{% endif %}>Home</a>
       {% if user.is_authenticated %}
-      <a href="{% url 'connect:student-list' %}"
+      <a data-icon="coffee" href="{% url 'connect:meet' %}"
+         {% if u == 'meet' %}class="active" aria-current="page"{% endif %}>Meet</a>
+      <a data-icon="calendar" href="{% url 'connect:plan-list' %}"
+         {% if u == 'plan-list' %}class="active" aria-current="page"{% elif u == 'plan-detail' or u == 'plan-create' %}class="active" aria-current="true"{% endif %}>Plans</a>
+      <a data-icon="users" href="{% url 'connect:student-list' %}"
          {% if u == 'student-list' %}class="active" aria-current="page"{% elif u == 'student-detail' %}class="active" aria-current="true"{% endif %}>Students</a>
-      <a href="{% url 'connect:student-search' %}"
+      <a data-icon="search" href="{% url 'connect:student-search' %}"
          {% if u == 'student-search' %}class="active" aria-current="page"{% elif u == 'student-ask' %}class="active" aria-current="true"{% endif %}>Search</a>
-      <a href="{% url 'connect:match-list' %}"
-         {% if u == 'match-list' %}class="active" aria-current="page"{% elif u == 'match-detail' or u == 'match-icebreakers' %}class="active" aria-current="true"{% endif %}>Matches</a>
-      <a href="{% url 'connect:location-list' %}"
+      <a data-icon="calendar-check" href="{% url 'connect:match-list' %}"
+         {% if u == 'match-list' %}class="active" aria-current="page"{% elif u == 'match-detail' or u == 'match-icebreakers' or u == 'match-feedback' %}class="active" aria-current="true"{% endif %}>Matches</a>
+      <a data-icon="map-pin" href="{% url 'connect:location-list' %}"
          {% if u == 'location-list' %}class="active" aria-current="page"{% elif u == 'location-detail' %}class="active" aria-current="true"{% endif %}>Locations</a>
-      <a href="{% url 'connect:feedback-summary' %}"
-         {% if u == 'feedback-summary' %}class="active" aria-current="page"{% endif %}>Feedback</a>
-      <a href="{% url 'connect:insights' %}"
-         {% if u == 'insights' %}class="active" aria-current="page"{% endif %}>Insights</a>
-      <a href="{% url 'connect:reports' %}"
-         {% if u == 'reports' %}class="active" aria-current="page"{% endif %}>Reports</a>
-      <a href="{% url 'connect:api-docs' %}"
-         {% if u == 'api-docs' %}class="active" aria-current="page"{% endif %}>API</a>
+      <details>
+        <summary data-icon="ellipsis"{% if u == 'feedback-summary' or u == 'insights' or u == 'reports' or u == 'api-docs' or u == 'analytics' %} class="active"{% endif %}>More</summary>
+        <div class="menu">
+          <a data-icon="star" href="{% url 'connect:feedback-summary' %}"
+             {% if u == 'feedback-summary' %}class="active" aria-current="page"{% endif %}>Feedback</a>
+          <a data-icon="chart-column" href="{% url 'connect:insights' %}"
+             {% if u == 'insights' %}class="active" aria-current="page"{% endif %}>Insights</a>
+          <a data-icon="file-text" href="{% url 'connect:reports' %}"
+             {% if u == 'reports' %}class="active" aria-current="page"{% endif %}>Reports</a>
+          {% if user.is_staff %}
+          <a data-icon="chart-column" href="{% url 'connect:analytics' %}"
+             {% if u == 'analytics' %}class="active" aria-current="page"{% endif %}>AI analytics</a>
+          {% endif %}
+          <a data-icon="braces" href="{% url 'connect:api-docs' %}"
+             {% if u == 'api-docs' %}class="active" aria-current="page"{% endif %}>API</a>
+        </div>
+      </details>
       {% endif %}
     </nav>
     <div class="account">
       {% if user.is_authenticated %}
-        <span class="who">Signed in as <strong>{{ user.get_username }}</strong></span>
+        {% url 'connect:profile' as setup_url %}
+        <a class="me" href="{% firstof user.student_profile.get_absolute_url setup_url %}">
+          {% if user.student_profile.photo %}<img class="face" src="{{ user.student_profile.photo.url }}" alt="">
+          {% else %}<span class="face" aria-hidden="true">{{ user.get_username|slice:":1"|upper }}</span>{% endif %}
+          <span class="who">Signed in as <strong>{{ user.get_username }}</strong>
+            <span class="to">{% if user.student_profile %}Your profile{% else %}Set up your profile{% endif %}</span></span>
+        </a>
         <form method="post" action="{% url 'account_logout' %}">
           {% csrf_token %}
           <button type="submit">Log out</button>
@@ -88,7 +130,7 @@ is a POST form, so a link or a prefetch can never sign anyone out.
   </div>
 </header>
 
-<main id="main" tabindex="-1">
+<main id="main" tabindex="-1"{% block main_class %}{% endblock %}>
   {% if messages %}
     <div class="messages">
       {% for message in messages %}
@@ -97,6 +139,14 @@ is a POST form, so a link or a prefetch can never sign anyone out.
           {{ message }}
         </p>
       {% endfor %}
+    </div>
+  {% endif %}
+  {% if user.is_authenticated and not user.is_staff and not user.student_profile and request.resolver_match.url_name != "profile" %}
+    <div class="messages">
+      <p class="message nudge">
+        <span><strong>Your profile is not set up yet.</strong> Until it is, other students cannot find you, and you cannot be matched.</span>
+        <a class="btn btn-primary" href="{% url 'connect:profile' %}">Set up your profile</a>
+      </p>
     </div>
   {% endif %}
 
@@ -113,8 +163,11 @@ is a POST form, so a link or a prefetch can never sign anyone out.
   University of Illinois Urbana-Champaign &middot;
   <a href="{% url 'connect:privacy' %}">Privacy</a>
   {% if user.is_staff %}&middot; <a href="{% url 'admin:index' %}">Admin</a>{% endif %}
+  {% block footer_extra %}{% endblock %}
 </footer>
 
+<script src="{% static 'vendor/motion/motion.js' %}" defer></script>
+<script src="{% static 'js/site.js' %}" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

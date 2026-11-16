@@ -23,6 +23,71 @@ Sections:
 ================================================================================
 
 --------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  Profile photo and headline, on feature/profile-photo
+                             [Manojkumar]
+--------------------------------------------------------------------------------
+  - Optional photo and headline on a profile; shown on the card, the
+    profile, the faces in a match and the menu avatar.
+  - A photo is kept as a small JPEG, upright, without its metadata, and
+    only signed-in students can open it (/media/ needs a login).
+  - Migration 0004. 243 tests pass.
+
+--------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  Real matching, on feature/matching  [Manojkumar]
+--------------------------------------------------------------------------------
+  - Meet page (/meet/): sign up for the coming weekend, 1-on-1 or a group.
+    Matching runs on every sign-up: 1-on-1 = most shared interests and a
+    shared free block; group = 4-8 free at one block sharing one interest.
+  - Accept or decline; confirmed when all accept; called off and re-matched
+    on a decline. Home page card says the next step. Check-in from 30 min
+    before; feedback after; mutual "stay connected" shows Illinois emails.
+  - Students see only their own matches; staff see all. Icebreakers are
+    live trivia for the match (Gym -> Sports).
+  - New model MatchRequest (migration 0003). 239 tests pass.
+Next: Microsoft Entra sign-in for UIUC students, at the last stage.
+
+--------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  Sign-up fixed, and a profile set up after login,
+                             on feature/login-fixes  [Manojkumar]
+--------------------------------------------------------------------------------
+  - A double click on "Create account" gave a 500 (IntegrityError: the
+    username was saved by the first click). The form now comes back with the
+    reason, and every POST form is sent once (site.js).
+  - After a login or sign-up, a student without a profile goes to /profile/:
+    name, NetID, college, how they like to meet, interests, free weekend
+    times. Saving opens their profile, which is on the roster from then on.
+    The same page edits it; "Signed in as" links to it.
+  - Verified only when a Google sign-in proved the NetID's illinois.edu
+    address. The roster, search and privacy page now say so.
+Next: try it on the laptop, then push and open a PR into feature/rebuild
+or main.
+
+--------------------------------------------------------------------------------
+WEEK 12 (w/c 2026-11-09)  -  The interface rebuilt on feature/rebuild
+                             [Manojkumar]
+--------------------------------------------------------------------------------
+The look and layout of every page, on feature/rebuild, cut from main after
+P1-A9. No feature, route, form or API changed.
+  - Look: a light wash behind every page (orange tint to blue), Illini-blue
+    ink, white cards. Orange = brand and main action, blue = Friend Connect,
+    purple = Squad Connect, green = free time and "yes". New logo. Figtree and
+    Bricolage Grotesque replace Inter. lucide icons in the stylesheet.
+  - Shell: signed in, navigation is a column on the left (wide screens) or a
+    tab bar along the bottom (small screens); "More" holds Feedback, Insights,
+    Reports and API.
+  - Students are cards (_person.html) with the weekend grid (_weekend.html);
+    the profile keeps the card beside the answers. Matches show a date tile
+    and who is in them.
+  - One photo (Illini Union and Main Quad, Daniel Schwen, CC BY-SA 4.0) behind
+    the home headline and the sign-in pages; credited where shown.
+  - One entrance per page, with Motion 14.12 (plain-JS build of Framer
+    Motion), self-hosted. Off for reduced motion; nothing hidden without JS.
+  - Checked: 210 tests pass; Lighthouse accessibility 100 on the home page,
+    the roster, a profile and a match; no sideways scroll at 320 px;
+    collectstatic builds with production settings.
+Next: push the branch (CI runs on it), then a PR into main.
+
+--------------------------------------------------------------------------------
 WEEK 12 (w/c 2026-11-09)  -  P1-A9 Part 1 on feature/p1-a9-part1  [Kritika]
 --------------------------------------------------------------------------------
 P1-A9 Part 1 (the AI integrated into the Django app), on feature/p1-a9-part1,

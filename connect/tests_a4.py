@@ -65,7 +65,7 @@ class SeededTestCase(TestCase):
 class SeedDataTests(SeededTestCase):
 
     def test_seed_builds_the_documented_dataset(self):
-        self.assertEqual(StudentProfile.objects.count(), 8)
+        self.assertEqual(StudentProfile.objects.count(), 38)  # 8 in the matches, 30 fall sign-ups
         self.assertEqual(Match.objects.count(), 3 + len(HISTORY))
         self.assertEqual(MatchParticipant.objects.count(), 55)
         self.assertEqual(ExperienceFeedback.objects.count(), 33)
@@ -107,7 +107,7 @@ class SeedDataTests(SeededTestCase):
     def test_students_have_no_password(self):
         # Students sign in through SSO later; nobody can log in as one now.
         student_users = User.objects.filter(student_profile__isnull=False)
-        self.assertEqual(student_users.count(), 8)
+        self.assertEqual(student_users.count(), 38)
         self.assertFalse(any(u.has_usable_password() for u in student_users))
 
     def test_verify_constraints_passes_on_the_seed(self):
@@ -116,6 +116,7 @@ class SeedDataTests(SeededTestCase):
     def test_match_lists_put_the_newest_cycle_first(self):
         # With the history seeded, id order is no longer date order, and
         # annotate() drops Meta.ordering, so each list must order by date.
+        self.client.force_login(User.objects.get(username="tester"))  # staff see every match
         newest = [m.get_absolute_url()
                   for m in Match.objects.order_by("-week_start", "-scheduled_for", "-pk")]
         for name, count in [("match-list", len(newest)), ("home", 5)]:
@@ -137,7 +138,7 @@ class SummaryApiTests(SeededTestCase):
         self.assertEqual(set(rows[0]), {"category", "count", "type"})
         # Most picked first, ties by name; nobody picked an activity.
         self.assertEqual([(r["category"], r["count"]) for r in rows[:3]],
-                         [("Food", 4), ("Movies", 4), ("Fitness", 3)])
+                         [("Food", 13), ("Gaming", 12), ("Music", 12)])
         self.assertEqual(sum(r["count"] for r in rows), ProfileInterest.objects.count())
         self.assertNotIn("Meeting activity", {r["type"] for r in rows})
 
@@ -171,7 +172,7 @@ class SummaryApiTests(SeededTestCase):
 
     def test_only_verified_students_count(self):
         StudentProfile.objects.filter(net_id="apatel22").update(is_sso_verified=False)
-        self.assertEqual(self.summary()["Food"], 3)  # apatel22 is one of Food's four
+        self.assertEqual(self.summary()["Food"], 12)  # apatel22 is one of Food's thirteen
 
     def test_interests_with_the_same_name_keep_their_own_bars(self):
         # Food is both a hobby and a meeting activity.
@@ -179,7 +180,7 @@ class SummaryApiTests(SeededTestCase):
             profile=StudentProfile.objects.get(net_id="jordan4"),
             interest=Interest.objects.get(name="Food", category=InterestCategory.ACTIVITY))
         rows = self.summary()
-        self.assertEqual((rows["Food (Hobby / Interest)"], rows["Food (Meeting activity)"]), (4, 1))
+        self.assertEqual((rows["Food (Hobby / Interest)"], rows["Food (Meeting activity)"]), (13, 1))
         self.assertNotIn("Food", rows)
 
 
@@ -229,8 +230,10 @@ class VegaLiteTests(SeededTestCase):
         for name in ["chart1", "chart2"]:
             self.assertContains(response, f'data-vega-spec="{reverse("connect:vega-spec", args=[name])}"')
         self.assertContains(response, "vendor/vega/vega-embed")
-        self.assertContains(response, "<noscript>", count=2)
-        self.assertContains(response, 'alt="Bar chart of 22 interests by how many verified students')
+        # Each chart's <noscript> holds its server-drawn image. (base.html has one
+        # more <noscript>: the rule that shows the page's entrance without scripts.)
+        self.assertEqual(len(re.findall(r"<noscript>\s*<img ", response.content.decode())), 2)
+        self.assertContains(response, 'alt="Bar chart of 23 interests by how many verified students')
         self.assertContains(response, 'alt="Line chart of matches scheduled each week from 2026-07-13 to 2026-09-07')
 
 
@@ -261,6 +264,8 @@ class IcebreakerTests(SeededTestCase):
 
     def setUp(self):
         super().setUp()
+        # A match's icebreakers are for its students and staff; the member is neither.
+        self.client.force_login(User.objects.get(username="tester"))
         patcher = patch("connect.icebreakers.requests.get",
                         return_value=trivia_reply(body={"response_code": 0, "results": [QUESTION]}))
         self.get = patcher.start()
@@ -439,7 +444,7 @@ class ReportsTests(SeededTestCase):
 
     def test_totals_line_and_grouped_summaries(self):
         response = self.client.get(reverse("connect:reports"))
-        self.assertIn("Totals: 8 students, 19 matches (16 completed, 2 upcoming, 1 cancelled) "
+        self.assertIn("Totals: 38 students, 19 matches (16 completed, 2 upcoming, 1 cancelled) "
                       "and 55 participants across all matches.", flat(response))
         self.assertContains(response, '<th scope="row">All colleges</th>')
         self.assertContains(response, '<th scope="row">All venues</th>')

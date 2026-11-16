@@ -25,7 +25,7 @@ from datetime import date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_not_required
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, Prefetch, Q
+from django.db.models import Avg, Count, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template import loader
@@ -34,7 +34,7 @@ from django.utils.timezone import localtime
 from django.views import View
 from django.views.generic import DetailView, ListView
 
-from . import ai_venues
+from . import ai_venues, meetups
 from .forms import CampusLocationSuggestionForm, NetIDLookupForm, StudentSearchForm
 from .models import (
     CampusLocation,
@@ -42,7 +42,6 @@ from .models import (
     Interest,
     Match,
     MatchParticipant,
-    ProfileInterest,
     StudentProfile,
 )
 
@@ -54,11 +53,13 @@ from .models import (
 @login_not_required  # the public landing page (P1-A5)
 def home(request):
     """Landing page. Visitors who are not signed in see what QuadConnect is
-    and how to join, and no student data; signed-in users also get a count
-    of every seeded entity and the recent matches."""
+    and how to join, and no student data; signed-in users also get what to
+    do about the coming weekend (meetups.notice), a count of every seeded
+    entity, and the recent matches they may see (their own; staff, all)."""
     if not request.user.is_authenticated:
         return render(request, "connect/home.html")
     context = {
+        "notice": meetups.notice(request.user),
         "counts": [
             ("Student profiles", StudentProfile.objects.count()),
             ("Interests in catalogue", Interest.objects.count()),
@@ -69,7 +70,7 @@ def home(request):
             ("Feedback submissions", ExperienceFeedback.objects.count()),
         ],
         "recent_matches": (
-            Match.objects.select_related("location", "suggested_activity")
+            Match.objects.visible_to(request.user).select_related("location", "suggested_activity")
             .annotate(headcount=Count("participants"))
             # annotate() drops Meta.ordering (GROUP BY), so order here.
             .order_by("-week_start", "-scheduled_for", "-pk")[:5]
@@ -188,7 +189,8 @@ def _match_rows(matches):
     is what lets the same template serve this page and the campus-location
     page from two different view styles.
 
-    Expects the queryset to be annotated with `headcount`.
+    Expects the queryset to be annotated with `headcount`, and its
+    participants and their profiles to be prefetched.
     """
     rows = []
     for match in matches:
@@ -212,12 +214,21 @@ def _match_rows(matches):
             ],
             "badge": match.get_status_display(),
             "url": match.get_absolute_url(),
+            # For the row's tone and the badge's dot: "friend"/"squad", and the status.
+            "kind": match.connection_type.lower(),
+            "state": match.status.lower(),
+            # The tile shows the day over the month; the faces are the initials
+            # of who is in the match. Both repeat what the row says in words.
+            "date": [str(when.day), when.strftime("%b")],
+            "faces": [p.profile.initials for p in match.participants.all()],
         })
     return rows
 
 
 def match_list(request):
-    """List every weekly scheduled experience, optionally filtered by week.
+    """List the weekly scheduled experiences, optionally filtered by week:
+    every one for staff, and a student's own for a student, since who meets
+    whom is private (Match.objects.visible_to).
 
     The graded `render()` view: it queries the model, builds a context
     dictionary, and hands both to the render() shortcut. Compare with
@@ -233,9 +244,11 @@ def match_list(request):
             # A hand-typed query string should not produce a 500.
             bad_date = True
 
+    staff = request.user.is_staff
     matches = (
-        Match.objects
+        Match.objects.visible_to(request.user)
         .select_related("location", "suggested_activity")
+        .prefetch_related("participants__profile")  # each row's faces: two queries in all
         .annotate(headcount=Count("participants"))
         # annotate() drops Meta.ordering (GROUP BY), so order here.
         .order_by("-week_start", "-scheduled_for", "-pk")
@@ -256,6 +269,10 @@ def match_list(request):
         empty_title = f"No matches for the week of {selected_week:%d %b %Y}"
         empty_message = ("No experience was scheduled that week. Clear the "
                          "filter to see every match.")
+    elif not staff:
+        empty_title = "No matches yet"
+        empty_message = ("Sign up for the coming weekend on the Meet page, "
+                         "and your matches will be listed here.")
     else:
         empty_title = "No matches scheduled yet"
         empty_message = ("Matches appear here once a weekly matching cycle "
@@ -264,17 +281,19 @@ def match_list(request):
 
     context = {
         "page_title": "Matches - QuadConnect",
-        "heading": "Weekly matches",
-        "subtitle": "Every scheduled experience, newest cycle first. "
-                    "Each match is one real meeting at an approved campus "
-                    "location.",
+        "heading": "Weekly matches" if staff else "Your matches",
+        "subtitle": ("Every scheduled experience, newest cycle first. "
+                     "Each match is one real meeting at an approved campus "
+                     "location." if staff else
+                     "The meetups you have been matched into, newest first. "
+                     "Only the students in a match can see it."),
         "items": _match_rows(matches),
         "empty_title": empty_title,
         "empty_message": empty_message,
         # For the filter form in match_list.html.
         "selected_week": raw_week,
         "available_weeks": (
-            Match.objects.order_by("-week_start")
+            Match.objects.visible_to(request.user).order_by("-week_start")
             .values_list("week_start", flat=True).distinct()
         ),
     }
@@ -286,12 +305,19 @@ class MatchDetailView(DetailView):
 
     Reached from any match row via Match.get_absolute_url(). DetailView
     looks the match up by the <int:pk> in the URL and raises 404 for a pk
-    that does not exist. Template: connect/match_detail.html by convention.
+    that does not exist, or that the user may not see: a student sees only
+    the matches they are in, staff see all. Template:
+    connect/match_detail.html by convention.
+
+    A student in the match also gets their own part of it: accept or
+    decline, check in, feedback (connect/meetups.py).
     """
 
     model = Match
     context_object_name = "match"
-    queryset = Match.objects.select_related("location", "suggested_activity")
+
+    def get_queryset(self):
+        return Match.objects.visible_to(self.request.user).select_related("location", "suggested_activity")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -300,6 +326,11 @@ class MatchDetailView(DetailView):
         context["participants"] = (
             self.object.participants.select_related("profile")
         )
+        me = self.object.participants.filter(profile__user=self.request.user).first()
+        if me:
+            me.match = self.object  # already loaded
+        context["me"] = me
+        context["actions"] = meetups.actions(me) if me else None
         return context
 
 
@@ -344,6 +375,7 @@ class CampusLocationListView(View):
                     "meta": meta,
                     "badge": setting,
                     "url": location.get_absolute_url(),
+                    "kind": setting.lower(),  # the tile's icon: indoor or outdoor
                 }
             )
 
@@ -539,15 +571,13 @@ class StudentProfileListView(ListView):
     def get_queryset(self):
         """Apply the optional ?college= filter on top of the default order.
 
-        The interest count is annotated rather than counted per row, so the
-        list costs the same number of queries whatever its length.
+        for_cards() prefetches what each profile card shows (the student's
+        interests and free weekend slots), so the list costs the same
+        number of queries whatever its length.
         """
-        # annotate() adds a GROUP BY, and Django drops Meta.ordering from a
-        # grouped query - which makes pagination non-deterministic (a student
-        # can appear on two pages, or none). Re-apply the ordering explicitly.
-        queryset = StudentProfile.objects.annotate(
-            interest_count=Count("interest_links")
-        ).order_by("full_name", "net_id")
+        # Ordered explicitly, with net_id as the tie-breaker: without a
+        # total order, pagination can show a student on two pages, or none.
+        queryset = StudentProfile.objects.for_cards().order_by("full_name", "net_id")
         college = (self.request.GET.get("college") or "").strip()
         if college:
             queryset = queryset.filter(college__icontains=college)
@@ -579,6 +609,8 @@ class StudentProfileDetailView(DetailView):
 
     model = StudentProfile
     context_object_name = "student"
+    # The page reads the free slots twice: the grid, and its empty state.
+    queryset = StudentProfile.objects.prefetch_related("availability_slots")
 
     def get_context_data(self, **kwargs):
         """Prefetch the related rows the template walks, so the page costs a
@@ -590,11 +622,13 @@ class StudentProfileDetailView(DetailView):
             .order_by("-is_primary", "interest__name")
         )
         context["slots"] = student.availability_slots.all()
+        # When and where a student met someone is theirs, and staff's, to see.
+        mine = self.request.user.is_staff or student.user_id == self.request.user.pk
         context["participations"] = (
             student.match_participations
             .select_related("match", "match__location")
             .order_by("-match__scheduled_for")
-        )
+        ) if mine else None
         return context
 
 
@@ -676,23 +710,15 @@ class StudentSearchView(View):
         else:
             matching = StudentProfile.objects.none()
 
-        # Re-select through a pk subquery so the annotation and the
-        # aggregates below are not skewed by the search's joins: counting
-        # interest_links on the filtered query would count only the
-        # interests that matched the search, not all of them.
+        # Re-select through a pk subquery so the aggregates below are not
+        # skewed by the search's joins: grouping the filtered query would
+        # count a student once per interest that matched the search.
         results = StudentProfile.objects.filter(pk__in=matching.values("pk"))
 
         # ponytail: unpaginated; the roster at /students/ paginates, add it
         # here too once the roster outgrows a single page.
-        students = (
-            results.annotate(interest_count=Count("interest_links"))
-            .prefetch_related(Prefetch(
-                "interest_links",
-                queryset=ProfileInterest.objects.select_related("interest")
-                .order_by("-is_primary", "interest__name"),
-            ))
-            .order_by("full_name", "net_id")
-        )
+        # for_cards(): each card's interests and free slots, prefetched.
+        students = results.for_cards().order_by("full_name", "net_id")
 
         # Total: aggregate() collapses the result set into one row.
         summary = results.aggregate(

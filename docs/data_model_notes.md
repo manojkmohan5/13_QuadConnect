@@ -27,7 +27,7 @@ see the Team Contribution Contract.
 
 ## 2. Model overview
 
-Eight models, each mapping to a screen in the wireframe deck.
+Nine models, each mapping to a screen in the wireframe deck.
 
 | Model | Real-world entity | Screen |
 |---|---|---|
@@ -39,6 +39,7 @@ Eight models, each mapping to a screen in the wireframe deck.
 | `Match` | One scheduled weekly experience | 6, 7 |
 | `MatchParticipant` | One student's place in one match | 6, 7, 8 |
 | `ExperienceFeedback` | One student's private post-meeting feedback | 9 |
+| `MatchRequest` | One student's sign-up for one weekend's matching (added with real matching) | 3 |
 
 This exceeds the recommended 3–5 because the binding requirement is a
 *minimum* of two models per feature, and the product has four distinct
@@ -91,7 +92,7 @@ The mix is deliberate: `CASCADE` where the child is a detail of its parent,
 
 ## 4. Uniqueness constraints
 
-Five multi-field `UniqueConstraint`s, all verified against the live database:
+Six multi-field `UniqueConstraint`s:
 
 | Constraint | Fields | Prevents |
 |---|---|---|
@@ -100,6 +101,7 @@ Five multi-field `UniqueConstraint`s, all verified against the live database:
 | `uniq_interest_per_profile` | `profile`, `interest` | The same interest selected twice, which would double-count overlap |
 | `uniq_slot_per_profile_day_block` | `profile`, `weekday`, `time_block` | The same weekend window selected twice |
 | `uniq_participant_per_match` | `match`, `profile` | The same student appearing twice in one match |
+| `uniq_request_per_profile_week` | `profile`, `week_start` | A student in one weekend's pool twice, where they could be matched twice |
 
 ---
 
@@ -124,7 +126,7 @@ Every model sets `Meta.ordering` so lists are stable without callers asking:
 
 ```bash
 python manage.py migrate
-python manage.py seed_demo_data       # 8 students, 3 matches, 2 feedback rows
+python manage.py seed_demo_data       # 38 students, 19 matches, 33 feedback rows
 python manage.py verify_constraints   # proves constraints + on_delete (11/11)
 python manage.py runserver
 ```
@@ -146,10 +148,11 @@ are required to review the data — log in at `/admin/` directly.
 
 Seeded by `connect/management/commands/seed_demo_data.py` (idempotent):
 
-- **8 student profiles** across five colleges, varied social preferences
-- **28 interests** (12 hobbies, 10 RSOs, 6 activities)
-- **41 interest selections** exercising the M2M through-model
-- **16 availability slots**
+- **38 student profiles** across six colleges, varied social preferences: the
+  8 who are in the matches, and 30 fall sign-ups with no match yet
+- **29 interests** (13 hobbies, 10 RSOs, 6 activities); Gym was added last
+- **167 interest selections** exercising the M2M through-model
+- **76 availability slots**
 - **4 approved campus locations** (Illini Union, Grainger Library, Main Quad, Espresso Royale)
 - **3 matches** — one Friend Connect awaiting response, one confirmed Squad Connect with check-ins, one completed experience
 - **9 match participants**, **2 feedback submissions**

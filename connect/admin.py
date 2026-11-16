@@ -15,6 +15,9 @@ from .models import (
     Interest,
     Match,
     MatchParticipant,
+    MatchRequest,
+    Plan,
+    PlanRSVP,
     ProfileInterest,
     StudentProfile,
 )
@@ -87,6 +90,10 @@ class StudentProfileAdmin(admin.ModelAdmin):
             "fields": ("user", "net_id", "illinois_email", "full_name",
                        "is_sso_verified"),
         }),
+        # Staff can clear a photo or a headline that breaks the rules.
+        ("Photo and headline", {
+            "fields": ("photo", "headline"),
+        }),
         ("Academic context (Screen 2)", {
             "fields": ("college", "department", "part_time_job"),
         }),
@@ -127,6 +134,14 @@ class ProfileInterestAdmin(admin.ModelAdmin):
 class AvailabilitySlotAdmin(admin.ModelAdmin):
     list_display = ("profile", "weekday", "time_block")
     list_filter = ("weekday", "time_block")
+    search_fields = ("profile__net_id", "profile__full_name")
+    autocomplete_fields = ["profile"]
+
+
+@admin.register(MatchRequest)
+class MatchRequestAdmin(admin.ModelAdmin):
+    list_display = ("profile", "week_start", "connection_type", "created_at")
+    list_filter = ("week_start", "connection_type")
     search_fields = ("profile__net_id", "profile__full_name")
     autocomplete_fields = ["profile"]
 
@@ -188,3 +203,18 @@ class ExperienceFeedbackAdmin(admin.ModelAdmin):
 admin.site.site_header = "QuadConnect Administration"
 admin.site.site_title = "QuadConnect Admin"
 admin.site.index_title = "Verified campus social discovery - data model"
+
+
+class PlanRSVPInline(admin.TabularInline):
+    model = PlanRSVP
+    extra = 0
+    autocomplete_fields = ["profile"]
+
+
+@admin.register(Plan)
+class PlanAdmin(admin.ModelAdmin):
+    list_display = ("title", "host", "starts_at", "location", "capacity", "cancelled_at")
+    list_filter = ("location", "cancelled_at")
+    search_fields = ("title", "host__net_id", "host__full_name")
+    autocomplete_fields = ["host"]
+    inlines = [PlanRSVPInline]

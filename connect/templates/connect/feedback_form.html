@@ -1,0 +1,48 @@
+{% extends "connect/base.html" %}
+{% comment %}
+How a meetup went (Screen 9; connect/meetups.py, FeedbackForm). Once, for a
+student who checked in. Private: no one else in the match sees it. Only
+"stay connected" is acted on, and only when it is mutual.
+
+Context: form, match.
+{% endcomment %}
+
+{% block title %}{% if form.errors %}Error: {% endif %}How was it? - QuadConnect{% endblock %}
+{% block main_class %} class="reading"{% endblock %}
+
+{% block page_header %}
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'connect:match-list' %}">Matches</a> /
+    <a href="{{ match.get_absolute_url }}">Match {{ match.check_in_code }}</a> /
+    <span aria-current="page">Feedback</span>
+  </nav>
+  <h1 class="page">How was it?</h1>
+  <p class="sub">
+    Your {{ match.get_connection_type_display }} at {{ match.location.name }},
+    {{ match.scheduled_for|date:"l j F" }}. Only you and QuadConnect staff see these answers.
+  </p>
+{% endblock %}
+
+{% block content %}
+  {% if form.errors %}
+    <div class="messages">
+      <p class="message message-error" role="alert">Your feedback was not sent. Fix the answer marked below.</p>
+    </div>
+  {% endif %}
+
+  {# novalidate: the server's messages say how to fix each answer. #}
+  <form class="form card" method="post" action="{% url 'connect:match-feedback' match.pk %}" novalidate>
+    {% csrf_token %}
+    <div class="field">{{ form.rating.as_field_group }}</div>
+    <fieldset class="field">
+      <legend>What went well?</legend>
+      <div class="field field-check">{{ form.enjoyed_conversation.as_field_group }}</div>
+      <div class="field field-check">{{ form.enjoyed_shared_interests.as_field_group }}</div>
+      <div class="field field-check">{{ form.enjoyed_activity.as_field_group }}</div>
+      <div class="field field-check">{{ form.felt_comfortable.as_field_group }}</div>
+    </fieldset>
+    <div class="field field-check">{{ form.wants_to_stay_connected.as_field_group }}</div>
+    <div class="field">{{ form.private_note.as_field_group }}</div>
+    <div class="actions"><button type="submit">Send feedback</button></div>
+  </form>
+{% endblock %}

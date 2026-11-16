@@ -29,6 +29,7 @@ what we chose not to build, and where the shortcuts are.
 | **Last completed** | P1-A8 — Semantic Relationships and Retrieval — merged into `main` (PR #15, 2026-11-08) |
 | **`main` status** | Has P1-A2 to P1-A9 (P1-A8 in PR #15, P1-A9 in PR #16). |
 | **What remains** | P1-A9: the Canvas file (the repository link, a summary of the AI feature and the demo time) and the in-person demo on Thursday 2026-11-12, 11:30 AM, EDUC 339 (§9). |
+| **Also in flight** | The interface rebuilt on `feature/rebuild` (2026-11-11), cut from `main` after P1-A9: a new look and layout, no feature added or removed. Not pushed and not in `main` yet (§9). |
 
 `main` ships P1-A2 (split settings, `.env` handling, `base.html`, the shared
 list template, a home dashboard and the four graded views), P1-A3 (detail
@@ -59,6 +60,7 @@ only through a PR whose head has passed it.
 | Manojkumar Mohankumar (P1-A7) | `feature/p1-a7-part-1`, `-part-2`, `-part-3` | Parts 1–3 | `multi-model/` (not Django) | ✅ DONE — merged to `main` in PR #12 (2026-10-26), PR #13 and PR #14 (2026-11-03); see §9 |
 | Manojkumar Mohankumar (P1-A8) | `feature/p1-a8` | Parts 1–4 | `rag/` (not Django) | ✅ DONE — merged to `main` in PR #15 (2026-11-08); see §9 |
 | Prathamesh Mulay, Manojkumar Mohankumar (P1-A9) | `feature/p1-a9-part2-3` | Parts 2–3 | `README_AI.md`, the request check in `connect/ai_search.py`, `docs/a9_evaluation/` | ✅ DONE — Parts 2 and 3 done 2026-11-08; merged to `main` in PR #16 (2026-11-09), through `feature/p1-a9-part1`; see §9 |
+| Manojkumar Mohankumar (interface) | `feature/rebuild` | the look and layout of every page | `static/`, `connect/templates/`, `templates/account/` | BUILDING — rebuilt 2026-11-11; not pushed; see §9 |
 | Kritika Agrawal (P1-A9) | `feature/p1-a9-part1` | Part 1 | `README_AI.md` Part 1, `match_by_meaning()` and `ModelTimeout` in `connect/ai_search.py`, `docs/a9_part1/` | ✅ DONE — Part 1 done and audited 2026-11-09; merged to `main` in PR #16 (2026-11-09); the demo is on 2026-11-12; see §9 |
 
 **Whoever completes a branch:** updating this file is
@@ -220,7 +222,8 @@ the same models as a foundation.
 ├── llm-test/                      (A6) ai_prototype.ipynb (the model lab), requirements.txt (its extras), results/runs.jsonl
 ├── manage.py                      -> quadconnect.settings.development
 ├── db.sqlite3                     COMMITTED since A4 — seed data only
-├── static/                        (A3) css/quadconnect.css, img/logo.svg, fonts/; (A4) js/charts.js, vendor/vega/
+├── static/                        (A3) css/quadconnect.css, img/logo.svg, fonts/; (A4) js/charts.js, vendor/vega/;
+│                                  (rebuild) js/site.js, img/ campus photo + CREDITS.txt, vendor/motion/, vendor/lucide/
 ├── templates/                     (A5) account/ (login, sign-up, logout pages), allauth/ (layout)
 ├── staticfiles/                   IGNORED — collectstatic output (production)
 ├── docs/
@@ -246,7 +249,7 @@ the same models as a foundation.
 │   ├── urls.py                    /admin/, /accounts/ (allauth) and '' -> connect.urls
 │   ├── wsgi.py  asgi.py           -> quadconnect.settings.production
 └── connect/
-    ├── models.py                  8 models; A3 added get_absolute_url() to 3 (no migration)
+    ├── models.py                  9 models; A3 added get_absolute_url() to 3 (no migration)
     ├── views.py                   one section per owner, plus A3 sections
     ├── forms.py                   (A3) search, NetID lookup, venue suggestion; (A5) login form
     ├── middleware.py              (A5) login required by default; 401 JSON for /api/
@@ -270,6 +273,7 @@ the same models as a foundation.
     ├── templates/connect/
     │   ├── base.html              site shell; A3 moved its CSS to static/
     │   ├── entity_list.html       SHARED — model-agnostic list
+    │   ├── _person.html           (rebuild) a student's card; with _weekend.html and _photo_credit.html
     │   └── home.html, *_detail.html, student_search.html, insights.html, api_docs.html, icebreakers.html, reports.html, ...
     └── management/commands/
         ├── seed_demo_data.py      idempotent
@@ -326,6 +330,7 @@ names, `immutable` caching, gzip. **Production needs
 | `GOOGLE_CLIENT_ID` | Google OAuth client (A5). Required in production; in development, empty hides the Google button. |
 | `GOOGLE_CLIENT_SECRET` | That client's secret. Required when the ID is set. Never in the database. |
 | `DJANGO_DB_PATH` | Optional SQLite path. The live site's database lives outside the repository. |
+| `DJANGO_MEDIA_ROOT` | Optional folder for profile photos (default `media/`, gitignored). The live site keeps it outside the repository. |
 | `AI_LOCAL_ENABLED`, `AI_LOCAL_MODEL`, `AI_LOCAL_MAX_SECONDS` | (A6) The local model for "Ask in plain English": on/off, its Hugging Face id, its time limit. |
 | `AI_EMBED_ENABLED`, `AI_EMBED_MODEL` | (A9) The embedding model that places an interest the model wrote in its own words on the list: on/off, its Hugging Face id. |
 | `AI_API_PROVIDER`, `AI_API_MODEL` | (A6) The venue check's API (`groq`, `openrouter`, `gemini`, `huggingface`) and an optional model. |
@@ -334,7 +339,7 @@ names, `immutable` caching, gzip. **Production needs
 
 ---
 
-## 6. Data model — 8 models
+## 6. Data model — 9 models
 
 All in `connect/models.py`. **Frozen for P1-A2** — do not add fields or
 migrations. Every model has a class docstring, `Meta.ordering`, and `__str__`.
@@ -363,6 +368,7 @@ product data.
 ```
 user  OneToOne -> auth.User  CASCADE UNIQUE   net_id CharField UNIQUE
 illinois_email EmailField UNIQUE              full_name, college, department,
+headline CharField(80) blank                  photo ImageField blank (re-encoded, forms.py)
 preferred_connection  ConnectionType          part_time_job  CharField
 social_energy SocialEnergy                    conversation_style ConversationStyle
 group_preference GroupPreference              prefers_same_age Boolean
@@ -455,6 +461,19 @@ submitted_at DateTime auto_now_add
 Meta.ordering ["-submitted_at"]
 ```
 
+### `MatchRequest`
+A student's sign-up for one weekend's matching (`connect/matching.py`). Added
+with real matching; migration `0003_matchrequest`.
+
+```
+profile FK -> StudentProfile CASCADE
+week_start Date            Monday of the week whose weekend it is
+connection_type            ConnectionType (FRIEND | SQUAD)
+created_at DateTime auto_now_add   first to sign up, first into a squad
+UniqueConstraint (profile, week_start)  uniq_request_per_profile_week
+Meta.ordering ["-week_start", "created_at"]
+```
+
 ### Relationship map
 
 ```
@@ -488,15 +507,16 @@ Pattern: **CASCADE** when the child is a detail of its parent · **PROTECT**
 when deletion destroys history or affects a third party · **SET_NULL** when
 the link is genuinely optional.
 
-### The five `UniqueConstraint`s
+### The six `UniqueConstraint`s
 
 `uniq_profile_netid_email` · `uniq_interest_name_per_category` ·
 `uniq_interest_per_profile` · `uniq_slot_per_profile_day_block` ·
-`uniq_participant_per_match`
+`uniq_participant_per_match` · `uniq_request_per_profile_week`
 
 > **Django limitation:** `UniqueConstraint` cannot span relations. "One match
 > per student per week" (`profile`, `match__week_start`) is **not expressible**
-> and was removed. Enforce it in the matching service layer.
+> and was removed. `connect/matching.py` enforces it: only a student in no
+> match going ahead that weekend is matched (`_waiting`).
 
 ---
 
@@ -509,6 +529,10 @@ yours.
 |---|---|---|---|---|
 | `/` | `connect:home` | dashboard | shared/`main` | `home.html` |
 | `/privacy/` | `connect:privacy` | FBV `render()`, public | A5 | `privacy.html` |
+| `/profile/` | `connect:profile` | FBV, GET+POST; your own profile, set up or edited (`onboarding.py`) | login fixes | `profile_form.html` |
+| `/media/<path>` | `connect:media` | FBV; a profile photo, login required (`onboarding.py`) | profile photo | — |
+| `/meet/` | `connect:meet` | FBV, GET+POST; sign up for the weekend, see your match (`meetups.py`) | matching | `meet.html` |
+| `/matches/<pk>/answer/`, `/matches/<pk>/feedback/` | `connect:match-answer`, `connect:match-feedback` | FBV; accept, decline, check in (POST); feedback after checking in | matching | `feedback_form.html` |
 | `/students/` | `connect:student-list` | Generic CBV | Kritika | `studentprofile_list.html` (default naming) |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV | Kritika | `studentprofile_detail.html` |
 | `/matches/` | `connect:match-list` | FBV `render()` | Manojkumar | `entity_list.html` (shared) |
@@ -537,7 +561,10 @@ request redirects to `/accounts/login/?next=...`, and an `/api/` request gets
 `401` JSON. A new view is private unless you mark it, so decide on purpose,
 and add a public one to `PUBLIC_ROUTES` in `tests_a5.py`. The account pages
 live under `/accounts/` (allauth's URLs), with the site's templates in the
-project-level `templates/account/`.
+project-level `templates/account/`. Sign-up runs `connect.onboarding.SignupView`
+(allauth's, routed before `include('allauth.urls')` in `quadconnect/urls.py`),
+and every login ends in `AccountAdapter.post_login`, which sends a student
+without a profile to `/profile/`.
 
 ### Template architecture
 
@@ -589,8 +616,10 @@ The assignment contradicted itself; both exist.
 
 ### Seeded data
 
-8 profiles across 6 colleges · 28 interests (12 hobby, 10 RSO, 6 activity) ·
-41 interest selections · 16 availability slots · 4 campus locations (Illini
+38 profiles across 6 colleges (the 8 in the matches, and 30 fall sign-ups
+added 2026-11-11 with no match yet) · 29 interests (13 hobby, 10 RSO,
+6 activity; Gym added last, so the older interests keep their ids) ·
+167 interest selections · 76 availability slots · 4 campus locations (Illini
 Union, Grainger Library, Main Quad, Espresso Royale) · 19 matches over nine
 weeks (2026-07-13 to 2026-09-07): the original three keep ids 1–3
 (`QC-4827` Friend/PROPOSED, `QC-5193` Squad/CONFIRMED with check-ins,
@@ -611,6 +640,132 @@ that property when adding checks.
 ## 9. Work log
 
 The running history of what has actually been built. Newest at the top.
+
+### BUILDING `feature/profile-photo` - Manojkumar Mohankumar - 2026-11-12
+**Shipped so far:** an optional photo and headline on a profile, on a branch cut from `feature/matching` at
+`2aa011c`. Migration `0004_studentprofile_photo_headline`.
+- **Where they show:** the profile page's card, the student cards (roster and searches), the faces in a match and
+  on the Meet page (`_face.html`), and your avatar in the menu. The headline goes under the name.
+- **The photo as kept** (`ProfileForm`, `_photo_jpeg`): upright, at most 800 px, a JPEG under a random name, with
+  no metadata (a phone photo's EXIF can say where it was taken). Up to 5 MB and 50 megapixels; JPEG, PNG or WebP;
+  see-through parts become white. Replacing or removing it deletes the old file once the save is committed.
+- **Private:** `MEDIA_URL` is `/media/`, served by `onboarding.media`, which needs a login like every other view
+  and serves only `profile_photos/`. No web server mapping. `DJANGO_MEDIA_ROOT` sets the folder.
+- **On a photo,** the name and headline sit on a panel of Illini blue at 90%, so white text stays readable.
+
+**Files changed:** `connect/models.py`, migration 0004, `forms.py`, `onboarding.py`, `urls.py`, `admin.py`
+(staff can clear a photo or headline), `quadconnect/settings/base.py`, `_face.html` (new), `_person.html`,
+`studentprofile_detail.html`, `profile_form.html`, `match_detail.html`, `meet.html`, `base.html`, `privacy.html`,
+the stylesheet, `tests_onboarding.py` (4 photo tests), `tests_a5.py` (a sample path for the route sweep),
+`.env.example`, `README.md`, this file, notes.txt, the committed `db.sqlite3` (migrated).
+
+**Gotchas:**
+- **Chrome stretches an image grid item to its area, not past negative margins.** So a card with a photo drops
+  its padding and the words carry it as a margin; the photo is `justify-self`/`align-self: stretch` with
+  `contain: size`.
+- **`transaction.on_commit` never runs in a `TestCase`.** The tests wrap saves in
+  `captureOnCommitCallbacks(execute=True)` to see the old file deleted.
+- **Photos are never cached** (the middleware marks every signed-in response never-cache). Fine for now.
+
+### BUILDING `feature/matching` - Manojkumar Mohankumar - 2026-11-12
+**Shipped so far:** real matching, on a branch cut from `feature/login-fixes` at `e2794c0`.
+- **Sign up for a weekend** on `/meet/`: 1-on-1 (Friend Connect) or a group (Squad Connect). New model
+  `MatchRequest` (migration `0003_matchrequest`), one per student per weekend.
+- **Matching** (`connect/matching.py`) runs on every sign-up, decline and withdrawal. 1-on-1: the pair sharing the
+  most interests (starred double) and a weekend block at least 2 hours away. Group: 4 to 8 free at one block
+  who picked one interest. Never the same students together twice in a weekend. Soonest shared block; the
+  approved venue that seats them with the fewest meetups then; a `QC-` code; an activity from a shared interest.
+- **Answers** (`connect/meetups.py`, `_match_actions.html`): accept or decline until it starts. All left
+  accepted: CONFIRMED. A 1-on-1 with a decline, or a squad under 3: CANCELLED, the rest matched again.
+- **Notice:** the home page's "This weekend" card says the next step. **Check-in:** 30 minutes before the start
+  to the end of the block; two check-ins: COMPLETED. **Feedback** once checked in; mutual "stay connected"
+  shows each other's Illinois email.
+- **Privacy:** `Match.objects.visible_to(user)`: a student sees only their own matches (list, page,
+  icebreakers page and API, home) and their own match history; staff see all.
+- **Icebreakers** stay live from Open Trivia DB; Gym now maps to Sports. **Menu:** "Meet" first (coffee icon).
+
+**Files changed:** `connect/matching.py`, `connect/meetups.py`, `connect/tests_matching.py`,
+`connect/migrations/0003_matchrequest.py` and `templates/connect/meet.html`, `_match_actions.html`,
+`feedback_form.html` (new); `models.py`, `forms.py`, `views.py`, `urls.py`, `admin.py`, `icebreakers.py`,
+`base.html`, `home.html`, `match_detail.html`, `studentprofile_detail.html`, `privacy.html`, the stylesheet, the
+lucide README, five existing tests (staff log in to see every match), the committed `db.sqlite3` (migrated),
+`README.md`, `docs/data_model_notes.md`, this file, notes.txt.
+
+**Gotchas:**
+- **`visible_to` is a subquery on purpose.** A join on `participants` before `annotate(Count("participants"))`
+  would count only the viewer.
+- **A test that opens a match needs a participant or staff.** Seeded matches have only seeded students, so the old
+  tests sign in as staff (`tester`).
+- **Check-in can't be tried before the weekend** unless staff move the match's time in Admin.
+- **One process lock.** `matching._lock` keeps two sign-ups from matching one student twice; several server
+  processes would need a database lock.
+
+### BUILDING `feature/login-fixes` - Manojkumar Mohankumar - 2026-11-12
+**Shipped so far:** on a branch cut from `feature/rebuild` at `5ad1050`.
+- **Sign-up error fixed.** A double click on "Create account" sent the form twice. Both copies passed allauth's
+  "username taken" check before either was saved, so the second save hit the database's unique rule and gave a
+  500 page (`IntegrityError` on `auth_user.username`). `connect.onboarding.SignupView` now gives the form back
+  with the reason. `site.js` sends any POST form once.
+- **Profile first.** A new account had no `StudentProfile`, so nobody could find it, and nothing asked for one.
+  Now every login or sign-up of a student without a profile ends on `/profile/` (`AccountAdapter.post_login`),
+  whose form (`ProfileForm`) asks for the name, NetID, college, the four matching preferences, interests (hobbies
+  and clubs) and the free weekend blocks. Saving opens the profile page. The same page edits it later. Until a
+  student has one, every page shows a prompt, and "Signed in as" links to the form (then to the profile).
+- **Verified means verified.** `is_sso_verified` is set only when the account has a verified email equal to
+  `<netid>@illinois.edu` (a Google sign-in). The roster no longer says every student is verified.
+- **Privacy page** lists the profile data and who sees it.
+- **Fixed on the way:** the "reading" status line (`e17b456`) shared its class with `main.reading`, so the
+  privacy page was laid out as a row. The status line is `.model-status` now.
+
+**Files changed:** `connect/onboarding.py` (new), `connect/forms.py`, `connect/adapters.py`, `connect/urls.py`,
+`quadconnect/urls.py`, `connect/templates/connect/profile_form.html` (new), `base.html`,
+`studentprofile_detail.html`, `studentprofile_list.html`, `student_search.html`, `student_ask.html`,
+`privacy.html`, `static/css/quadconnect.css`, `static/js/site.js`, `connect/tests_onboarding.py` (new),
+`tests_a5.py`, `tests_a6.py`, `README.md`, this file, notes.txt. No migration.
+
+**Gotchas:**
+- **`?next=` is not followed when there is no profile.** The adapter sends the student to the form first, and
+  saving opens their own profile. A test that logs in and expects `next` needs a user who has a profile, or staff.
+- **The menu costs a query.** `base.html` reads `user.student_profile`, so the ask page runs 8 queries, not 7.
+- **Two pages can share a class name by accident.** Check `grep` for a class before giving it a new meaning.
+
+### BUILDING `feature/rebuild` - Manojkumar Mohankumar - 2026-11-11
+**Shipped so far:** the interface rebuilt, on a branch cut from `main` at `0c20516` (after P1-A9). No feature,
+route, form or API changed; every page was restyled and several were laid out again.
+- **Look:** a light wash behind every page (warm orange tint to cool blue), Illini-blue ink, white cards.
+  Orange is the brand and the main action, blue is Friend Connect, purple is Squad Connect, green is free time
+  and "yes". A new logo (a Q whose bowl is a quad). Figtree and Bricolage Grotesque replace Inter. 27 lucide
+  icons, written into the stylesheet as masks.
+- **Shell:** signed in, a column of navigation on the left of a wide screen and a tab bar along the bottom of a
+  small one, from the same markup. Feedback, Insights, Reports and API are under "More", a `<details>`.
+- **Students:** `_person.html`, one card shared by the roster, the search and "Ask in plain English", with
+  `_weekend.html`, the grid of free weekend blocks. The profile page keeps the card beside the answers.
+  `StudentProfile` gained `initials`, `weekend()`, `free_times()` and `objects.for_cards()` (no migration).
+- **Matches and venues:** rows have a tile (a match's date, a venue's kind) and a dot on the badge for the
+  state. The Matches page shows the initials of who is in each match.
+- **Photo:** the Illini Union across the Main Quad (Daniel Schwen, CC BY-SA 4.0) behind the home page's
+  headline and the sign-in pages; credited on those pages and in `static/img/CREDITS.txt`.
+- **Motion:** one entrance per page, drawn with Motion 14.12 (the plain-JavaScript build of Framer Motion),
+  self-hosted in `static/vendor/motion/`.
+- **Charts:** the Matplotlib and Vega-Lite charts use the same palette.
+
+**Files changed:** `static/` (stylesheet, logo, fonts, photo, `js/site.js`, `vendor/motion/`,
+`vendor/lucide/`), every template in `connect/templates/connect/` and `templates/account/`, `connect/models.py`,
+`connect/views.py`, `connect/ai_search.py` (the card's prefetch), `connect/charts.py`, `connect/specs/`,
+three tests, the CI workflow (runs on `feature/rebuild`), `README.md`, this file, notes.txt.
+
+**Gotchas:**
+- **A nav link's text must stay its whole content.** Tests match `aria-current="page">Reports</a>`, so the
+  icons are drawn by the stylesheet from `data-icon`, not put inside the link.
+- **Text on the photo.** Never put text on the bare photograph: the stylesheet keeps 92% Illini blue behind
+  the hero's text, and the sign-in pages keep all text on the card.
+- **A new colour needs measuring.** Text colours were re-measured against the darkest point of the page's wash
+  (`--bg-cool`), not only against white. The figures are beside each token.
+- **The entrance never blocks a page.** Elements marked `data-enter` start hidden only when reduced motion is
+  not requested, and the stylesheet shows them after 1.2 s if `site.js` or Motion fails to load.
+- **The ask page runs 7 queries**, one more than before, for the free slots on each card.
+- **Not pushed.** CI runs on `feature/rebuild` once it is pushed; the production build (`collectstatic`) was
+  run locally.
 
 ### DONE `feature/p1-a9-part1` - Kritika Agrawal - 2026-11-09
 **Shipped so far:** P1-A9 Part 1, on a branch cut from `feature/p1-a9-part2-3` at `461e03e`.

@@ -1,0 +1,41 @@
+{% extends "connect/base.html" %}
+{% comment %}
+Plans (connect/plans.py): what students are doing soon, open to anyone who
+wants to join, then the signed-in student's own plans.
+
+Context: profile (or None), upcoming, mine, going_ids. Each plan carries
+`going`, the host included.
+{% endcomment %}
+
+{% block title %}Plans - QuadConnect{% endblock %}
+{% block heading %}Plans{% endblock %}
+{% block subtitle %}
+  <p class="sub">Things students are doing on campus soon. Join one, or post your own.
+    Every plan is at an approved public place.</p>
+  <p class="actions"><a class="btn btn-primary" href="{% url 'connect:plan-create' %}">Post a plan</a></p>
+{% endblock %}
+
+{% block content %}
+  <h2 class="section">Coming up</h2>
+  <ul class="list" role="list">
+    {% for plan in upcoming %}
+      {% include "connect/_plan_row.html" %}
+    {% empty %}
+      <li class="empty">
+        <div class="big">No plans yet</div>
+        <p>Be the first: post what you're doing, and others can join you.</p>
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if profile %}
+    <h2 class="section">Your plans</h2>
+    <ul class="list" role="list">
+      {% for plan in mine %}
+        {% include "connect/_plan_row.html" %}
+      {% empty %}
+        <li class="empty"><p>Plans you post or join will be here.</p></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

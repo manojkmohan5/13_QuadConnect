@@ -17,6 +17,9 @@ free and needs no key. For one match:
   4. processing: the HTML entities Open Trivia DB sends are decoded, and
      each question's choices are sorted, so the answer is not always first.
 
+Only the students in the match, and staff, can see its icebreakers
+(Match.objects.visible_to); for anyone else the match does not exist.
+
 Nothing from Open Trivia DB is saved. A category's questions stay in memory
 for 5 seconds at most (see fetch_questions), then the next request fetches
 new ones. Only counts leave through the API, never names, NetIDs or
@@ -59,6 +62,7 @@ TRIVIA_CATEGORIES = {
     "Photography": (25, "Art"),
     "Basketball": (21, "Sports"),
     "Fitness": (21, "Sports"),
+    "Gym": (21, "Sports"),
     "Gaming": (15, "Video Games"),
     "UIUC Esports": (15, "Video Games"),
     "Movies": (11, "Film"),
@@ -184,7 +188,7 @@ def icebreakers_api(request):
     query = IcebreakerQuery(request.GET)
     if not query.is_valid():
         return _bad_params(query)
-    match = Match.objects.filter(pk=query.cleaned_data["match"]).first()
+    match = Match.objects.visible_to(request.user).filter(pk=query.cleaned_data["match"]).first()
     if match is None:
         return JsonResponse({"error": f"There is no match with id {query.cleaned_data['match']}."},
                             status=404, json_dumps_params=JSON_PARAMS)
@@ -214,7 +218,7 @@ def icebreakers_api(request):
 def icebreakers_page(request, pk):
     """GET /matches/<id>/icebreakers/ - the same result, as a page. If Open
     Trivia DB fails, the page still shows what the group has in common."""
-    match = get_object_or_404(Match, pk=pk)
+    match = get_object_or_404(Match.objects.visible_to(request.user), pk=pk)
     context = {"match": match, **common_ground(match)}
     try:
         context["questions"] = fetch_questions(context["topic"]["category_id"])

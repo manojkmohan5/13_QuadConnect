@@ -232,7 +232,7 @@ parser, and the page always says who read the request.
 | The embedding model missing, failing, busy or answering in the wrong shape | Nothing is placed by meaning, and the search goes on by spelling | `tests_a9`: `test_a_missing_busy_or_crashing_model_places_nothing`, `test_an_answer_of_the_wrong_shape_…` |
 | **Timeout:** a generation reaches `AI_LOCAL_MAX_SECONDS` | **New:** no second try. The keyword parser answers at once: *"The language model took too long to answer."* | `tests_a9`: `TimeLimitTests`; live, with the limit at 0.3 s: 1 model call, keywords, 0.4 s |
 | The model is switched off, not installed, or cannot load | The keyword parser, with a notice. A failed load is not retried for 5 minutes. | `tests_a6`: `UnderstandTests` |
-| The model is busy for over 5 s | The keyword parser | `tests_a6`: `test_a_busy_model_lets_the_search_fall_back_at_once` |
+| The model is busy for over 30 s | The keyword parser | `tests_a6`: `test_a_busy_model_lets_the_search_fall_back_at_once` |
 | More than 10 model runs a minute by one user | The keyword parser | `tests_a6`: `test_over_the_rate_limit_the_keyword_parser_answers` |
 | No filter found | *"No search filter was found …"*, with what to name instead | `tests_a6`: `test_the_request_is_escaped` |
 | No student matches | *"No student matches all of these filters. Try asking for less …"* | `tests_a9`: `test_no_match_says_how_to_widen_the_search` |
@@ -263,7 +263,7 @@ The feature takes text only, so there is no file upload to validate.
   one-on-one hangout on Sunday around noon"*. The form is sent with GET, so a search can be bookmarked.
 * `AskForm` accepts 3 to 200 characters, and each error message says how to fix the request.
 * The page is behind the site-wide `LoginRequiredMiddleware`.
-* The model's second input comes from the database on every request: the 22 interests students can pick
+* The model's second input comes from the database on every request: the 23 interests students can pick
   (hobbies and student organizations) and the 6 colleges on file. A new interest added in Django Admin is
   understood without a code change.
 * **No student record ever enters the prompt.**
@@ -322,7 +322,7 @@ The feature takes text only, so there is no file upload to validate.
 6. The deterministic keyword parser (`keyword_filters()`) also answers when the model:
    * is switched off (`AI_LOCAL_ENABLED=0`);
    * cannot load;
-   * is busy for more than 5 seconds;
+   * is busy with another search for more than 30 seconds;
    * reaches the 60-second limit;
    * raises any error;
    * has already run 10 times for this user in the last minute.
@@ -407,7 +407,7 @@ flowchart TD
     J -->|no, even after one retry| KW["keyword_filters():<br/>deterministic keyword parser"]
     J -->|yes| E["match_by_meaning(): an interest not on the list by spelling is placed by meaning<br/>with bge-small-en-v1.5 (A8), at a similarity of at least 0.78 and a lead of at least 0.08"]
     E --> A["clean_filters(): allow-list<br/>6 keys, database values, at most 4 interests"]
-    X["Model off, busy for 5 s, past the 60-second cap,<br/>failed, or 10 runs this minute"] -.-> KW
+    X["Model off, busy for 30 s, past the 60-second cap,<br/>failed, or 10 runs this minute"] -.-> KW
     A --> CK["check_against_request(): day, time, connection and college<br/>checked against the request's own words"]
     CK --> Q["find_students(): Django ORM query"]
     KW --> Q
@@ -625,8 +625,9 @@ statistics. p95 uses the nearest-rank method on the 20 observations. The 19.3 s 
 
 **Evaluation machine:** Apple MacBook Air (Mac16,12) with an Apple M4 chip (10-core CPU: 4 performance cores and 6 efficiency cores), 16 GB unified memory, and an integrated 10-core Apple GPU (Metal 4 support). CUDA was unavailable (`torch.cuda.is_available() == False`), so the app used its CPU inference path; the Apple GPU was not used through CUDA.
 
-The seeded database has 8 students. So *students found* shows whether a search still finds people, not how
-good a ranking is.
+The seeded database had 8 students and 22 interests when these results were measured. So *students found*
+shows whether a search still finds people, not how good a ranking is. (Since 2026-11-11 the seed has 38
+students and a 23rd interest, Gym, so the same searches now find more students.)
 
 **Verdict:** *Exact* means the filters equal the expected ones. Otherwise the cell names what is *missing*,
 *extra* (not asked for) or *wrong*.

@@ -50,7 +50,7 @@ python manage.py runserver
 ```
 
 Open <http://127.0.0.1:8000/>, and log in as `tester` (see [Admin](#admin))
-or sign up. Run the test suite with `python manage.py test connect` (210
+or sign up. Run the test suite with `python manage.py test connect` (243
 tests).
 
 Since P1-A6, `requirements.txt` also installs `torch` and `transformers` for the
@@ -95,6 +95,112 @@ python manage.py createsuperuser
 The seed data also ships two superusers, both with password `uiuc12345`:
 `mohitg2` and `tester`. (P1-A1 named a different one in two places, so both
 exist.)
+
+---
+
+## Meeting up: real matching
+
+A student signs up for the coming weekend on **Meet** (`/meet/`), one-on-one
+(Friend Connect) or in a group (Squad Connect). Matching runs at once, on
+every sign-up, decline and withdrawal
+([`connect/matching.py`](connect/matching.py)):
+
+- **1-on-1:** the two waiting students who share the most interests (a
+  starred one counts double) and are both free at one of the weekend's
+  blocks that is at least two hours away.
+- **Group:** 4 to 8 waiting students free at the same block who picked the
+  same interest, the biggest group first.
+- Two students who were in a match together that weekend are never put
+  together again that weekend.
+- The meetup is at the soonest block they share, at the approved venue with
+  room for everyone. It has a check-in code, and an activity that suits what
+  they share (Gaming: Board games; Gym: Sports; otherwise Coffee).
+
+Then each student, on the Meet page or the match page
+([`connect/meetups.py`](connect/meetups.py)):
+
+1. **Accepts or declines**, until it starts. When everyone left has
+   accepted, it is confirmed. A 1-on-1 with a decline, or a group down to
+   two, is called off, and the others are matched again. Whoever declines is
+   back in the pool, for someone else.
+2. **Sees what to do on the home page**: one line says the next step (sign
+   up, answer, check in, give feedback).
+3. **Checks in** at the venue, from 30 minutes before the start to the end
+   of the block. Two check-ins mark the meetup completed.
+4. **Gives feedback** once checked in. It is private. Students who both ask
+   to stay connected each see the other's Illinois email.
+5. **Gets icebreakers**: trivia questions fetched live from the Open Trivia
+   Database, on a topic the match's students share.
+
+**Privacy.** A match, its icebreakers and a student's match history are
+seen only by the students in it and by staff (`Match.objects.visible_to`).
+Staff see every match, and the sign-ups (`MatchRequest`) in Django Admin.
+
+**Try it** with two accounts in two browser windows (one of them private).
+Give both profiles an interest and a weekend time in common, then sign up on
+Meet in both: the second sign-up makes the match. Check-in opens only near
+the meetup's time; staff can move a match's time in Django Admin to try it
+sooner.
+
+**Not yet:** email or push notices (there is no mail server), proof that a
+student is at the venue (check-in is on trust; the shared code helps them
+find each other), and UIUC sign-in with Microsoft Entra, planned for the
+last stage.
+
+## The interface, rebuilt
+
+Built on `feature/rebuild`, cut from `main` after P1-A9. No feature was added
+or removed: every page, route, form and API answers as before. What changed is
+how the app looks and is laid out, so that it reads as the campus meetup app
+it is.
+
+- **The look.** A light wash of colour behind every page, from a warm orange
+  tint to a cool blue one, with Illini-blue ink and white cards. Colour has
+  four jobs, and each always sits next to its label:
+  - orange is the brand and the main action;
+  - blue is Friend Connect;
+  - purple is Squad Connect;
+  - green is free time and "yes" (confirmed, accepted).
+- **The logo.** A Q whose bowl is a quad, with a tail where two people meet
+  ([`static/img/logo.svg`](static/img/logo.svg)).
+- **The shell.** Signed in, the navigation is a column on the left of a wide
+  screen and a tab bar along the bottom of a small one. Feedback, Insights,
+  Reports and API sit under **More**. Signed out, the header is a bar.
+- **Students are cards.** A block of colour where a photo would be (the app
+  has no photos), with the name over it and the initials large behind it, a
+  check for a verified student, their interests, and a grid of the eight
+  weekend blocks with the free ones in green. The roster, the search and "Ask
+  in plain English" share the card
+  ([`_person.html`](connect/templates/connect/_person.html)).
+- **A profile** keeps the student's card on the left as the page scrolls. Their
+  onboarding answers are on the right as prompts: the question small, the
+  answer large.
+- **Matches** show their date as a tile and the initials of who is in them. A
+  match's page opens with its plan (what, when, where, status and check-in
+  code) in the colour of its kind.
+- **One photograph.** The Illini Union across the Main Quad in autumn sits
+  behind the home page's headline and the sign-in pages. It is by Daniel
+  Schwen, from Wikimedia Commons, under CC BY-SA 4.0. The credit is on every
+  page that shows it, and [`static/img/CREDITS.txt`](static/img/CREDITS.txt)
+  gives the source and what was changed. Text never sits on the bare photo.
+- **Type and icons.** Figtree for the interface and Bricolage Grotesque for
+  headings (both under the SIL Open Font License, self-hosted in
+  `static/fonts/`). The line icons are from lucide (ISC) and are written into
+  the stylesheet.
+- **Motion.** A page's main content fades in once. It is drawn with
+  [Motion](https://motion.dev) 14.12 (MIT), the plain-JavaScript build of the
+  Framer Motion library, self-hosted in `static/vendor/motion/`. Framer
+  Motion's own components need React, which this site does not use. People who
+  ask their system for reduced motion get none, and nothing is hidden when
+  JavaScript is off.
+- **Accessibility.** Every colour pair is measured against WCAG 2.1 AA and
+  listed in the stylesheet. Lighthouse scores accessibility 100 on the home
+  page, the roster, a profile and a match. Focus is always visible, every icon
+  sits next to its label, and the pages fit a 320 px screen without scrolling
+  sideways.
+
+The design is in [`static/css/quadconnect.css`](static/css/quadconnect.css),
+whose first comment explains it.
 
 ---
 
@@ -275,6 +381,10 @@ own `auth` app.
   ([`templates/account/`](templates/account/)), not allauth's defaults.
   - Log in takes a username or an email address.
   - Sign up asks for a username, an email address and the password twice.
+    A double click on **Create account** sends the form once
+    ([`static/js/site.js`](static/js/site.js)). If a second copy still
+    reaches the server, it gets the form back with the reason, not an error
+    page ([`connect/onboarding.py`](connect/onboarding.py)).
   - Log out is a button in the header that sends a POST, so a link or an
     image on another page cannot sign anyone out.
 - **Settings** ([`quadconnect/settings/base.py`](quadconnect/settings/base.py)):
@@ -295,9 +405,27 @@ own `auth` app.
     (`?next=`).
   - An API endpoint answers `401` with JSON instead, because a program cannot
     fill in a login form.
+- **Your profile first.** An account is not yet a student. After a login or
+  a sign-up, by password or by Google, a student with no profile goes to
+  `/profile/`, wherever they were headed (`AccountAdapter.post_login` in
+  [`connect/adapters.py`](connect/adapters.py)). The form asks for their
+  name, NetID, college, how they like to meet, their interests and the
+  weekend times they are free. Saving opens their profile page, and the same
+  form edits it later. Until it is set up, every page says so and links to
+  it. Staff are not sent there.
+  - A profile is marked verified only when the account has a verified email
+    (from a Google sign-in) that is the NetID's `@illinois.edu` address. A
+    NetID typed into the form proves nothing.
+  - **A photo and a headline**, both optional, show on the student's card,
+    their profile and in their matches. A photo is kept as a JPEG of at
+    most 800 px, upright, under a random name, and without its metadata
+    (a phone photo's can say where it was taken). Replacing or removing it
+    deletes the old file. It is served at `/media/...` by a view that needs
+    a login, never as a public file. Staff can clear either in Django Admin.
 - **Navigation.** Signed out, the header shows only Home, Log in and Sign up,
   and the home page describes the product instead of showing student data.
-  Signed in, it shows every section, "Signed in as *username*", and Log out.
+  Signed in, it shows every section, "Signed in as *username*" (a link to
+  your profile, or to setting it up), and Log out.
 
 | Signed out, a request for | gets |
 |---|---|
@@ -625,10 +753,11 @@ Screenshots: [04](docs/screenshots/p1-a3/04_search_get_results.png), [05](docs/s
 
 The design lives in [`static/css/quadconnect.css`](static/css/quadconnect.css),
 loaded in `base.html` with `{% load static %}` and `{% static %}`, alongside the
-logo (`static/img/logo.svg`) and the self-hosted Inter font (`static/fonts/`).
-**UI note:** a dark header with the four-quadrant logo, an orange accent used
-sparingly for actions and the current nav item, white cards on a warm grey
-page, and one type family throughout. Every colour pair meets WCAG 2.1 AA
+logo (`static/img/logo.svg`) and the self-hosted fonts (`static/fonts/`).
+**UI note:** as built for P1-A3, the design was a dark header with a
+four-quadrant logo, an orange accent used sparingly, white cards on a warm
+grey page, and Inter throughout. The stylesheet has since been rewritten; see
+[The interface, rebuilt](#the-interface-rebuilt). Every colour pair meets WCAG 2.1 AA
 contrast, focus is always visible, there is a skip link, and every page fits a
 375 px phone screen. WhiteNoise serves the files in development and
 production; in production they are stored under content-hashed names for
@@ -774,6 +903,9 @@ followed, and what any other host would need:
    then point `DJANGO_DB_PATH` at the copy in `.env`. `migrate` finds
    nothing to do, and the course accounts `tester` and `mohitg2` (password
    `uiuc12345`) are in it. The live site's accounts then never touch git.
+   Photos likewise: point `DJANGO_MEDIA_ROOT` at a folder beside it, such as
+   `~/quadconnect-data/media`. Do not map `/media/` as a static folder: the
+   app serves photos itself, to signed-in users only.
 
 Two things to check on the host:
 
@@ -819,8 +951,8 @@ be extended on the Web tab once a month.
 
 ## Continuous integration
 
-Every push to the branch the current assignment is built on (for P1-A9,
-`feature/p1-a9-part1`) runs one GitHub Actions check, **Deploy / test (push)**,
+Every push to the branch the current work is built on (now
+`feature/rebuild`) runs one GitHub Actions check, **Deploy / test (push)**,
 defined in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Its
 single job runs, in order (with `AI_LOCAL_ENABLED=0` and `AI_EMBED_ENABLED=0`,
 so CI never downloads a model; the tests replace both):
@@ -873,6 +1005,7 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID. Required in production. In development, leave it empty to hide "Continue with Google". |
 | `GOOGLE_CLIENT_SECRET` | That client's secret. Required when `GOOGLE_CLIENT_ID` is set. |
 | `DJANGO_DB_PATH` | Optional: the SQLite file to use. Unset, the committed `db.sqlite3`; the live site keeps its own outside the repository. |
+| `DJANGO_MEDIA_ROOT` | Optional: where profile photos are kept. Unset, `media/` here (git ignores it); the live site keeps them outside the repository. |
 | `MAPS_API_KEY` | Placeholder for the Screen 8 campus map. Dummy value. |
 | `AI_LOCAL_ENABLED` | `1` (default) runs the local model for "Ask in plain English"; `0` uses only its keyword parser. |
 | `AI_LOCAL_MODEL` | Hugging Face id of that model, downloaded on first use. Default `Qwen/Qwen2.5-1.5B-Instruct`. |
@@ -892,6 +1025,9 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 |---|---|---|---|
 | `/` | `connect:home` | FBV, `render()` | A2 |
 | `/privacy/` | `connect:privacy` | FBV, `render()`; public | A5 |
+| `/profile/` | `connect:profile` | FBV, GET + POST; set up or edit your own profile | login fixes |
+| `/media/<path>` | `connect:media` | FBV; a profile photo, to signed-in users only | profile photo |
+| `/meet/` | `connect:meet` | FBV, GET + POST; sign up for the weekend, see your match | matching |
 | `/students/` | `connect:student-list` | Generic CBV (`ListView`) | A2 |
 | `/students/<pk>/` | `connect:student-detail` | Generic CBV (`DetailView`) | A2 |
 | `/search/` | `connect:student-search` | Base CBV (`View`), GET + POST | A3 |
@@ -899,6 +1035,8 @@ Copy `.env.example` → `.env`. `.env` is gitignored and must never be committed
 | `/matches/` | `connect:match-list` | FBV, `render()` | A2 |
 | `/matches/<pk>/` | `connect:match-detail` | Generic CBV (`DetailView`) | A3 |
 | `/matches/<pk>/icebreakers/` | `connect:match-icebreakers` | FBV, `render()`; calls Open Trivia DB | A4 |
+| `/matches/<pk>/answer/` | `connect:match-answer` | FBV, POST only: accept, decline, check in | matching |
+| `/matches/<pk>/feedback/` | `connect:match-feedback` | FBV, GET + POST; after checking in | matching |
 | `/locations/` | `connect:location-list` | Base CBV (`View`), GET + POST | A2, POST in A3 |
 | `/locations/<pk>/` | `connect:location-detail` | Generic CBV (`DetailView`) | A3 |
 | `/feedback/summary/` | `connect:feedback-summary` | FBV, `HttpResponse` | A2 |
@@ -953,11 +1091,12 @@ own login, for staff.
 ├── .github/workflows/deploy.yml  CI: the one "Deploy / test" check
 ├── .env.example                  committed; copy to .env
 ├── static/                       site-wide static files ({% static %})
-│   ├── css/quadconnect.css       the whole design
-│   ├── img/logo.svg              header logo and favicon
-│   ├── fonts/                    Inter (SIL Open Font License)
+│   ├── css/quadconnect.css       the whole design, and the icons as masks
+│   ├── img/                      logo.svg (header and favicon), the campus photo, CREDITS.txt
+│   ├── fonts/                    Figtree and Bricolage Grotesque (SIL Open Font License)
+│   ├── js/site.js                the "More" menu and each page's entrance
 │   ├── js/charts.js              draws the Vega-Lite charts (vega-embed)
-│   └── vendor/vega/              Vega, Vega-Lite, vega-embed (BSD-3-Clause)
+│   └── vendor/                   vega/ (BSD-3-Clause), motion/ (MIT), lucide/ (ISC licence of the icons)
 ├── docs/
 │   ├── wireframes/v1/            9 screens + flow, exported as PNG
 │   ├── branching_strategy/       diagram.png + branching.md
@@ -977,7 +1116,7 @@ own login, for staff.
 │   │   └── production.py         DEBUG=False, security headers, hashed static
 │   ├── urls.py  wsgi.py  asgi.py
 └── connect/                      the one domain app
-    ├── models.py                 8 models; get_absolute_url() on 3
+    ├── models.py                 9 models; get_absolute_url() on 3
     ├── views.py                  pages, detail views, search, venue suggestions
     ├── forms.py                  search, NetID lookup, venue suggestion, login
     ├── middleware.py             login required everywhere; 401 for the API
@@ -995,8 +1134,9 @@ own login, for staff.
     ├── tests_a6.py               61 tests: the local model's pipeline, the API check, hygiene
     ├── tests_a9.py               37 tests: the embedding step, the time limit and the page (Part 1); the request check (Part 3)
     ├── urls.py                   all routes named
-    ├── admin.py                  all 8 models registered, with inlines
-    ├── templates/connect/        base.html, shared entity_list.html, pages
+    ├── admin.py                  all 9 models registered, with inlines
+    ├── templates/connect/        base.html, shared entity_list.html, pages; _person.html (a student's card),
+    │                             _weekend.html (the free-time grid), _photo_credit.html
     └── management/commands/
         ├── seed_demo_data.py     idempotent sample data
         ├── verify_constraints.py proves constraints and on_delete rules
@@ -1007,8 +1147,9 @@ own login, for staff.
 
 ## Data model
 
-Eight models in `connect/models.py`, each mapping to a screen in the
-wireframes. Full rationale — every field, every `on_delete`, every constraint —
+Nine models in `connect/models.py`, each mapping to a screen in the
+wireframes. The ninth, `MatchRequest`, is a student's sign-up for one
+weekend's matching (`StudentProfile` 1-N `MatchRequest`, one per weekend). Full rationale — every field, every `on_delete`, every constraint —
 is in [`docs/data_model_notes.md`](docs/data_model_notes.md); the diagram is
 [`docs/er_diagram.pdf`](docs/er_diagram.pdf).
 

@@ -1,0 +1,23 @@
+{% comment %}
+One plan in a list (plan_list.html). Context: plan (with `going`), profile, going_ids.
+{% endcomment %}
+<li class="card linked with-tile k-squad">
+  <span class="tile date" aria-hidden="true"><b>{{ plan.starts_at|date:"j" }}</b>{{ plan.starts_at|date:"M" }}</span>
+  <div class="row">
+    <div>
+      <div class="title"><a href="{{ plan.get_absolute_url }}">{{ plan.title }}</a></div>
+      <div class="subtitle">{{ plan.starts_at|date:"l, g:i A" }} &middot; {{ plan.location.name }}</div>
+      <div class="meta">
+        <span>Hosted by {{ plan.host.full_name }}</span>
+        <span>{{ plan.going }} of {{ plan.capacity }} going</span>
+      </div>
+    </div>
+    <div class="side">
+      {% if plan.cancelled_at %}<span class="badge s-cancelled">Called off</span>
+      {% elif profile and plan.host_id == profile.pk %}<span class="badge s-confirmed">Hosting</span>
+      {% elif plan.pk in going_ids %}<span class="badge s-accepted">Going</span>
+      {% elif plan.going >= plan.capacity %}<span class="badge">Full</span>
+      {% endif %}
+    </div>
+  </div>
+</li>

@@ -20,9 +20,12 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import get_resolver, reverse
 from django.utils.html import escape
 
+from .models import StudentProfile
+
 PUBLIC_ROUTES = {"home", "privacy", "api-summary"}
+STAFF_ROUTES = {"analytics"}  # P1-A10: shows what other students searched for
 # A value for each URL parameter, so every route can be requested.
-SAMPLE_KWARGS = {"pk": 1, "chart": "chart1", "fmt": "png"}
+SAMPLE_KWARGS = {"pk": 1, "chart": "chart1", "fmt": "png", "path": "profile_photos/none.jpg"}
 
 GOOGLE = {"google": {"SCOPE": ["profile", "email"], "OAUTH_PKCE_ENABLED": True,
                      "AUTH_PARAMS": {"access_type": "online", "prompt": "select_account"},
@@ -71,16 +74,17 @@ class AccessTests(AuthTestCase):
     def test_a_signed_in_member_can_open_every_route(self):
         self.client.force_login(self.member)
         with patch("connect.icebreakers.requests.get", side_effect=requests.ConnectionError):
-            for _name, path in connect_routes():
+            for name, path in connect_routes():
                 with self.subTest(path=path):
-                    self.assertNotIn(self.client.get(path).status_code, (302, 401))
+                    if name not in STAFF_ROUTES:
+                        self.assertNotIn(self.client.get(path).status_code, (302, 401))
 
     def test_the_public_api_needs_no_login(self):
         response = self.client.get(reverse("connect:api-summary"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertEqual(response["Access-Control-Allow-Origin"], "*")
-        self.assertEqual(response.json()[0], {"category": "Food", "count": 4, "type": "Hobby / Interest"})
+        self.assertEqual(response.json()[0], {"category": "Food", "count": 13, "type": "Hobby / Interest"})
 
     def test_the_api_docs_label_access_and_show_the_real_401(self):
         body = self.client.get(reverse("connect:api-matches")).content.decode()
@@ -156,11 +160,19 @@ class NavigationTests(AuthTestCase):
 class AccountTests(AuthTestCase):
     PASSWORD = "quad-Connect-2026!"  # noqa: S105 - a test password
 
+    def make_ada(self):
+        """A student who has set up a profile, so a login goes where it was
+        headed rather than to the profile form (onboarding.py)."""
+        ada = User.objects.create_user("ada", "ada@illinois.edu", self.PASSWORD)
+        StudentProfile.objects.create(user=ada, net_id="ada", illinois_email="ada@illinois.edu",
+                                      full_name="Ada Lovelace", college="Grainger College of Engineering")
+
     def test_sign_up_creates_the_account_and_logs_in(self):
         response = self.client.post(reverse("account_signup"), {
             "username": "newstudent", "email": "newstudent@illinois.edu",
             "password1": self.PASSWORD, "password2": self.PASSWORD})
-        self.assertRedirects(response, reverse("connect:home"), fetch_redirect_response=False)
+        # A new account has no profile yet, so it is set up first.
+        self.assertRedirects(response, reverse("connect:profile"), fetch_redirect_response=False)
         self.assertTrue(User.objects.filter(username="newstudent").exists())
         self.assertContains(self.client.get(reverse("connect:home")), "Signed in as <strong>newstudent</strong>")
 
@@ -173,7 +185,7 @@ class AccountTests(AuthTestCase):
         self.assertFalse(User.objects.filter(username="newstudent").exists())
 
     def test_log_in_with_username_or_email_then_return_to_next(self):
-        User.objects.create_user("ada", "ada@illinois.edu", self.PASSWORD)
+        self.make_ada()
         for login in ["ada", "ada@illinois.edu"]:
             with self.subTest(login=login):
                 response = self.client.post(reverse("account_login") + "?next=/reports/",
@@ -182,7 +194,7 @@ class AccountTests(AuthTestCase):
                 self.client.post(reverse("account_logout"))
 
     def test_next_rides_in_the_login_form(self):
-        User.objects.create_user("ada", "ada@illinois.edu", self.PASSWORD)
+        self.make_ada()
         self.assertContains(self.client.get(reverse("account_login") + "?next=/reports/"),
                             'name="next" value="/reports/"')
         response = self.client.post(reverse("account_login"),  # next only in the form
@@ -253,10 +265,14 @@ class GoogleTests(AuthTestCase):
         response = self.google_callback({"sub": "1234567890", "email": "ada@example.com",
                                          "email_verified": True, "name": "Ada Lovelace",
                                          "given_name": "Ada", "family_name": "Lovelace"})
-        self.assertRedirects(response, reverse("connect:home"), fetch_redirect_response=False)
+        # A new account has no profile yet, so it is set up first, with the
+        # name Google gave already filled in.
+        self.assertRedirects(response, reverse("connect:profile"), fetch_redirect_response=False)
         user = User.objects.get(pk=self.client.session["_auth_user_id"])
         self.assertEqual((user.email, user.first_name), ("ada@example.com", "Ada"))
         self.assertTrue(user.socialaccount_set.filter(provider="google", uid="1234567890").exists())
+        form = self.client.get(reverse("connect:profile")).context["form"]
+        self.assertEqual(form["full_name"].value(), "Ada Lovelace")
 
     @override_settings(SOCIALACCOUNT_PROVIDERS=GOOGLE)
     def test_google_sign_in_never_takes_over_an_account_by_email(self):

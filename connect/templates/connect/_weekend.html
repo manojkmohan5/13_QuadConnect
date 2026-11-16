@@ -1,0 +1,18 @@
+{% comment %}
+The weekend grid: Saturday and Sunday by the four two-hour blocks, with a
+filled square where the student is free. Included wherever a student is
+shown as a card.
+
+Context: student, a StudentProfile whose slots are prefetched
+(StudentProfile.objects.for_cards()).
+
+The grid is one image to a screen reader: its label gives the free times
+in words, and the squares and hour marks (the start of each block) are not
+read out one by one.
+{% endcomment %}
+<div class="weekend" role="img" aria-label="{{ student.free_times }}">
+  <span></span><span class="h">10</span><span class="h">12</span><span class="h">2</span><span class="h">4</span>
+  {% for day, blocks in student.weekend %}
+    <span class="d">{{ day|slice:":3" }}</span>{% for label, free in blocks %}<span class="c{% if free %} on{% endif %}"></span>{% endfor %}
+  {% endfor %}
+</div>

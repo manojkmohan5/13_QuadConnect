@@ -7,14 +7,17 @@ The filename is not arbitrary: ListView looks for
 studentprofile_list.html is what lets the view omit `template_name` entirely.
 The matches and locations pages set their template explicitly instead, so the
 project demonstrates both conventions.
+
+Each student is a profile card (_person.html), shared with the search pages.
 {% endcomment %}
 
 {% block title %}Students - QuadConnect{% endblock %}
-{% block heading %}Verified students{% endblock %}
+{% block heading %}Students{% endblock %}
 
 {% block subtitle %}
   <p class="sub">
-    Every student who has completed UIUC SSO verification and onboarding.
+    Every student who has set up a profile. A tick beside a name means a UIUC
+    sign-in verified it.
     {% if selected_college %}
       Showing {{ page_obj.paginator.count }} of {{ total_count }}.
     {% else %}
@@ -41,47 +44,25 @@ project demonstrates both conventions.
     {% endif %}
   </form>
 
-  <ul class="list" role="list">
+  <ul class="people" role="list" data-enter-list>
   {% for student in students %}
-    <li class="card linked">
-      <div class="row">
-        <div>
-          <div class="title">
-            <a href="{{ student.get_absolute_url }}">
-              {{ student.full_name }}
-            </a>
-          </div>
-          <div class="subtitle">
-            {{ student.college }}{% if student.department %} &middot;
-            {{ student.department }}{% endif %}
-          </div>
-          <div class="meta">
-            <span>{{ student.net_id }}</span>
-            <span>{{ student.get_social_energy_display }}</span>
-            <span>{{ student.get_conversation_style_display }}</span>
-            <span>{{ student.interest_count }}
-              interest{{ student.interest_count|pluralize }}</span>
-          </div>
-        </div>
-        <span class="badge">{{ student.get_preferred_connection_display }}</span>
-      </div>
-    </li>
+    {% include "connect/_person.html" %}
   {% empty %}
     <li class="empty">
       {% if selected_college %}
         <div class="big">No students in a college matching
           &ldquo;{{ selected_college }}&rdquo;</div>
         <p>
-          No verified student has a college matching that text.
+          No student has a college matching that text.
           <a href="{% url 'connect:student-list' %}">Clear the filter</a>
           to see all {{ total_count }} students.
         </p>
       {% else %}
         <div class="big">No students yet</div>
         <p>
-          Students appear here once they complete SSO verification and
-          onboarding. Run <code>python manage.py seed_demo_data</code> to load
-          the sample roster.
+          Students appear here once they set up a profile. Run
+          <code>python manage.py seed_demo_data</code> to load the sample
+          roster.
         </p>
       {% endif %}
     </li>

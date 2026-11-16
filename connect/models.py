@@ -1,12 +1,13 @@
 """
 Data model for QuadConnect - a verified campus social discovery platform.
 
-The eight models below map onto the nine screens documented in the team's
+The nine models below map onto the nine screens documented in the team's
 wireframe deck, so that every stored field has a visible reason to exist:
 
     Screen 1 (UIUC SSO Login) .............. StudentProfile
     Screen 2 (Interests & Hobbies) ......... Interest, ProfileInterest
-    Screen 3 (Choose Connection Type) ...... StudentProfile.preferred_connection
+    Screen 3 (Choose Connection Type) ...... StudentProfile.preferred_connection,
+                                             MatchRequest (for one weekend)
     Screen 4 (Social Preferences) .......... StudentProfile (preference fields)
     Screen 5 (Availability) ................ AvailabilitySlot
     Screen 6/7 (Friend / Squad Match) ...... Match, MatchParticipant
@@ -113,6 +114,23 @@ class ParticipantResponse(models.TextChoices):
 # ---------------------------------------------------------------------------
 
 
+class StudentProfileQuerySet(models.QuerySet):
+    """Adds for_cards() to StudentProfile.objects."""
+
+    def for_cards(self):
+        """With what a profile card shows: each student's interests, starred
+        first, and the weekend slots they are free. Two queries, however many
+        students, so a list of cards never costs a query per student."""
+        return self.prefetch_related(
+            models.Prefetch(
+                "interest_links",
+                queryset=ProfileInterest.objects.select_related("interest")
+                .order_by("-is_primary", "interest__name"),
+            ),
+            "availability_slots",
+        )
+
+
 class StudentProfile(models.Model):
     """
     Represents a single SSO-verified UIUC student inside QuadConnect.
@@ -144,6 +162,17 @@ class StudentProfile(models.Model):
         help_text="illinois.edu address returned by SSO.",
     )
     full_name = models.CharField(max_length=120)
+    headline = models.CharField(
+        max_length=80,
+        blank=True,
+        help_text="Optional line under the name, in the student's own words.",
+    )
+    photo = models.ImageField(
+        upload_to="profile_photos/",
+        blank=True,
+        help_text="Optional. Stored as a JPEG of at most 800 px without its "
+                  "metadata (connect/forms.py); only signed-in users see it.",
+    )
 
     # --- Screen 2: academic context --------------------------------------
     college = models.CharField(
@@ -210,6 +239,8 @@ class StudentProfile(models.Model):
     onboarding_completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = StudentProfileQuerySet.as_manager()
+
     class Meta:
         ordering = ["full_name", "net_id"]
         verbose_name = "Student profile"
@@ -234,6 +265,39 @@ class StudentProfile(models.Model):
         Django Admin also uses it for the "View on site" button.
         """
         return reverse("connect:student-detail", kwargs={"pk": self.pk})
+
+    # --- For the profile card. Nothing below is stored. -------------------
+
+    @property
+    def initials(self):
+        """First and last initial, e.g. "JA". A card has no photo, so the
+        initials stand where one would be."""
+        words = self.full_name.split()
+        if not words:
+            return ""
+        return (words[0][0] + (words[-1][0] if len(words) > 1 else "")).upper()
+
+    def weekend(self):
+        """The weekend grid: each day with its four time blocks, and whether
+        this student is free in each.
+
+            [("Saturday", [("10 AM - 12 PM", False), ("12 - 2 PM", True), ...]),
+             ("Sunday", [...])]
+
+        Reads availability_slots.all(), which for_cards() has prefetched.
+        """
+        free = {(slot.weekday, slot.time_block) for slot in self.availability_slots.all()}
+        return [
+            (day.label, [(block.label, (day.value, block.value) in free) for block in TimeBlock])
+            for day in Weekday
+        ]
+
+    def free_times(self):
+        """The weekend grid in words, for a screen reader:
+        "Free Saturday 2 - 4 PM, Sunday 12 - 2 PM"."""
+        slots = [f"{slot.get_weekday_display()} {slot.get_time_block_display()}"
+                 for slot in self.availability_slots.all()]
+        return "Free " + ", ".join(slots) if slots else "No free time given"
 
 
 class Interest(models.Model):
@@ -350,6 +414,48 @@ class AvailabilitySlot(models.Model):
         )
 
 
+class MatchRequest(models.Model):
+    """
+    Represents one student's sign-up for one weekend's matching: "match me
+    this weekend, one-on-one" (or in a squad).
+
+    It exists because a profile says who a student is, not that they are
+    free and willing this week. Matching (connect/matching.py) only ever
+    pairs students who signed up for that weekend, in the way they asked.
+    """
+
+    profile = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="match_requests",
+        # CASCADE: a sign-up means nothing once the student is gone.
+    )
+    week_start = models.DateField(
+        help_text="Monday of the week whose weekend this sign-up is for.",
+    )
+    connection_type = models.CharField(
+        max_length=10,
+        choices=ConnectionType.choices,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-week_start", "created_at"]
+        verbose_name = "Match request"
+        constraints = [
+            # Signing up twice for one weekend must not put a student in the
+            # pool twice, where they could be matched with two people.
+            models.UniqueConstraint(
+                fields=["profile", "week_start"],
+                name="uniq_request_per_profile_week",
+            ),
+        ]
+
+    def __str__(self):
+        return (f"{self.profile.net_id} for the weekend of {self.week_start:%d %b} "
+                f"({self.get_connection_type_display()})")
+
+
 class CampusLocation(models.Model):
     """
     Represents an approved public meeting place on the UIUC campus.
@@ -420,6 +526,19 @@ class CampusLocation(models.Model):
         return [flag.replace("_", " ") for flag in self.ai_flags.split(",") if flag]
 
 
+class MatchQuerySet(models.QuerySet):
+    """Adds visible_to() to Match.objects."""
+
+    def visible_to(self, user):
+        """The matches this user may see: staff see every match, a student
+        only the ones they are in, since who meets whom is private. A
+        subquery, not a join, so a Count("participants") on the result
+        still counts everyone in each match."""
+        if user.is_staff:
+            return self
+        return self.filter(pk__in=MatchParticipant.objects.filter(profile__user=user).values("match"))
+
+
 class Match(models.Model):
     """
     Represents one weekly scheduled experience produced by the matching cycle.
@@ -468,6 +587,8 @@ class Match(models.Model):
         help_text="Short code shown on Screen 8, e.g. QC-4827.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = MatchQuerySet.as_manager()
 
     class Meta:
         ordering = ["-week_start", "-scheduled_for"]
@@ -590,3 +711,126 @@ class ExperienceFeedback(models.Model):
 
     def __str__(self):
         return f"{self.participant.profile.net_id}: {self.rating}/5"
+
+
+class AIRequestLog(models.Model):
+    """
+    One "Ask in plain English" search (P1-A10): what was asked, how the AI
+    answered, how long it took and how many tokens it used. Feeds /analytics/.
+
+    Cost is not stored: it is tokens times the price in connect/analytics.py,
+    so a new price re-prices every row.
+    """
+
+    class Source(models.TextChoices):
+        MODEL = "model", "Language model"
+        CACHED = "cached", "Cached answer"
+        KEYWORDS = "keywords", "Keyword fallback"
+
+    created_at = models.DateTimeField(db_index=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        # SET_NULL: the usage numbers stay when an account is deleted.
+    )
+    request = models.CharField(max_length=200)
+    source = models.CharField(max_length=10, choices=Source.choices)
+    filter_kinds = models.CharField(
+        max_length=80, blank=True,
+        help_text="The filters the AI found, comma-separated: interests,day,time,...",
+    )
+    students_found = models.PositiveIntegerField(default=0)
+    latency_ms = models.PositiveIntegerField()
+    prompt_tokens = models.PositiveIntegerField(default=0)
+    completion_tokens = models.PositiveIntegerField(default=0)
+    flagged = models.BooleanField(default=False, help_text="Looked like a prompt injection.")
+    note = models.CharField(max_length=120, blank=True, help_text="Why the model was not used, if it was not.")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "AI request log"
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.source} {self.latency_ms} ms"
+
+
+class Plan(models.Model):
+    """
+    A plan one student posts for others to join: "Board games, Saturday 3 PM
+    at the Illini Union, up to 6 of us". The open counterpart to the weekly
+    match: anyone signed in can see it, and any student can RSVP until it is
+    full or starts. The rules live in connect/plans.py.
+
+    Like a match, a plan only ever happens at an approved campus location,
+    so "public, staffed place" stays a rule rather than a promise.
+    """
+
+    host = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="hosted_plans",
+        # CASCADE: a plan without its host has nobody to run it.
+    )
+    title = models.CharField(max_length=80, help_text="What you're doing, e.g. Board games and coffee.")
+    details = models.TextField(
+        max_length=500,
+        blank=True,
+        help_text="Anything people should know: what to bring, where inside to find you.",
+    )
+    starts_at = models.DateTimeField(db_index=True)
+    location = models.ForeignKey(
+        CampusLocation,
+        on_delete=models.PROTECT,
+        related_name="plans",
+        # PROTECT: a venue with plans is retired with is_approved=False, as for matches.
+    )
+    capacity = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(2), MaxValueValidator(50)],
+        help_text="Most people who can come, you included.",
+    )
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["starts_at", "pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(capacity__gte=2) & models.Q(capacity__lte=50),
+                name="plan_capacity_2_to_50",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.starts_at:%Y-%m-%d %H:%M})"
+
+    def get_absolute_url(self):
+        return reverse("connect:plan-detail", kwargs={"pk": self.pk})
+
+
+class PlanRSVP(models.Model):
+    """
+    One student saying "I'm going" to a plan. Leaving deletes the row, so
+    a row always means going. The host is never a row: they are always going.
+    """
+
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE, related_name="rsvps")
+    profile = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="plan_rsvps",
+        # CASCADE: an RSVP means nothing once the student is gone.
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "pk"]
+        verbose_name = "Plan RSVP"
+        constraints = [
+            # Two clicks must not take two places.
+            models.UniqueConstraint(fields=["plan", "profile"], name="uniq_rsvp_per_plan_profile"),
+        ]
+
+    def __str__(self):
+        return f"{self.profile.net_id} going to plan {self.plan_id}"
