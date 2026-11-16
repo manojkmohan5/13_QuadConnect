@@ -98,6 +98,34 @@ exist.)
 
 ---
 
+## P1-A10: AI analytics dashboard
+
+**Live:** <https://manojkmohan43.pythonanywhere.com/analytics/>, staff only: log in as `mohitg2` / `uiuc12345`.
+
+`/analytics/` monitors **Ask in plain English** in three sections. Each card is titled with the
+question it answers:
+
+| Section | Questions | Widgets |
+|---|---|---|
+| System performance | Q1–Q3: latency over time, consistency, which requests are slower | Median, p95, coefficient-of-variation and fallback tiles; a rolling 7-day median and p95 line; a latency histogram by answer source; a box plot by filters found, with Pearson *r* |
+| User behavior | Q4–Q7: how often, when, what kinds of requests, the most common ones | Searches per day with a 7-day moving average; a weekday × hour heat map; a bar chart of filter kinds; a table of top requests |
+| Cost | Q8–Q10: cost over time, per request, the costliest requests | Cost per 1,000 searches, cache-savings and prompt-share tiles; a cost-per-day area chart; prompt and completion tokens by filters found; a table of requests by tokens |
+
+- **Logging:** every search writes an `AIRequestLog` row (`log_request()` in
+  [`connect/ai_search.py`](connect/ai_search.py)): latency, answer source, filters, students
+  found, prompt and completion tokens, and an injection flag.
+- **Statistics and charts:** [`connect/analytics.py`](connect/analytics.py), as Vega-Lite specs
+  drawn by `static/js/charts.js`. The window (7, 30 or 90 days) ends at the newest log.
+- **Data:** `seed_ai_logs` loads six weeks of simulated logs (563 searches) built from P1-A9's
+  measured requests; real searches are logged alongside them. The live site has no `torch`, so
+  its real searches are keyword-parser answers with no tokens.
+- **Cost:** tokens times the price of a hosted model of the same size: $0.10 per million prompt
+  tokens and $0.20 per million completion tokens.
+- **Report and screenshots:** [`docs/a10/`](docs/a10/). Tests:
+  [`connect/tests_a10.py`](connect/tests_a10.py).
+
+---
+
 ## Meeting up: real matching
 
 A student signs up for the coming weekend on **Meet** (`/meet/`), one-on-one
@@ -952,7 +980,7 @@ be extended on the Web tab once a month.
 ## Continuous integration
 
 Every push to the branch the current work is built on (now
-`feature/rebuild`) runs one GitHub Actions check, **Deploy / test (push)**,
+`p1-A10-plans`) runs one GitHub Actions check, **Deploy / test (push)**,
 defined in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Its
 single job runs, in order (with `AI_LOCAL_ENABLED=0` and `AI_EMBED_ENABLED=0`,
 so CI never downloads a model; the tests replace both):

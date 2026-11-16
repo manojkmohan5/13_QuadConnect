@@ -1,5 +1,7 @@
 # P1-A10: AI analytics dashboard
 
+**Live:** <https://manojkmohan43.pythonanywhere.com/analytics/>
+
 `/analytics/` (staff only; log in as `mohitg2` / `uiuc12345`) monitors **Ask in plain English**
 (`/search/ask/`) in three sections: system performance, user behavior and cost. Each card is titled with
 the question it answers. The submission write-up is [`P1-A10_report.pdf`](P1-A10_report.pdf) (source:
@@ -7,7 +9,7 @@ the question it answers. The submission write-up is [`P1-A10_report.pdf`](P1-A10
 
 | Piece | Where |
 |---|---|
-| Log model, one row per search | `AIRequestLog` in [`connect/models.py`](../../connect/models.py), migration `0003_ai_request_log` |
+| Log model, one row per search | `AIRequestLog` in [`connect/models.py`](../../connect/models.py), migration `0005_ai_request_log` |
 | Logging (latency, tokens, source, filters, results) | `log_request()` and the `usage` counter in [`connect/ai_search.py`](../../connect/ai_search.py) |
 | Statistics and the 8 Vega-Lite specs | [`connect/analytics.py`](../../connect/analytics.py) |
 | Page | [`connect/templates/connect/analytics.html`](../../connect/templates/connect/analytics.html), drawn by `static/js/charts.js` |
@@ -26,9 +28,12 @@ Cost is not stored, so changing the price re-prices every row.
 
 ```bash
 cd ~/13_QuadConnect && git pull
+workon myenv-django
+export DJANGO_SETTINGS_MODULE=quadconnect.settings.production
 python manage.py migrate
 python manage.py seed_ai_logs
 python manage.py collectstatic --noinput
 ```
 
-Then **Reload** the web app on the Web tab and open `/analytics/` as `mohitg2`.
+Then press **Reload** on the Web tab (touching the WSGI file does not reload the app) and open
+`/analytics/` as `mohitg2`.
