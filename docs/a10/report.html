@@ -75,7 +75,7 @@ results and token counts, plus volume growth, time-of-day habits, cache hits, bu
 <ul>
   <li><b>Median and p95, not the mean.</b> Latency is right-skewed (9.5 s cold starts, 30 s busy-model waits), so the mean would hide the
     typical case and the tail. p95 is what the slowest 1 in 20 students feel.</li>
-  <li><b>Rolling 7-day windows.</b> One day holds ~10 model answers: too few for a stable p95. A 7-day window also cancels the weekday/weekend cycle in the usage trend.</li>
+  <li><b>Rolling 7-day windows.</b> One day holds ~12 model answers: too few for a stable p95. A 7-day window also cancels the weekday/weekend cycle in the usage trend.</li>
   <li><b>Coefficient of variation</b> (&sigma;/&mu; = 0.72) gives a unit-free consistency score that can be compared across model versions.</li>
 </ul>
 <ul>
