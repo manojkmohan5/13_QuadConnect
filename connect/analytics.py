@@ -116,7 +116,7 @@ def build(logs, days, end, before=()):
                    "tokens": round(statistics.mean(r.prompt_tokens + r.completion_tokens
                                                    for r in rows if r.source == "model"))
                    if any(r.source == "model" for r in rows) else 0,
-                   "cost": sum(cost(r) for r in rows) * 1000}
+                   "cost": sum(cost(r) for r in rows) * 100}  # US cents: the Q10 table's unit
                   for text, rows in queries.items()]
 
     filters_n = [p["filters"] for p in points if p["source"] == SOURCE_LABELS["model"]]

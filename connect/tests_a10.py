@@ -75,6 +75,19 @@ class DashboardTests(TestCase):
         call_command("seed_ai_logs", stdout=StringIO())
         self.assertEqual(AIRequestLog.objects.count(), count)
 
+    def test_the_costliest_requests_table_is_in_cents(self):
+        from datetime import date, datetime
+
+        from django.utils import timezone
+        at = timezone.make_aware(datetime(2026, 11, 12, 12))
+        logs = [AIRequestLog(created_at=at, request="gamers", source="model", latency_ms=2000, prompt_tokens=700,
+                             completion_tokens=20, filter_kinds="interests", students_found=3) for _ in range(2)]
+        kpis, charts, top, costly = build(logs, 7, date(2026, 11, 12))
+        # One answer: (700 x $0.10 + 20 x $0.20) per million tokens = $0.000074 = 0.0074 cents.
+        self.assertAlmostEqual(costly[0]["cost"], 2 * 0.0074)
+        # The table can never add up to more than everything in the window.
+        self.assertAlmostEqual(sum(q["cost"] for q in costly), kpis["total_cost"] * 100)
+
     def test_no_logs_still_builds(self):
         from datetime import date
         kpis, charts, top, costly = build([], 7, date(2026, 11, 12))
